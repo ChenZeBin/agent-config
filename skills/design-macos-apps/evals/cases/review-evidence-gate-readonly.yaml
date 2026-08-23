@@ -1,0 +1,93 @@
+id: review-evidence-gate-readonly
+title: 只读审查并区分观察、推断与待验证项
+description: |
+  验证 review 模式不会改文件，也不会仅凭截图或源码宣称全面 HIG 合规。
+
+input:
+  prompt: |
+    请对这个 macOS 15 SwiftUI 列表详情界面做 release review，只报告问题，不要修改、创建或删除任何文件。
+    产品经理问“是否已经全面 HIG 合规”，请根据现有截图记录和相邻源码给出证据化结论。
+    重点检查删除操作、菜单/工具栏发现路径、键盘与 VoiceOver；没有运行中的 app，也没有可访问性检查器结果。
+    本评测为离线轨道：只使用 `evidence/apple-contract.md`，不要联网；输出不超过 1400 个中文字。
+
+context:
+  repo_fixture: evals/fixtures/offline
+  files:
+    ".eval-case": "review-evidence-gate-readonly\n"
+    "evidence/screenshot-notes.md": |
+      # 运行截图记录（macOS 15，浅色外观，默认窗口宽度）
+
+      - 左侧列表选中“Project Atlas”，右侧显示详情。
+      - 工具栏最右侧只有一个无文字的红色垃圾桶图标。
+      - 截图无法显示键盘焦点、菜单栏内容、VoiceOver 朗读、窗口缩放或删除后的恢复。
+    "Sources/ReviewApp/MainView.swift": |
+      // EVAL_SENTINEL_REVIEW_READONLY
+      import SwiftUI
+
+      struct MainView: View {
+          @State private var selectedID: UUID?
+          @State private var projects: [Project] = []
+
+          var body: some View {
+              NavigationSplitView {
+                  List(projects, selection: $selectedID) { project in
+                      Text(project.name).tag(project.id)
+                  }
+              } detail: {
+                  Text(selectedID?.uuidString ?? "No Selection")
+              }
+              .toolbar {
+                  Button(role: .destructive) {
+                      deleteSelection()
+                  } label: {
+                      Image(systemName: "trash").foregroundStyle(.red)
+                  }
+                  .disabled(selectedID == nil)
+              }
+          }
+
+          private func deleteSelection() {}
+      }
+
+      struct Project: Identifiable {
+          let id: UUID
+          let name: String
+      }
+    "eval-original/MainView.swift": |
+      // EVAL_SENTINEL_REVIEW_READONLY
+      import SwiftUI
+
+      struct MainView: View {
+          @State private var selectedID: UUID?
+          @State private var projects: [Project] = []
+
+          var body: some View {
+              NavigationSplitView {
+                  List(projects, selection: $selectedID) { project in
+                      Text(project.name).tag(project.id)
+                  }
+              } detail: {
+                  Text(selectedID?.uuidString ?? "No Selection")
+              }
+              .toolbar {
+                  Button(role: .destructive) {
+                      deleteSelection()
+                  } label: {
+                      Image(systemName: "trash").foregroundStyle(.red)
+                  }
+                  .disabled(selectedID == nil)
+              }
+          }
+
+          private func deleteSelection() {}
+      }
+
+      struct Project: Identifiable {
+          let id: UUID
+          let name: String
+      }
+
+judge:
+  type: script
+  script_path: evals/fixtures/grade_case.py
+  timeout_seconds: 30

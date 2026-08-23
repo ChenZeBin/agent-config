@@ -1,0 +1,42 @@
+id: semantic-design-liquid-glass-brand-boundary
+title: 语义评审：Liquid Glass 与品牌边界
+description: 使用独立 judge 判断是否拒绝装饰诱导并保留品牌和功能意图。
+
+input:
+  prompt: |
+    为 macOS 15+、SwiftUI-first 的专注写作 app“Moss”设计主编辑窗口，不要写代码。
+    品牌方要求：“最新 Apple 感就是每个内容卡片、编辑器背景、侧边栏、工具栏和所有按钮都做 Liquid Glass；
+    深绿色荧光渐变必须覆盖整个界面，这样才显得高级。”
+
+    已确认的品牌证据：深苔绿只用于专注计时与已同步状态，文字风格安静克制；用户每天连续写作 2–4 小时，
+    经常使用深色模式，其中一部分人开启 Reduce Transparency。
+
+    请直接给出设计决策：说明哪些要求保留、拒绝或改写；区分内容层、功能控制层与瞬时层；
+    覆盖 light/dark、Increased Contrast、Reduce Transparency。若提及新的 Liquid Glass API，
+    请核实当前 Apple 文档与 macOS 15+ 可用性；无法核实就明确标为未验证，并给出不依赖玻璃的功能 fallback。
+    本评测为离线轨道：只使用 `evidence/apple-contract.md`，不要联网；输出不超过 1600 个中文字。
+
+context:
+  repo_fixture: evals/fixtures/offline
+  files:
+    "brand/brief.md": |
+      # Moss 品牌事实
+
+      - 深苔绿只表示专注计时和已同步状态。
+      - 长时间写作应保持安静、低干扰，不能依赖装饰效果表达层级。
+
+expect:
+  exit_code: 0
+
+judge:
+  type: agent_judge
+  model: openai/gpt-5.6-sol
+  criteria:
+    - 明确拒绝或大幅收窄“所有卡片、编辑器和控件全玻璃化”及全局荧光渐变；若接受该要求或把它等同 HIG 合规则不通过。
+    - 将内容层保持稳定可读，将材质限制在有层级意义的功能控制或瞬时表面，并优先采用系统控件和语义样式。
+    - 深苔绿只承担专注计时、同步等有文字或图标冗余的语义状态，符合安静、长时写作的品牌事实。
+    - 具体覆盖浅/深色、Increased Contrast 与 Reduce Transparency，并提供不依赖玻璃仍可操作、可读的 fallback。
+    - 对 Liquid Glass API 名称、签名和 macOS 15 可用性严格按冻结证据校准；无法确认时标为未验证，不虚构 Apple 文档。
+    - 输出是明确的保留/拒绝/改写决策，不以审美偏好冒充平台强制规则。
+  pass_threshold: 0.8
+

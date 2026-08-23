@@ -1,0 +1,4 @@
+interface:
+  display_name: "Design Native macOS Apps"
+  short_description: "Design and verify Apple-native macOS UI"
+  default_prompt: "Use $design-macos-apps to make an evidence-backed native macOS UI decision or change and verify Apple-native fit when completion is claimed."

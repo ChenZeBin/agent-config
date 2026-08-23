@@ -1,0 +1,36 @@
+id: semantic-translate-ios-figma-to-mac
+title: 语义评审：iPhone 意图到 Mac 原生结构
+description: 使用独立 judge 判断是否保留产品意图并丢弃移动端外壳。
+
+input:
+  prompt: |
+    把下面的 iPhone Figma 方案翻译成 macOS 14+、SwiftUI-first 的实现交接，不要修改 Figma 文件，也不要逐像素复刻：
+
+    - 底部四个 tab：资料库、搜索、收件箱、设置；
+    - 资料库使用逐屏 push 导航，搜索是全屏页面；
+    - 内容以大圆角卡片网格展示；
+    - 只能左滑删除；批量标签从底部 sheet 弹出；
+    - 标注统一 44pt 触控目标、手机 safe area 和固定像素间距；
+    - 品牌意图是“安静、可信、适合长时间研究”。
+
+    请给出源元素到 Mac 原生结构的意图映射，说明保留与丢弃内容、窗口/命令/输入行为、状态与无障碍、API 可用性和 fallback。
+    本评测为离线轨道：只使用 `evidence/apple-contract.md`，不要联网；输出不超过 1800 个中文字。
+
+context:
+  repo_fixture: evals/fixtures/offline
+
+expect:
+  exit_code: 0
+
+judge:
+  type: agent_judge
+  model: openai/gpt-5.6-sol
+  criteria:
+    - 对底部 tab、逐屏 push/全屏搜索、卡片网格、左滑删除、底部 sheet、44pt/safe area/固定像素逐项说明原始用户意图与 Mac 替代方案。
+    - 明确丢弃触控和手机容器假设，选择适合任务的 sidebar/list-detail/inspector/toolbar/menu/window 等桌面结构，而不是逐像素复刻。
+    - 删除、批量标注、搜索和设置都有可发现的菜单/工具栏/键盘或上下文路径，右键不成为唯一入口。
+    - 覆盖选择、空态、进度、错误与恢复，以及 VoiceOver、键盘和相关显示偏好；品牌语义映射不依赖固定像素或装饰材料。
+    - 对具体 API、部署版本和 fallback 保持证据校准；只使用冻结证据，不虚构一方文档或运行结果。
+    - 明确 Figma 为只读来源且未被修改，交付足够具体，SwiftUI/AppKit 建议保持最小范围。
+  pass_threshold: 0.8
+

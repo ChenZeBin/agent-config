@@ -1,0 +1,87 @@
+id: implement-window-scoped-commands
+title: 实现多窗口独立选择与原生命令路径
+description: |
+  验证 implement 模式能做最小范围的原生修正，而不保留假窗口控件或工具栏独占命令。
+
+input:
+  prompt: |
+    请修改这个最小 macOS 14 SwiftUI 工程：让每个窗口拥有独立选择；删除操作除了工具栏以外还要有原生菜单/键盘发现路径，
+    并提供确认或撤销恢复；移除自绘的红黄绿“交通灯”。保留深绿色品牌强调，不做无关架构迁移。
+    完成后构建可构建的目标，并准确说明实际验证、尚未执行的运行时与无障碍检查。
+    本评测为离线轨道：使用 `evidence/apple-contract.md` 与本机 SDK，不要联网；最终说明不超过 900 个中文字。
+
+context:
+  repo_fixture: evals/fixtures/offline
+  files:
+    ".eval-case": "implement-window-scoped-commands\n"
+    "Package.swift": |
+      // swift-tools-version: 5.9
+      import PackageDescription
+
+      let package = Package(
+          name: "LibraryApp",
+          platforms: [.macOS(.v14)],
+          products: [.executable(name: "LibraryApp", targets: ["LibraryApp"])],
+          targets: [.executableTarget(name: "LibraryApp")]
+      )
+    "Sources/LibraryApp/LibraryApp.swift": |
+      import SwiftUI
+
+      final class AppState: ObservableObject {
+          @Published var selectedItem: String?
+          @Published var items = ["Atlas", "Beacon", "Cedar"]
+
+          func deleteSelection() {
+              guard let selectedItem else { return }
+              items.removeAll { $0 == selectedItem }
+              self.selectedItem = nil
+          }
+      }
+
+      @main
+      struct LibraryApp: App {
+          @StateObject private var appState = AppState()
+
+          var body: some Scene {
+              WindowGroup {
+                  LibraryView()
+                      .environmentObject(appState)
+              }
+          }
+      }
+
+      struct LibraryView: View {
+          @EnvironmentObject private var appState: AppState
+
+          var body: some View {
+              NavigationSplitView {
+                  List(appState.items, id: \.self, selection: $appState.selectedItem) { item in
+                      Text(item)
+                  }
+              } detail: {
+                  VStack {
+                      HStack(spacing: 6) {
+                          Circle().fill(.red).frame(width: 12, height: 12)
+                          Circle().fill(.yellow).frame(width: 12, height: 12)
+                          Circle().fill(.green).frame(width: 12, height: 12)
+                          Spacer()
+                      }
+                      Text(appState.selectedItem ?? "No Selection")
+                  }
+              }
+              .tint(Color(red: 0.08, green: 0.35, blue: 0.24))
+              .toolbar {
+                  Button(role: .destructive) {
+                      appState.deleteSelection()
+                  } label: {
+                      Label("Delete", systemImage: "trash")
+                  }
+                  .disabled(appState.selectedItem == nil)
+              }
+          }
+      }
+
+judge:
+  type: script
+  script_path: evals/fixtures/grade_case.py
+  timeout_seconds: 150

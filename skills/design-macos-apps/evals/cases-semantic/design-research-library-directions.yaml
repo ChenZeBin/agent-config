@@ -1,0 +1,31 @@
+id: semantic-design-research-library-directions
+title: 语义评审：研究资料库设计方向
+description: 使用独立 judge 判断设计取舍是否真正适配任务，而不按关键词计分。
+
+input:
+  prompt: |
+    为一款原生 macOS 研究资料库设计主工作区，目标 macOS 15+、SwiftUI-first。
+    用户每天会高频检索资料、并排比较元数据、拖入 PDF、批量标注，并在多个研究主题之间切换。
+    品牌已有克制的深绿色，但设计方向尚未确定。请直接给出可实施的设计决策，比较真正不同的方向并推荐一个；
+    同时覆盖窗口与命令模型、关键状态、无障碍、部署版本和验证边界。当前没有代码或运行截图。
+    本评测为离线轨道：只使用 `evidence/apple-contract.md`，不要联网；证据包未覆盖的版本/API 主张标为未验证。
+    输出不超过 1800 个中文字。
+
+context:
+  repo_fixture: evals/fixtures/offline
+
+expect:
+  exit_code: 0
+
+judge:
+  type: agent_judge
+  model: openai/gpt-5.6-sol
+  criteria:
+    - 至少比较三个在信息密度、交互姿态或工作流上实质不同的方向，而不是同一布局的换皮。
+    - 推荐项明确服务于高频检索、并排元数据比较、PDF 导入、批量标注和跨主题切换，并解释未选方向的代价。
+    - 给出符合桌面工作方式的窗口/场景、窗口级与共享状态、信息架构、菜单、工具栏、键盘和指针模型。
+    - 覆盖空态、进度、无结果、导入或批处理失败、恢复，以及 VoiceOver 和相关显示偏好。
+    - 只把 evidence/apple-contract.md 覆盖的窄结论当作已确认；其他版本/API 主张标为未验证，且不宣称已运行、已视觉验收或全面 HIG 合规。
+    - 方案具体可实施，品牌深绿承担有限语义角色，不以篇幅或术语堆叠代替决策。
+  pass_threshold: 0.8
+

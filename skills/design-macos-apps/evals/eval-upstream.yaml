@@ -1,0 +1,45 @@
+schema_version: v1alpha1
+
+environment:
+  type: none
+
+skills:
+  - source: local_path
+    path: /Users/example/Project/mac-app-design-skill-research/sources/platform/ehmo-platform-design-skills/skills/macos
+    include:
+      - SKILL.md
+      - AGENTS.md
+      - rules/_sections.md
+
+engine:
+  name: codex
+  model:
+    provider: openai
+    name: gpt-5.6-terra
+
+cases:
+  files:
+    - evals/cases/design-research-library-directions.yaml
+    - evals/cases/review-evidence-gate-readonly.yaml
+    - evals/cases/implement-window-scoped-commands.yaml
+    - evals/cases/translate-ios-figma-to-mac.yaml
+    - evals/cases/boundary-electron-not-native-hig.yaml
+    - evals/cases/negative-pure-swift-debug.yaml
+  defaults:
+    timeout_seconds: 480
+    max_turns: 12
+    collect_artifacts:
+      - Package.swift
+      - "Sources/**/*.swift"
+      - "evidence/**"
+      - "brand/**"
+    expect:
+      exit_code: 0
+  parallelism: 2
+
+benchmark:
+  enabled: true
+
+report:
+  formats: [json, html]
+  artifacts: [transcript]

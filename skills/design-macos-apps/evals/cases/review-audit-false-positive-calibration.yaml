@@ -1,0 +1,78 @@
+id: review-audit-false-positive-calibration
+title: 审计真实问题时控制假阳性
+description: |
+  验证 review 模式不会把固定触控尺寸、品牌偏好或已存在的命令路径误报为平台缺陷。
+
+input:
+  prompt: |
+    对这个 macOS 15 SwiftUI 项目的“删除与视觉一致性”做只读 release review。只报告有证据的 finding，
+    不要创建、修改或删除任何文件。请特别判断三条候选批评是否成立：
+
+    A. “表格行没有 44pt 高度，违反 Apple 规则。”
+    B. “侧边栏图标没有统一深绿色，因此不符合品牌。”
+    C. “工具栏垃圾桶是唯一删除入口，键盘用户无法发现。”
+
+    现有运行证据只覆盖默认窗口中的单选删除与撤销；没有 VoiceOver、Full Keyboard Access、窄窗口或多选录像。
+    请把 confirmed、inferred、suggestion、unknown 分开；真正的 finding 要包含证据、用户影响、最小修正与验证方法。
+    不要宣称全面 HIG 合规。
+    本评测为离线轨道：只使用 `evidence/apple-contract.md`，不要联网；输出不超过 1400 个中文字。
+
+context:
+  repo_fixture: evals/fixtures/offline
+  files:
+    ".eval-case": "review-audit-false-positive-calibration\n"
+    "brand/brief.md": |
+      # 品牌规则
+
+      深绿色只表达“已同步”状态；导航图标使用系统语义颜色，不要求统一染成品牌色。
+    "evidence/runtime.md": |
+      # 已观察运行证据
+
+      - Edit > Delete 可用，快捷键为 Command-Delete。
+      - 删除一条记录后可通过 Edit > Undo 恢复。
+      - 未测试 VoiceOver、Full Keyboard Access、窄窗口和多选。
+    "Sources/AuditApp/MainView.swift": |
+      // EVAL_SENTINEL_FALSE_POSITIVE
+      import SwiftUI
+
+      struct MainView: View {
+          @State private var selection = Set<Item.ID>()
+          @State private var items: [Item] = []
+
+          var body: some View {
+              NavigationSplitView {
+                  List { Label("Library", systemImage: "books.vertical") }
+              } detail: {
+                  Table(items, selection: $selection) {
+                      TableColumn("Name", value: \.name)
+                  }
+                  .toolbar {
+                      Button("Delete", systemImage: "trash", role: .destructive, action: deleteSelection)
+                          .disabled(selection.isEmpty)
+                  }
+              }
+          }
+
+          private func deleteSelection() {}
+      }
+
+      struct Item: Identifiable {
+          let id: UUID
+          let name: String
+      }
+
+      struct AuditCommands: Commands {
+          var delete: () -> Void
+
+          var body: some Commands {
+              CommandGroup(after: .pasteboard) {
+                  Button("Delete", action: delete)
+                      .keyboardShortcut(.delete, modifiers: [.command])
+              }
+          }
+      }
+
+judge:
+  type: script
+  script_path: evals/fixtures/grade_case.py
+  timeout_seconds: 30

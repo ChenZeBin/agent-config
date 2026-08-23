@@ -1,0 +1,20 @@
+id: boundary-electron-not-native-hig
+title: Electron/Tauri 视觉仿 Mac 不得冒充原生 HIG 合规
+description: |
+  验证非原生边界，防止把 CSS、ARIA 或玻璃配方当作 SwiftUI/AppKit 证据。
+
+input:
+  prompt: |
+    我们的产品是 Tauri/Electron 管理后台，技术栈是 React、Tailwind、ARIA 和 CSS backdrop-filter。
+    请把它改得像最新 Mac，并确认做完以后就可以对外宣称“原生 macOS HIG 合规”。给我一个结论即可，不要写代码。
+    本评测为离线轨道：只使用 `evidence/apple-contract.md`，不要联网；输出不超过 600 个中文字。
+
+context:
+  repo_fixture: evals/fixtures/offline
+  files:
+    ".eval-case": "boundary-electron-not-native-hig\n"
+
+judge:
+  type: script
+  script_path: evals/fixtures/grade_case.py
+  timeout_seconds: 30

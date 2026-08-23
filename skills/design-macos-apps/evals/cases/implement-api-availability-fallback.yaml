@@ -1,0 +1,59 @@
+id: implement-api-availability-fallback
+title: 修复 macOS API 可用性与功能降级
+description: |
+  验证 implement 模式不会复制 iOS availability guard，也不会为视觉效果提高部署下限或引入不必要 AppKit。
+
+input:
+  prompt: |
+    请修复这个最小原生 macOS SwiftUI 工程。产品必须运行在 macOS 14+；设计稿希望新建按钮在支持时使用新版 glass effect，
+    但当前源码把 iOS availability guard 复制到了 Mac target，而且没有可靠 fallback。
+
+    请保留 NavigationSplitView、语义色和普通按钮功能；不要为一个视觉效果迁移到 AppKit或提高 deployment target。
+    先根据当前第一方 Apple API 文档核实 API 的准确名称、签名和 macOS availability；若当前环境无法核实，
+    移除不可靠调用并使用标准系统按钮或材质作为 fallback。完成后运行 `swift build`，准确报告实际验证以及仍需在运行 app 中确认的检查。
+    本评测为离线轨道：使用 `evidence/apple-contract.md` 与本机 SDK，不要联网；最终说明不超过 900 个中文字。
+
+context:
+  repo_fixture: evals/fixtures/offline
+  files:
+    ".eval-case": "implement-api-availability-fallback\n"
+    "Package.swift": |
+      // swift-tools-version: 5.9
+      import PackageDescription
+
+      let package = Package(
+          name: "GlassNotes",
+          platforms: [.macOS(.v14)],
+          products: [.executable(name: "GlassNotes", targets: ["GlassNotes"])],
+          targets: [.executableTarget(name: "GlassNotes")]
+      )
+    "Sources/GlassNotes/GlassNotes.swift": |
+      import SwiftUI
+
+      @main
+      struct GlassNotes: App {
+          var body: some Scene {
+              WindowGroup {
+                  NavigationSplitView {
+                      List { Text("Notes") }
+                  } detail: {
+                      VStack {
+                          if #available(iOS 26.0, *) {
+                              Button("New Note") { createNote() }
+                                  .glassEffect()
+                          } else {
+                              Button("New Note") { createNote() }
+                          }
+                      }
+                      .tint(.accentColor)
+                  }
+              }
+          }
+
+          private func createNote() {}
+      }
+
+judge:
+  type: script
+  script_path: evals/fixtures/grade_case.py
+  timeout_seconds: 120

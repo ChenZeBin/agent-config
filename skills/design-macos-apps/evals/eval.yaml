@@ -1,0 +1,55 @@
+schema_version: v1alpha1
+
+environment:
+  type: none
+
+skills:
+  - source: local_path
+    path: .
+    include:
+      - SKILL.md
+      - agents/**
+      - assets/**
+      - references/**
+      - scripts/**
+
+engine:
+  name: codex
+  model:
+    provider: openai
+    name: gpt-5.6-terra
+
+cases:
+  files:
+    - evals/cases/design-research-library-directions.yaml
+    - evals/cases/review-evidence-gate-readonly.yaml
+    - evals/cases/implement-window-scoped-commands.yaml
+    - evals/cases/translate-ios-figma-to-mac.yaml
+    - evals/cases/boundary-electron-not-native-hig.yaml
+    - evals/cases/negative-pure-swift-debug.yaml
+    - evals/cases/design-liquid-glass-brand-boundary.yaml
+    - evals/cases/implement-api-availability-fallback.yaml
+    - evals/cases/review-audit-false-positive-calibration.yaml
+    - evals/cases/design-menubar-permission-recovery.yaml
+    - evals/cases/design-quick-export-placement.yaml
+    - evals/cases/review-build-evidence-boundary.yaml
+    - evals/cases/design-apple-native-completion-gate.yaml
+    - evals/cases/review-apple-native-fit-evidence.yaml
+  defaults:
+    timeout_seconds: 480
+    max_turns: 12
+    collect_artifacts:
+      - Package.swift
+      - "Sources/**/*.swift"
+      - "evidence/**"
+      - "brand/**"
+    expect:
+      exit_code: 0
+  parallelism: 2
+
+benchmark:
+  enabled: true
+
+report:
+  formats: [json, html]
+  artifacts: [transcript]

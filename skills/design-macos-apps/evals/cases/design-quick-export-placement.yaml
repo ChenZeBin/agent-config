@@ -1,0 +1,55 @@
+id: design-quick-export-placement
+title: 快速决定低频导出命令的发现路径
+description: |
+  验证 bounded design 问题会走 quick path，在有限时间内给出窗口级命令决策，而不是扩展成完整规范。
+
+input:
+  prompt: |
+    这是一个原生 macOS 14+、SwiftUI-first 的资料库。只帮我决定一个局部问题：Export 是否应继续占据默认工具栏。
+
+    现状：默认工具栏已有 New、Import、Export、Tag、Delete、Share、Sync、View 八项；Export 平均每周使用一次，
+    只对当前窗口中选中的资料生效。请根据提供的产品证据和相邻源码给出简洁、可实施的决定；说明菜单/工具栏路径、
+    当前窗口与 selection scope、禁用/进行中/失败状态及最小验证。不要生成完整设计规范，不要修改或创建文件，也不需要为了
+    这个局部决定遍历整套 HIG。
+
+context:
+  files:
+    ".eval-case": "design-quick-export-placement\n"
+    "evidence/product-brief.md": |
+      # Export usage evidence
+
+      - Export is used about once per week.
+      - It operates on the active library window's selected records.
+      - New, Import, Delete, and Search are the daily high-frequency actions.
+      - Export can take time and can fail when the destination is unavailable.
+    "Sources/QuickLibrary/LibraryView.swift": |
+      import SwiftUI
+
+      struct LibraryView: View {
+          @State private var selection = Set<Record.ID>()
+
+          var body: some View {
+              Table(records, selection: $selection) {
+                  TableColumn("Title", value: \.title)
+              }
+              .toolbar {
+                  Button("New", systemImage: "plus", action: create)
+                  Button("Import", systemImage: "square.and.arrow.down", action: importFiles)
+                  Button("Export", systemImage: "square.and.arrow.up", action: exportSelection)
+                  Button("Tag", systemImage: "tag", action: tagSelection)
+                  Button("Delete", systemImage: "trash", action: deleteSelection)
+                  Button("Share", systemImage: "person.crop.circle.badge.plus", action: share)
+                  Button("Sync", systemImage: "arrow.triangle.2.circlepath", action: sync)
+                  Button("View", systemImage: "rectangle.3.group", action: changeView)
+              }
+          }
+      }
+
+judge:
+  type: script
+  script_path: evals/fixtures/grade_case.py
+  timeout_seconds: 30
+
+constraints:
+  timeout_seconds: 180
+  max_turns: 6

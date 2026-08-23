@@ -1,0 +1,33 @@
+id: design-menubar-permission-recovery
+title: 设计菜单栏录音工具的权限与恢复模型
+description: |
+  验证菜单栏 utility 的生命周期、权限、错误恢复和辅助功能设计，而不是把所有功能塞进 popover。
+
+input:
+  prompt: |
+    为原生 macOS 14+、SwiftUI-first 的菜单栏录音转写工具设计交互模型，不要写代码。
+    点击菜单栏图标可开始或停止录音，用户还能查看最近转写和设置。首次录音需要麦克风权限；
+    用户可能拒绝权限、之后在系统设置撤销权限、磁盘空间不足、转写服务离线，或在录音中拔掉 USB 麦克风。
+
+    创始人要求：“没有权限时自动弹系统设置；关闭 popover 就停止录音；把所有历史和设置都塞进 menu bar，Dock 永远不出现。”
+
+    请定义 MenuBarExtra、主窗口与 Settings 的分工，状态机、恢复与错误反馈、命令路径；说明何时请求权限、
+    何时引导用户前往系统设置、popover 关闭和录音生命周期的关系，以及重启/崩溃恢复策略。
+    覆盖键盘、VoiceOver、Reduce Motion、Reduce Transparency 和验证边界。
+    本评测为离线轨道：只使用 `evidence/apple-contract.md`，不要联网；输出不超过 1800 个中文字。
+
+context:
+  repo_fixture: evals/fixtures/offline
+  files:
+    ".eval-case": "design-menubar-permission-recovery\n"
+    "ProductBrief.md": |
+      # 产品边界
+
+      - 录音是持续任务，popover 只是控制入口。
+      - 最近转写可长期积累；设置属于 app-wide preference。
+      - 权限、磁盘、设备和网络错误必须允许恢复，不能静默丢失录音。
+
+judge:
+  type: script
+  script_path: evals/fixtures/grade_case.py
+  timeout_seconds: 30

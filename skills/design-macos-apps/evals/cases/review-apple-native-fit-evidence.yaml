@@ -1,0 +1,47 @@
+id: review-apple-native-fit-evidence
+title: Apple 原生感发布验收必须具备三类完整证据
+description: |
+  验证只读审查会逐项核对参照原型、运行截图矩阵和交互记录，不把构建、图片清单或一次点击升级为完成。
+
+input:
+  prompt: |
+    做一次只读 release review，不要修改或创建文件。团队想发布以下结论：
+    “Ledger 已完成 Apple 原生感验收，窗口、明暗外观和所有交互均达到可发布质量。”
+
+    请检查 `evidence/reference-map.md`、`evidence/screenshot-manifest.md`、
+    `evidence/interaction-notes.md` 和 `evidence/build.log`。直接给出是否能批准，逐项说明三类验收交付物
+    已覆盖和缺少的内容、当前最高证据等级，以及最小的下一轮运行验证。保持简洁。
+
+context:
+  files:
+    ".eval-case": "review-apple-native-fit-evidence\n"
+    "evidence/reference-map.md": |
+      # Apple 参照
+
+      团队口头选择 Notes，但没有记录观察的 macOS 或 app 版本、截图、来源日期，
+      也没有说明采用、适配或不复制什么。
+    "evidence/screenshot-manifest.md": |
+      # Runtime screenshots
+
+      - evidence/screens/default-light-active.png
+      - evidence/screens/default-dark-active.png
+
+      两张图片来自 Debug app；没有记录 build 标识、macOS 版本、窗口尺寸、
+      显示缩放或数据状态。清单中的 PNG 没有随证据包提供。
+    "evidence/interaction-notes.md": |
+      # Interaction notes
+
+      人工点击工具栏“New”一次，创建成功。没有菜单、快捷键、焦点、窗口缩放与恢复、
+      Undo、多窗口作用域测试，也没有录像、日志或 UI test 路径。
+    "evidence/build.log": |
+      Build complete! (4.12s)
+      Process exited with code 0.
+
+judge:
+  type: script
+  script_path: evals/fixtures/grade_case.py
+  timeout_seconds: 30
+
+constraints:
+  timeout_seconds: 180
+  max_turns: 6

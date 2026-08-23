@@ -1,0 +1,4 @@
+interface:
+  display_name: "多智能体编排"
+  short_description: "Route, delegate, and verify multi-agent work safely."
+  default_prompt: "使用 $multi-agent-orchestration 判断当前任务是否值得拆分；符合条件时派发并验证。"

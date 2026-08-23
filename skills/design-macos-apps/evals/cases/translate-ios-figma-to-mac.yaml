@@ -1,0 +1,28 @@
+id: translate-ios-figma-to-mac
+title: 将 iPhone Figma 意图翻译为原生 Mac 结构
+description: |
+  验证 translate 模式会保留任务意图、明确丢弃移动端结构，并交付语义化实现映射。
+
+input:
+  prompt: |
+    把下面的 iPhone Figma 方案翻译成 macOS 14+、SwiftUI-first 的实现交接，不要修改 Figma 文件，也不要逐像素复刻：
+
+    - 底部四个 tab：资料库、搜索、收件箱、设置；
+    - 资料库使用逐屏 push 导航，搜索是全屏页面；
+    - 内容以大圆角卡片网格展示；
+    - 只能左滑删除；批量标签从底部 sheet 弹出；
+    - 标注统一 44pt 触控目标、手机 safe area 和固定像素间距；
+    - 品牌意图是“安静、可信、适合长时间研究”。
+
+    请给出源元素到 Mac 原生结构的意图映射，说明保留与丢弃内容、窗口/命令/输入行为、状态与无障碍、API 可用性和 fallback。
+    本评测为离线轨道：只使用 `evidence/apple-contract.md`，不要联网；输出不超过 1800 个中文字。
+
+context:
+  repo_fixture: evals/fixtures/offline
+  files:
+    ".eval-case": "translate-ios-figma-to-mac\n"
+
+judge:
+  type: script
+  script_path: evals/fixtures/grade_case.py
+  timeout_seconds: 30

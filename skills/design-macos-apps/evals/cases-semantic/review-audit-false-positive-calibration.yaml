@@ -1,0 +1,87 @@
+id: semantic-review-audit-false-positive-calibration
+title: 语义评审：release audit 假阳性校准
+description: 使用独立 judge 判断审查结论是否由给定证据支撑。
+
+input:
+  prompt: |
+    对这个 macOS 15 SwiftUI 项目的“删除与视觉一致性”做只读 release review。只报告有证据的 finding，
+    不要创建、修改或删除任何文件。请特别判断三条候选批评是否成立：
+
+    A. “表格行没有 44pt 高度，违反 Apple 规则。”
+    B. “侧边栏图标没有统一深绿色，因此不符合品牌。”
+    C. “工具栏垃圾桶是唯一删除入口，键盘用户无法发现。”
+
+    现有运行证据只覆盖默认窗口中的单选删除与撤销；没有 VoiceOver、Full Keyboard Access、窄窗口或多选录像。
+    请把 confirmed、inferred、suggestion、unknown 分开；真正的 finding 要包含证据、用户影响、最小修正与验证方法。
+    不要宣称全面 HIG 合规。
+    本评测为离线轨道：只使用 `evidence/apple-contract.md`，不要联网；输出不超过 1400 个中文字。
+
+context:
+  repo_fixture: evals/fixtures/offline
+  files:
+    "brand/brief.md": |
+      # 品牌规则
+
+      深绿色只表达“已同步”状态；导航图标使用系统语义颜色，不要求统一染成品牌色。
+    "evidence/runtime.md": |
+      # 已观察运行证据
+
+      - Edit > Delete 可用，快捷键为 Command-Delete。
+      - 删除一条记录后可通过 Edit > Undo 恢复。
+      - 未测试 VoiceOver、Full Keyboard Access、窄窗口和多选。
+    "Sources/AuditApp/MainView.swift": |
+      // EVAL_SENTINEL_FALSE_POSITIVE
+      import SwiftUI
+
+      struct MainView: View {
+          @State private var selection = Set<Item.ID>()
+          @State private var items: [Item] = []
+
+          var body: some View {
+              NavigationSplitView {
+                  List { Label("Library", systemImage: "books.vertical") }
+              } detail: {
+                  Table(items, selection: $selection) {
+                      TableColumn("Name", value: \.name)
+                  }
+                  .toolbar {
+                      Button("Delete", systemImage: "trash", role: .destructive, action: deleteSelection)
+                          .disabled(selection.isEmpty)
+                  }
+              }
+          }
+
+          private func deleteSelection() {}
+      }
+
+      struct Item: Identifiable {
+          let id: UUID
+          let name: String
+      }
+
+      struct AuditCommands: Commands {
+          var delete: () -> Void
+
+          var body: some Commands {
+              CommandGroup(after: .pasteboard) {
+                  Button("Delete", action: delete)
+                      .keyboardShortcut(.delete, modifiers: [.command])
+              }
+          }
+      }
+
+expect:
+  exit_code: 0
+
+judge:
+  type: agent_judge
+  model: openai/gpt-5.6-sol
+  criteria:
+    - A 不得被确认为 Apple 平台缺陷：冻结证据不支持 macOS 表格行固定 44pt；最多是有实际可用性证据后才讨论的建议。
+    - B 不得被确认为品牌缺陷：brand/brief.md 明确深绿只表示已同步，系统语义色图标符合该品牌规则。
+    - C 不得声称工具栏是唯一删除入口：runtime.md 已观察 Edit > Delete、Command-Delete 和 Undo；若讨论源码装配不确定性，应准确降级为 inferred/unknown。
+    - 明确区分 observed/source-confirmed、inferred、suggestion 和 unknown，并保留 VoiceOver、Full Keyboard Access、窄窗口、多选为未验证项。
+    - 真正 finding 才附 severity/status、证据位置、用户影响、最小修正和验证方法；不制造视觉偏好型 finding。
+    - 不宣称全面 HIG 合规，并保持只读，不声称已执行缺失的运行测试。
+  pass_threshold: 0.8
+

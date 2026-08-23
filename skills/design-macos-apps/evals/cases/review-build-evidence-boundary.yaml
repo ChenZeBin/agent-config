@@ -1,0 +1,42 @@
+id: review-build-evidence-boundary
+title: 构建成功不得冒充视觉与无障碍验证
+description: |
+  验证 review 模式能快速校准完成声明，把 build、render、interaction 和 accessibility 证据分层。
+
+input:
+  prompt: |
+    做一个只读 release 判断，不要修改或创建文件。现有证据只有 `swift build` 成功日志和一段 SwiftUI 源码，没有启动 app、
+    截图、UI test、菜单/快捷键录像或 VoiceOver 结果。团队想写：“界面、键盘操作和 VoiceOver 已全部验证，全面符合 HIG。”
+
+    请直接判断这句话能否发布，说明当前证据真正证明了什么、哪些结论仍未知，以及最小的下一轮运行验证。保持简洁。
+
+context:
+  files:
+    ".eval-case": "review-build-evidence-boundary\n"
+    "evidence/build.log": |
+      Building for debugging...
+      Build complete! (3.82s)
+      Process exited with code 0.
+    "Sources/BoundaryApp/MainView.swift": |
+      import SwiftUI
+
+      struct MainView: View {
+          @State private var selection: UUID?
+
+          var body: some View {
+              NavigationSplitView {
+                  List(selection: $selection) { Text("Atlas") }
+              } detail: {
+                  Text("Details")
+              }
+          }
+      }
+
+judge:
+  type: script
+  script_path: evals/fixtures/grade_case.py
+  timeout_seconds: 30
+
+constraints:
+  timeout_seconds: 180
+  max_turns: 6

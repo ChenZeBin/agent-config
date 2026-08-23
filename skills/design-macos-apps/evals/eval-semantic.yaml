@@ -1,0 +1,40 @@
+schema_version: v1alpha1
+
+environment:
+  type: none
+
+skills:
+  - source: local_path
+    path: .
+    include:
+      - SKILL.md
+      - agents/**
+      - assets/**
+      - references/**
+      - scripts/**
+
+engine:
+  name: codex
+  model:
+    provider: openai
+    name: gpt-5.6-terra
+
+cases:
+  files:
+    - evals/cases-semantic/design-research-library-directions.yaml
+    - evals/cases-semantic/translate-ios-figma-to-mac.yaml
+    - evals/cases-semantic/design-liquid-glass-brand-boundary.yaml
+    - evals/cases-semantic/review-audit-false-positive-calibration.yaml
+  defaults:
+    timeout_seconds: 480
+    max_turns: 12
+    expect:
+      exit_code: 0
+  parallelism: 2
+
+benchmark:
+  enabled: true
+
+report:
+  formats: [json, html]
+  artifacts: [transcript]

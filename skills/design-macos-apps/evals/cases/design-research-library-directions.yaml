@@ -1,0 +1,23 @@
+id: design-research-library-directions
+title: 为研究资料库选择原生 Mac 设计方向
+description: |
+  验证设计模式能否先建立窗口、信息和命令模型，再选择视觉方向，并保留证据与验证边界。
+
+input:
+  prompt: |
+    为一款原生 macOS 研究资料库设计主工作区，目标 macOS 15+、SwiftUI-first。
+    用户每天会高频检索资料、并排比较元数据、拖入 PDF、批量标注，并在多个研究主题之间切换。
+    品牌已有克制的深绿色，但设计方向尚未确定。请直接给出可实施的设计决策，比较真正不同的方向并推荐一个；
+    同时覆盖窗口与命令模型、关键状态、无障碍、部署版本和验证边界。当前没有代码或运行截图。
+    本评测为离线轨道：只使用 `evidence/apple-contract.md`，不要联网；证据包未覆盖的版本/API 主张标为未验证。
+    输出不超过 1800 个中文字。
+
+context:
+  repo_fixture: evals/fixtures/offline
+  files:
+    ".eval-case": "design-research-library-directions\n"
+
+judge:
+  type: script
+  script_path: evals/fixtures/grade_case.py
+  timeout_seconds: 30
