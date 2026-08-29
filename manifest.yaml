@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "profile": {
+    "agents": "profile/AGENTS.md",
+    "skills": [
+      "agent-reach",
+      "claude-md-progressive-disclosurer",
+      "customer-research",
+      "design-macos-apps",
+      "last30days",
+      "ln-51-opportunity-evaluator",
+      "multi-agent-orchestration",
+      "skill-upper",
+      "teach"
+    ]
+  }
+}

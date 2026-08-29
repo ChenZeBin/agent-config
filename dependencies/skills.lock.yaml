@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "skills": {
+    "agent-reach": {
+      "source": "https://github.com/Panniantong/Agent-Reach",
+      "license": "MIT",
+      "tracking": "legacy-snapshot"
+    },
+    "last30days": {
+      "source": "https://github.com/mvanhorn/last30days-skill",
+      "version": "3.21.0",
+      "license": "MIT",
+      "tracking": "pinned-snapshot"
+    },
+    "claude-md-progressive-disclosurer": {
+      "source": "https://github.com/daymade/claude-code-skills",
+      "license": "MIT",
+      "tracking": "legacy-snapshot"
+    },
+    "customer-research": {
+      "source": "https://github.com/coreyhaines31/marketingskills",
+      "version": "2.0.1",
+      "license": "MIT",
+      "tracking": "pinned-snapshot"
+    },
+    "design-macos-apps": {"tracking": "local-authored-snapshot"},
+    "ln-51-opportunity-evaluator": {"tracking": "local-authored-snapshot"},
+    "multi-agent-orchestration": {"tracking": "local-authored-snapshot"},
+    "skill-upper": {
+      "source": "https://github.com/alibaba/skill-up",
+      "license": "Apache-2.0",
+      "tracking": "legacy-snapshot"
+    },
+    "teach": {
+      "source": "https://github.com/mattpocock/skills",
+      "license": "MIT",
+      "tracking": "legacy-snapshot"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+repo_root=$(git rev-parse --show-toplevel)
+"$repo_root/bin/agent-config" validate
+command -v gitleaks >/dev/null 2>&1 || {
+  echo "gitleaks is required: brew install gitleaks" >&2
+  exit 1
+}
+gitleaks protect --staged --redact --no-banner

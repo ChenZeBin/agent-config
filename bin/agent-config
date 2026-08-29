@@ -1,0 +1,495 @@
+#!/usr/bin/env python3
+"""Manage a public Codex profile with fail-closed leaf links and Git sync."""
+
+from __future__ import annotations
+
+import argparse
+from datetime import datetime, timezone
+import json
+import os
+from pathlib import Path
+import plistlib
+import shutil
+import subprocess
+import sys
+import tempfile
+
+
+OK = 0
+DIRTY = 10
+BEHIND = 11
+AHEAD = 12
+DIVERGED = 13
+COLLISION = 20
+INVALID = 30
+OFFLINE = 40
+
+ROOT = Path(__file__).resolve().parents[1]
+MANIFEST_PATH = ROOT / "manifest.yaml"
+
+
+class ConfigError(RuntimeError):
+    pass
+
+
+def run(args: list[str], *, cwd: Path = ROOT, check: bool = True, capture: bool = False) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(args, cwd=cwd, check=check, text=True, capture_output=capture)
+
+
+def load_manifest() -> dict:
+    try:
+        data = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ConfigError(f"invalid manifest: {exc}") from exc
+    if data.get("schema_version") != 1 or not isinstance(data.get("profile"), dict):
+        raise ConfigError("manifest schema_version/profile is invalid")
+    return data
+
+
+def home() -> Path:
+    return Path(os.environ.get("HOME", str(Path.home()))).expanduser().resolve()
+
+
+def codex_home() -> Path:
+    return Path(os.environ.get("CODEX_HOME", str(home() / ".codex"))).expanduser().resolve()
+
+
+def state_root() -> Path:
+    base = Path(os.environ.get("XDG_STATE_HOME", str(home() / ".local" / "state"))).expanduser()
+    return base.resolve() / "agent-config"
+
+
+def expected_links() -> dict[Path, Path]:
+    manifest = load_manifest()["profile"]
+    links = {codex_home() / "AGENTS.md": (ROOT / manifest["agents"]).resolve()}
+    for name in manifest["skills"]:
+        links[home() / ".agents" / "skills" / name] = (ROOT / "profile" / "skills" / name).resolve()
+    return links
+
+
+def within(path: Path, parent: Path) -> bool:
+    try:
+        path.relative_to(parent)
+        return True
+    except ValueError:
+        return False
+
+
+def read_links_state() -> dict[str, str]:
+    path = state_root() / "links.json"
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def write_links_state(data: dict[str, str]) -> None:
+    root = state_root()
+    root.mkdir(parents=True, exist_ok=True)
+    path = root / "links.json"
+    temporary = path.with_suffix(".tmp")
+    temporary.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    temporary.replace(path)
+
+
+def validate_profile() -> list[str]:
+    errors: list[str] = []
+    try:
+        manifest = load_manifest()["profile"]
+    except ConfigError as exc:
+        return [str(exc)]
+
+    agents_rel = Path(manifest.get("agents", ""))
+    agents = (ROOT / agents_rel).resolve()
+    if agents_rel.is_absolute() or ".." in agents_rel.parts or not within(agents, ROOT / "profile"):
+        errors.append("AGENTS source escapes profile/")
+    elif not agents.is_file() or not agents.read_text(encoding="utf-8").strip():
+        errors.append("profile AGENTS.md is missing or empty")
+
+    skills = manifest.get("skills")
+    if not isinstance(skills, list) or not skills:
+        errors.append("manifest skills must be a non-empty list")
+        skills = []
+    if len(skills) != len(set(skills)):
+        errors.append("manifest has duplicate skill names")
+
+    declared = set(skills)
+    actual = {p.name for p in (ROOT / "profile" / "skills").iterdir() if p.is_dir() and not p.is_symlink()}
+    for extra in sorted(actual - declared):
+        errors.append(f"undeclared skill directory: {extra}")
+    for name in skills:
+        if not isinstance(name, str) or not name or "/" in name or name in {".", ".."}:
+            errors.append(f"invalid skill name: {name!r}")
+            continue
+        skill_dir = ROOT / "profile" / "skills" / name
+        skill_file = skill_dir / "SKILL.md"
+        if not skill_file.is_file():
+            errors.append(f"missing SKILL.md: {name}")
+            continue
+        lines = skill_file.read_text(encoding="utf-8").splitlines()
+        if not lines or lines[0].strip() != "---":
+            errors.append(f"missing YAML frontmatter: {name}")
+            continue
+        frontmatter_end = next((i for i, line in enumerate(lines[1:], 1) if line.strip() == "---"), None)
+        if frontmatter_end is None:
+            errors.append(f"unterminated YAML frontmatter: {name}")
+            continue
+        names = [line.split(":", 1)[1].strip().strip("'\"") for line in lines[1:frontmatter_end] if line.startswith("name:")]
+        if names != [name]:
+            errors.append(f"skill name mismatch: directory={name}, frontmatter={names}")
+
+    for path in (ROOT / "profile").rglob("*"):
+        if path.is_symlink():
+            errors.append(f"symlinks are forbidden inside profile: {path.relative_to(ROOT)}")
+
+    lock_path = ROOT / "dependencies" / "skills.lock.yaml"
+    try:
+        lock = json.loads(lock_path.read_text(encoding="utf-8"))["skills"]
+        if set(lock) != declared:
+            errors.append("dependencies/skills.lock.yaml must list exactly the manifest skills")
+    except (OSError, KeyError, json.JSONDecodeError) as exc:
+        errors.append(f"invalid dependencies lock: {exc}")
+    return errors
+
+
+def command_validate(_: argparse.Namespace) -> int:
+    errors = validate_profile()
+    privacy = run([sys.executable, str(ROOT / "scripts" / "privacy_scan.py"), "--root", str(ROOT)], check=False)
+    if privacy.returncode:
+        errors.append("privacy scan failed")
+    if errors:
+        print("validation failed:")
+        for error in errors:
+            print(f"  - {error}")
+        return INVALID
+    print("validation passed")
+    return OK
+
+
+def command_security_scan(_: argparse.Namespace) -> int:
+    if command_validate(argparse.Namespace()) != OK:
+        return INVALID
+    if shutil.which("gitleaks") is None:
+        print("gitleaks is required (macOS: brew install gitleaks)", file=sys.stderr)
+        return INVALID
+    result = run(
+        ["gitleaks", "git", "--redact", "--no-banner", "--config", str(ROOT / ".gitleaks.toml"), str(ROOT)],
+        check=False,
+    )
+    return OK if result.returncode == 0 else INVALID
+
+
+def describe_link(target: Path, source: Path) -> tuple[str, bool]:
+    if target.is_symlink():
+        try:
+            actual = target.resolve(strict=False)
+        except OSError:
+            actual = Path("/")
+        if actual == source:
+            return "ok", True
+        return f"collision: symlink -> {actual}", False
+    if target.exists():
+        return "collision: existing file/directory", False
+    return "missing", True
+
+
+def command_link(args: argparse.Namespace) -> int:
+    if command_validate(argparse.Namespace()) != OK:
+        return INVALID
+    links = expected_links()
+    collisions = []
+    for target, source in links.items():
+        status, safe = describe_link(target, source)
+        print(f"{status:38} {target} -> {source}")
+        if not safe:
+            collisions.append(target)
+    if collisions:
+        print("link aborted; no paths changed", file=sys.stderr)
+        return COLLISION
+    if not args.apply:
+        print("dry-run only; use --apply")
+        return OK
+    state = read_links_state()
+    for target, source in links.items():
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if not target.is_symlink():
+            target.symlink_to(source, target_is_directory=source.is_dir())
+        state[str(target)] = str(source)
+    write_links_state(state)
+    print(f"linked {len(links)} managed targets")
+    return OK
+
+
+def owned_link(target: Path, source: Path, state: dict[str, str]) -> bool:
+    return state.get(str(target)) == str(source) and target.is_symlink() and target.resolve(strict=False) == source
+
+
+def command_unlink(args: argparse.Namespace) -> int:
+    state = read_links_state()
+    removed = 0
+    for target_text, source_text in list(state.items()):
+        target, source = Path(target_text), Path(source_text)
+        if owned_link(target, source, state):
+            print(f"remove {target}")
+            if args.apply:
+                target.unlink()
+                state.pop(target_text, None)
+                removed += 1
+    if args.apply:
+        write_links_state(state)
+    else:
+        print("dry-run only; use --apply")
+    print(f"removed {removed} links")
+    return OK
+
+
+def command_reconcile(args: argparse.Namespace) -> int:
+    state = read_links_state()
+    expected = {str(target): str(source) for target, source in expected_links().items()}
+    removed = 0
+    for target_text, source_text in list(state.items()):
+        if expected.get(target_text) == source_text:
+            continue
+        target, source = Path(target_text), Path(source_text)
+        if owned_link(target, source, state):
+            print(f"stale owned link: {target}")
+            if args.apply:
+                target.unlink()
+                state.pop(target_text, None)
+                removed += 1
+    if args.apply:
+        write_links_state(state)
+    else:
+        print("dry-run only; use --apply")
+    print(f"reconciled {removed} stale links")
+    return OK
+
+
+def git_state(fetch: bool = False) -> tuple[str, int, int]:
+    if fetch:
+        fetched = run(["git", "fetch", "--prune", "origin"], check=False)
+        if fetched.returncode:
+            return "offline", 0, 0
+    dirty = bool(run(["git", "status", "--porcelain"], capture=True).stdout.strip())
+    if dirty:
+        return "dirty", 0, 0
+    upstream = run(["git", "rev-parse", "--abbrev-ref", "@{upstream}"], check=False, capture=True)
+    if upstream.returncode:
+        return "no-upstream", 0, 0
+    counts = run(["git", "rev-list", "--left-right", "--count", "HEAD...@{upstream}"], capture=True).stdout.split()
+    ahead, behind = int(counts[0]), int(counts[1])
+    if ahead and behind:
+        return "diverged", ahead, behind
+    if ahead:
+        return "ahead", ahead, behind
+    if behind:
+        return "behind", ahead, behind
+    return "synced", ahead, behind
+
+
+STATE_CODES = {"dirty": DIRTY, "behind": BEHIND, "ahead": AHEAD, "diverged": DIVERGED, "offline": OFFLINE}
+
+
+def command_status(args: argparse.Namespace) -> int:
+    state, ahead, behind = git_state(args.fetch)
+    print(f"git={state} ahead={ahead} behind={behind}")
+    bad_link = False
+    for target, source in expected_links().items():
+        status, safe = describe_link(target, source)
+        if status != "ok":
+            print(f"link={status} target={target}")
+        bad_link = bad_link or not safe
+    override = codex_home() / "AGENTS.override.md"
+    if override.exists() and override.stat().st_size:
+        print(f"shadowed_by_override={override}")
+    if bad_link:
+        return COLLISION
+    return STATE_CODES.get(state, OK)
+
+
+def command_doctor(_: argparse.Namespace) -> int:
+    print(f"repo={ROOT}")
+    print(f"home={home()}")
+    print(f"codex_home={codex_home()}")
+    print(f"state_root={state_root()}")
+    print(f"gitleaks={shutil.which('gitleaks') or 'missing'}")
+    print(f"git={shutil.which('git') or 'missing'}")
+    override = codex_home() / "AGENTS.override.md"
+    print(f"agents_override={'SHADOWING' if override.exists() and override.stat().st_size else 'none'}")
+    duplicate_root = codex_home() / "skills"
+    duplicates = [name for name in load_manifest()["profile"]["skills"] if (duplicate_root / name).exists()]
+    print(f"legacy_codex_skill_duplicates={','.join(duplicates) if duplicates else 'none'}")
+    return command_validate(argparse.Namespace())
+
+
+def validate_remote_candidate() -> bool:
+    with tempfile.TemporaryDirectory(prefix="agent-config-worktree-") as temporary:
+        checkout = Path(temporary) / "candidate"
+        added = run(["git", "worktree", "add", "--detach", str(checkout), "origin/main"], check=False)
+        if added.returncode:
+            return False
+        try:
+            candidate = checkout / "bin" / "agent-config"
+            return candidate.exists() and run([str(candidate), "validate"], cwd=checkout, check=False).returncode == 0
+        finally:
+            run(["git", "worktree", "remove", "--force", str(checkout)], check=False)
+
+
+def command_sync(args: argparse.Namespace) -> int:
+    state, ahead, behind = git_state(fetch=True)
+    print(f"git={state} ahead={ahead} behind={behind}")
+    if args.check:
+        return STATE_CODES.get(state, OK)
+    if state == "offline":
+        print("network unavailable; keeping last known-good checkout")
+        return OFFLINE
+    if state == "dirty":
+        print("sync aborted: working tree is dirty")
+        return DIRTY
+    if state == "diverged":
+        print("sync aborted: manual rebase/merge decision required")
+        return DIVERGED
+    if args.pull:
+        if state == "ahead":
+            print("pull aborted: local commits must be pushed or reconciled first")
+            return AHEAD
+        if state == "synced":
+            return OK
+        if state != "behind":
+            return STATE_CODES.get(state, INVALID)
+        if not validate_remote_candidate():
+            print("remote candidate failed validation")
+            return INVALID
+        if run(["git", "merge", "--ff-only", "@{upstream}"], check=False).returncode:
+            return DIVERGED
+        command_reconcile(argparse.Namespace(apply=True))
+        return command_link(argparse.Namespace(apply=True))
+    if args.push:
+        if state == "behind":
+            print("push aborted: pull and validate remote changes first")
+            return BEHIND
+        if state == "synced":
+            return OK
+        if state != "ahead":
+            return STATE_CODES.get(state, INVALID)
+        if command_security_scan(argparse.Namespace()) != OK:
+            return INVALID
+        return OK if run(["git", "push", "origin", "HEAD:main"], check=False).returncode == 0 else INVALID
+    return INVALID
+
+
+def command_hooks(args: argparse.Namespace) -> int:
+    if args.hooks_action == "install":
+        run(["git", "config", "core.hooksPath", ".githooks"])
+        print("installed repository-local hooks")
+    else:
+        current = run(["git", "config", "--get", "core.hooksPath"], check=False, capture=True).stdout.strip()
+        if current == ".githooks":
+            run(["git", "config", "--unset", "core.hooksPath"])
+        print("removed repository-local hooks setting")
+    return OK
+
+
+def automation_path() -> Path:
+    return home() / "Library" / "LaunchAgents" / "com.chenzebin.agent-config-check.plist"
+
+
+def command_automation(args: argparse.Namespace) -> int:
+    if sys.platform != "darwin":
+        print("automation installer currently supports macOS launchd only")
+        return INVALID
+    destination = automation_path()
+    label = "com.chenzebin.agent-config-check"
+    domain = f"gui/{os.getuid()}"
+    if args.automation_action == "uninstall":
+        run(["launchctl", "bootout", domain, str(destination)], check=False)
+        if destination.exists():
+            destination.unlink()
+        print(f"uninstalled {label}")
+        return OK
+    log_dir = state_root() / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    template = (ROOT / "launchd" / "com.chenzebin.agent-config-check.plist.template").read_text(encoding="utf-8")
+    rendered = template.replace("__EXECUTABLE__", str(Path(__file__).resolve())).replace("__LOG_DIR__", str(log_dir))
+    plistlib.loads(rendered.encode())
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary = destination.with_suffix(".tmp")
+    temporary.write_text(rendered, encoding="utf-8")
+    temporary.replace(destination)
+    run(["launchctl", "bootout", domain, str(destination)], check=False)
+    result = run(["launchctl", "bootstrap", domain, str(destination)], check=False)
+    if result.returncode:
+        return INVALID
+    print(f"installed {label}; fetch-only every 6 hours")
+    return OK
+
+
+def command_rollback(args: argparse.Namespace) -> int:
+    state, _, _ = git_state(fetch=False)
+    if state == "dirty":
+        print("rollback aborted: working tree is dirty")
+        return DIRTY
+    valid_target = run(["git", "cat-file", "-e", f"{args.commit}:manifest.yaml"], check=False)
+    if valid_target.returncode:
+        print("rollback target predates the managed profile layout or is invalid")
+        return INVALID
+    run(["git", "restore", "--source", args.commit, "--staged", "--worktree", "--", "."])
+    if command_validate(argparse.Namespace()) != OK:
+        run(["git", "restore", "--source", "HEAD", "--staged", "--worktree", "--", "."])
+        print("rollback target failed validation; restored current HEAD")
+        return INVALID
+    run(["git", "commit", "-am", f"Rollback profile to {args.commit}"])
+    print("rollback committed without rewriting history")
+    return OK
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="agent-config")
+    sub = parser.add_subparsers(dest="command", required=True)
+    sub.add_parser("doctor").set_defaults(func=command_doctor)
+    status = sub.add_parser("status")
+    status.add_argument("--fetch", action="store_true")
+    status.set_defaults(func=command_status)
+    sub.add_parser("validate").set_defaults(func=command_validate)
+    sub.add_parser("security-scan").set_defaults(func=command_security_scan)
+    link = sub.add_parser("link")
+    link.add_argument("--apply", action="store_true")
+    link.set_defaults(func=command_link)
+    for name, func in (("unlink", command_unlink), ("reconcile", command_reconcile)):
+        item = sub.add_parser(name)
+        item.add_argument("--apply", action="store_true")
+        item.set_defaults(func=func)
+    sync = sub.add_parser("sync")
+    group = sync.add_mutually_exclusive_group(required=True)
+    group.add_argument("--check", action="store_true")
+    group.add_argument("--pull", action="store_true")
+    group.add_argument("--push", action="store_true")
+    sync.set_defaults(func=command_sync)
+    hooks = sub.add_parser("hooks")
+    hooks.add_argument("hooks_action", choices=["install", "uninstall"])
+    hooks.set_defaults(func=command_hooks)
+    automation = sub.add_parser("automation")
+    automation.add_argument("automation_action", choices=["install", "uninstall"])
+    automation.set_defaults(func=command_automation)
+    rollback = sub.add_parser("rollback")
+    rollback.add_argument("commit")
+    rollback.set_defaults(func=command_rollback)
+    return parser
+
+
+def main() -> int:
+    try:
+        args = build_parser().parse_args()
+        return int(args.func(args))
+    except ConfigError as exc:
+        print(str(exc), file=sys.stderr)
+        return INVALID
+    except KeyboardInterrupt:
+        return 130
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
