@@ -38,6 +38,20 @@ class SyncStateMachineTests(unittest.TestCase):
             "CODEX_HOME": str(self.base / "codex"),
             "XDG_STATE_HOME": str(self.base / "state"),
         }
+        if shutil.which("gitleaks") is None:
+            fake_bin = self.base / "fake-bin"
+            fake_bin.mkdir()
+            fake = fake_bin / "gitleaks"
+            fake.write_text(
+                "#!/usr/bin/env python3\n"
+                "import pathlib,sys\n"
+                "root=pathlib.Path(sys.argv[-1])\n"
+                "bad=any((b'ghp_'+b'A'*36) in p.read_bytes() for p in root.rglob('*') if p.is_file())\n"
+                "raise SystemExit(1 if bad else 0)\n",
+                encoding="utf-8",
+            )
+            fake.chmod(0o700)
+            self.env["PATH"] = str(fake_bin) + os.pathsep + self.env.get("PATH", "")
         Path(self.env["CODEX_HOME"]).mkdir(parents=True)
 
     def tearDown(self) -> None:
@@ -114,14 +128,61 @@ class SyncStateMachineTests(unittest.TestCase):
 
     def test_secret_bearing_remote_candidate_is_not_applied(self) -> None:
         original_head = self.git(self.a, "rev-parse", "HEAD").stdout.strip()
+        marker = self.base / "state" / "candidate-executed"
+        candidate_program = "#!/bin/sh\ntouch \"$XDG_STATE_HOME/candidate-executed\"\nexit 0\n"
+        (self.b / "bin" / "agent-config").write_text(candidate_program, encoding="utf-8")
+        (self.b / "bin" / "agent-config").chmod(0o755)
         leaked_value = "ghp_" + ("A" * 36)
         (self.b / "unsafe-fixture.txt").write_text(leaked_value + "\n", encoding="utf-8")
-        self.git(self.b, "add", "unsafe-fixture.txt")
+        self.git(self.b, "add", "bin/agent-config", "unsafe-fixture.txt")
         self.git(self.b, "commit", "-q", "-m", "secret-bearing candidate")
         self.git(self.b, "push", "-q", "origin", "main")
         result = self.cli(self.a, "sync", "--pull")
         self.assertEqual(result.returncode, 30, result.stdout + result.stderr)
         self.assertEqual(self.git(self.a, "rev-parse", "HEAD").stdout.strip(), original_head)
+        self.assertFalse(marker.exists(), "untrusted candidate validator was executed")
+
+    def test_candidate_link_collision_is_rejected_before_fast_forward(self) -> None:
+        original_head = self.git(self.a, "rev-parse", "HEAD").stdout.strip()
+        manifest_path = self.b / "manifest.yaml"
+        manifest = json.loads(manifest_path.read_text())
+        manifest["profile"]["skills"].append("collision-proof")
+        manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+        lock_path = self.b / "dependencies" / "skills.lock.yaml"
+        lock = json.loads(lock_path.read_text())
+        lock["skills"]["collision-proof"] = {"tracking": "local-authored-snapshot"}
+        lock_path.write_text(json.dumps(lock, indent=2) + "\n", encoding="utf-8")
+        skill = self.b / "profile" / "skills" / "collision-proof"
+        skill.mkdir()
+        (skill / "SKILL.md").write_text("---\nname: collision-proof\ndescription: test\n---\n", encoding="utf-8")
+        self.git(self.b, "add", "manifest.yaml", "dependencies/skills.lock.yaml", "profile/skills/collision-proof/SKILL.md")
+        self.git(self.b, "commit", "-q", "-m", "add colliding skill")
+        self.git(self.b, "push", "-q", "origin", "main")
+        occupied = self.base / "home" / ".agents" / "skills" / "collision-proof"
+        occupied.mkdir(parents=True)
+        (occupied / "owned-by-user.txt").write_text("keep\n", encoding="utf-8")
+        result = self.cli(self.a, "sync", "--pull")
+        self.assertEqual(result.returncode, 30, result.stdout + result.stderr)
+        self.assertEqual(self.git(self.a, "rev-parse", "HEAD").stdout.strip(), original_head)
+        self.assertEqual((occupied / "owned-by-user.txt").read_text(), "keep\n")
+
+    def test_no_upstream_is_not_reported_as_healthy(self) -> None:
+        self.git(self.a, "branch", "--unset-upstream")
+        result = self.cli(self.a, "sync", "--check")
+        self.assertEqual(result.returncode, 14, result.stdout + result.stderr)
+
+    def test_adopt_records_state_and_keeps_private_backup_permissions(self) -> None:
+        target = Path(self.env["CODEX_HOME"]) / "AGENTS.md"
+        target.write_text("# Adopted safe global instructions\n", encoding="utf-8")
+        result = self.cli(self.a, "adopt", "agents", "--apply")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        state_root = self.base / "state" / "agent-config"
+        state = json.loads((state_root / "state.json").read_text())
+        self.assertEqual(state["event"], "adopt")
+        self.assertEqual(state_root.stat().st_mode & 0o777, 0o700)
+        backup_files = list((state_root / "backups").rglob("AGENTS.md"))
+        self.assertTrue(backup_files)
+        self.assertTrue(all((path.stat().st_mode & 0o777) == 0o600 for path in backup_files))
 
     def test_rollback_creates_a_new_commit_and_records_recovery_state(self) -> None:
         baseline = self.git(self.a, "rev-parse", "HEAD").stdout.strip()

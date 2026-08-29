@@ -3,24 +3,40 @@
   "skills": {
     "agent-reach": {
       "source": "https://github.com/Panniantong/Agent-Reach",
+      "revision": "93ae1d18c37b707dec053c7c4f9d91cd8ef8943d",
+      "revision_basis": "upstream HEAD at the 2026-08-23 legacy import cutoff",
+      "content_relation": "exact SKILL.md match",
       "license": "MIT",
+      "license_file": "third_party_licenses/agent-reach-LICENSE.txt",
       "tracking": "legacy-snapshot"
     },
     "last30days": {
       "source": "https://github.com/mvanhorn/last30days-skill",
       "version": "3.21.0",
+      "revision": "c7460f6114449ddfe6ea3fc2f23c3d910c0e740c",
+      "revision_basis": "upstream tag v3.21.0",
+      "content_relation": "exact SKILL.md match",
       "license": "MIT",
+      "license_file": "third_party_licenses/last30days-LICENSE.txt",
       "tracking": "pinned-snapshot"
     },
     "claude-md-progressive-disclosurer": {
       "source": "https://github.com/daymade/claude-code-skills",
+      "revision": "d7456dcb2f4495c9e3d08faf04941455309235bc",
+      "revision_basis": "upstream HEAD at the 2026-08-23 legacy import cutoff",
+      "content_relation": "exact SKILL.md match",
       "license": "MIT",
+      "license_file": "third_party_licenses/claude-md-progressive-disclosurer-LICENSE.txt",
       "tracking": "legacy-snapshot"
     },
     "customer-research": {
       "source": "https://github.com/coreyhaines31/marketingskills",
       "version": "2.0.1",
+      "revision": "114587831efbe7ac5c0a86afcb69e9cca6f728ce",
+      "revision_basis": "upstream tag v2.0.1",
+      "content_relation": "locally modified from pinned upstream revision",
       "license": "MIT",
+      "license_file": "third_party_licenses/customer-research-LICENSE.txt",
       "tracking": "pinned-snapshot"
     },
     "design-macos-apps": {"tracking": "local-authored-snapshot"},
@@ -28,12 +44,20 @@
     "multi-agent-orchestration": {"tracking": "local-authored-snapshot"},
     "skill-upper": {
       "source": "https://github.com/alibaba/skill-up",
+      "revision": "85661758ff443dc16e57fd9bf66639334fb11416",
+      "revision_basis": "upstream HEAD at the 2026-08-23 legacy import cutoff",
+      "content_relation": "locally modified from pinned upstream revision",
       "license": "Apache-2.0",
+      "license_file": "third_party_licenses/skill-upper-LICENSE.txt",
       "tracking": "legacy-snapshot"
     },
     "teach": {
       "source": "https://github.com/mattpocock/skills",
+      "revision": "5b15a47f2d7150f545fbcacbfe381787fc0230dc",
+      "revision_basis": "upstream HEAD at the 2026-08-23 legacy import cutoff",
+      "content_relation": "locally modified from pinned upstream revision",
       "license": "MIT",
+      "license_file": "third_party_licenses/teach-LICENSE.txt",
       "tracking": "legacy-snapshot"
     }
   }

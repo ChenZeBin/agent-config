@@ -13,8 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Validate manifest, skills, and privacy policy
         run: bin/agent-config validate
+      - name: Scan personal identifiers across Git history
+        run: python3 scripts/privacy_scan.py --root . --git-history
+      - name: Run link and sync state-machine tests
+        run: python3 -m unittest discover -s tests -v
 
   gitleaks:
     runs-on: ubuntu-latest

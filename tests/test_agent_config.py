@@ -42,8 +42,13 @@ class AgentConfigTests(unittest.TestCase):
         self.assertFalse(skills_root.is_symlink())
         for name in SKILLS:
             self.assertTrue((skills_root / name).is_symlink(), name)
+        state_path = Path(self.env["XDG_STATE_HOME"]) / "agent-config" / "state.json"
+        state_before = state_path.read_text(encoding="utf-8")
         second = self.run_cli("link", "--apply")
         self.assertEqual(second.returncode, 0, second.stdout + second.stderr)
+        self.assertEqual(state_path.read_text(encoding="utf-8"), state_before)
+        self.assertEqual(state_path.stat().st_mode & 0o777, 0o600)
+        self.assertEqual(state_path.parent.stat().st_mode & 0o777, 0o700)
 
     def test_collision_fails_without_overwrite(self) -> None:
         agents = Path(self.env["CODEX_HOME"]) / "AGENTS.md"

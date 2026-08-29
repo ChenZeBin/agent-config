@@ -2,6 +2,7 @@
 set -eu
 repo_root=$(git rev-parse --show-toplevel)
 "$repo_root/bin/agent-config" validate
+python3 "$repo_root/scripts/privacy_scan.py" --root "$repo_root" --staged
 command -v gitleaks >/dev/null 2>&1 || {
   echo "gitleaks is required: brew install gitleaks" >&2
   exit 1

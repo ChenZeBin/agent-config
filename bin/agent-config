@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import plistlib
+import re
 import shutil
 import subprocess
 import sys
@@ -20,14 +21,12 @@ DIRTY = 10
 BEHIND = 11
 AHEAD = 12
 DIVERGED = 13
+NO_UPSTREAM = 14
 COLLISION = 20
 INVALID = 30
 OFFLINE = 40
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST_PATH = ROOT / "manifest.yaml"
-
-
 class ConfigError(RuntimeError):
     pass
 
@@ -36,9 +35,9 @@ def run(args: list[str], *, cwd: Path = ROOT, check: bool = True, capture: bool 
     return subprocess.run(args, cwd=cwd, check=check, text=True, capture_output=capture)
 
 
-def load_manifest() -> dict:
+def load_manifest(root: Path = ROOT) -> dict:
     try:
-        data = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+        data = json.loads((root / "manifest.yaml").read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ConfigError(f"invalid manifest: {exc}") from exc
     if data.get("schema_version") != 1 or not isinstance(data.get("profile"), dict):
@@ -59,11 +58,28 @@ def state_root() -> Path:
     return base.resolve() / "agent-config"
 
 
-def expected_links() -> dict[Path, Path]:
-    manifest = load_manifest()["profile"]
-    links = {codex_home() / "AGENTS.md": (ROOT / manifest["agents"]).resolve()}
+def secure_tree(root: Path) -> None:
+    if not root.exists():
+        return
+    root.chmod(0o700)
+    for path in root.rglob("*"):
+        if path.is_symlink():
+            continue
+        path.chmod(0o700 if path.is_dir() else 0o600)
+
+
+def ensure_private_state_root() -> Path:
+    root = state_root()
+    root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    root.chmod(0o700)
+    return root
+
+
+def expected_links(*, manifest_root: Path = ROOT, source_root: Path = ROOT) -> dict[Path, Path]:
+    manifest = load_manifest(manifest_root)["profile"]
+    links = {codex_home() / "AGENTS.md": (source_root / manifest["agents"]).resolve()}
     for name in manifest["skills"]:
-        links[home() / ".agents" / "skills" / name] = (ROOT / "profile" / "skills" / name).resolve()
+        links[home() / ".agents" / "skills" / name] = (source_root / "profile" / "skills" / name).resolve()
     return links
 
 
@@ -87,12 +103,17 @@ def read_links_state() -> dict[str, str]:
 
 
 def write_links_state(data: dict[str, str]) -> None:
-    root = state_root()
-    root.mkdir(parents=True, exist_ok=True)
+    root = ensure_private_state_root()
     path = root / "links.json"
     temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    previous_umask = os.umask(0o077)
+    try:
+        temporary.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    finally:
+        os.umask(previous_umask)
+    temporary.chmod(0o600)
     temporary.replace(path)
+    path.chmod(0o600)
 
 
 def read_profile_state() -> dict[str, str]:
@@ -107,8 +128,7 @@ def read_profile_state() -> dict[str, str]:
 
 
 def write_profile_state(*, last_good_head: str, previous_head: str | None, event: str) -> None:
-    root = state_root()
-    root.mkdir(parents=True, exist_ok=True)
+    root = ensure_private_state_root()
     data = {
         "event": event,
         "last_good_head": last_good_head,
@@ -117,8 +137,31 @@ def write_profile_state(*, last_good_head: str, previous_head: str | None, event
     }
     path = root / "state.json"
     temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    previous_umask = os.umask(0o077)
+    try:
+        temporary.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    finally:
+        os.umask(previous_umask)
+    temporary.chmod(0o600)
     temporary.replace(path)
+    path.chmod(0o600)
+
+
+def restore_profile_state(data: dict[str, str]) -> None:
+    path = ensure_private_state_root() / "state.json"
+    if not data:
+        if path.exists():
+            path.unlink()
+        return
+    temporary = path.with_suffix(".tmp")
+    previous_umask = os.umask(0o077)
+    try:
+        temporary.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    finally:
+        os.umask(previous_umask)
+    temporary.chmod(0o600)
+    temporary.replace(path)
+    path.chmod(0o600)
 
 
 def git_head(revision: str = "HEAD") -> str:
@@ -126,19 +169,24 @@ def git_head(revision: str = "HEAD") -> str:
     return result.stdout.strip() if result.returncode == 0 else ""
 
 
-def validate_profile() -> list[str]:
+def validate_profile(root: Path = ROOT) -> list[str]:
+    root = root.resolve()
     errors: list[str] = []
     try:
-        manifest = load_manifest()["profile"]
+        manifest = load_manifest(root)["profile"]
     except ConfigError as exc:
         return [str(exc)]
 
-    agents_rel = Path(manifest.get("agents", ""))
-    agents = (ROOT / agents_rel).resolve()
-    if agents_rel.is_absolute() or ".." in agents_rel.parts or not within(agents, ROOT / "profile"):
-        errors.append("AGENTS source escapes profile/")
-    elif not agents.is_file() or not agents.read_text(encoding="utf-8").strip():
-        errors.append("profile AGENTS.md is missing or empty")
+    agents_value = manifest.get("agents", "")
+    if not isinstance(agents_value, str):
+        errors.append("profile agents path must be a string")
+    else:
+        agents_rel = Path(agents_value)
+        agents = (root / agents_rel).resolve()
+        if agents_rel.is_absolute() or ".." in agents_rel.parts or not within(agents, root / "profile"):
+            errors.append("AGENTS source escapes profile/")
+        elif not agents.is_file() or not agents.read_text(encoding="utf-8").strip():
+            errors.append("profile AGENTS.md is missing or empty")
 
     skills = manifest.get("skills")
     if not isinstance(skills, list) or not skills:
@@ -148,14 +196,17 @@ def validate_profile() -> list[str]:
         errors.append("manifest has duplicate skill names")
 
     declared = set(skills)
-    actual = {p.name for p in (ROOT / "profile" / "skills").iterdir() if p.is_dir() and not p.is_symlink()}
+    skills_root = root / "profile" / "skills"
+    actual = {p.name for p in skills_root.iterdir() if p.is_dir() and not p.is_symlink()} if skills_root.is_dir() else set()
+    if not skills_root.is_dir():
+        errors.append("profile/skills directory is missing")
     for extra in sorted(actual - declared):
         errors.append(f"undeclared skill directory: {extra}")
     for name in skills:
         if not isinstance(name, str) or not name or "/" in name or name in {".", ".."}:
             errors.append(f"invalid skill name: {name!r}")
             continue
-        skill_dir = ROOT / "profile" / "skills" / name
+        skill_dir = root / "profile" / "skills" / name
         skill_file = skill_dir / "SKILL.md"
         if not skill_file.is_file():
             errors.append(f"missing SKILL.md: {name}")
@@ -172,15 +223,27 @@ def validate_profile() -> list[str]:
         if names != [name]:
             errors.append(f"skill name mismatch: directory={name}, frontmatter={names}")
 
-    for path in (ROOT / "profile").rglob("*"):
+    for path in (root / "profile").rglob("*"):
         if path.is_symlink():
-            errors.append(f"symlinks are forbidden inside profile: {path.relative_to(ROOT)}")
+            errors.append(f"symlinks are forbidden inside profile: {path.relative_to(root)}")
 
-    lock_path = ROOT / "dependencies" / "skills.lock.yaml"
+    lock_path = root / "dependencies" / "skills.lock.yaml"
     try:
         lock = json.loads(lock_path.read_text(encoding="utf-8"))["skills"]
         if set(lock) != declared:
             errors.append("dependencies/skills.lock.yaml must list exactly the manifest skills")
+        for name, metadata in lock.items():
+            if not isinstance(metadata, dict):
+                errors.append(f"invalid dependency metadata: {name}")
+                continue
+            if metadata.get("source"):
+                revision = metadata.get("revision", "")
+                if not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{40}", revision):
+                    errors.append(f"third-party skill must pin a 40-character revision: {name}")
+                license_file = metadata.get("license_file", "")
+                license_path = (root / license_file).resolve() if isinstance(license_file, str) else root
+                if not license_file or not within(license_path, root / "third_party_licenses") or not license_path.is_file():
+                    errors.append(f"third-party license file is missing or unsafe: {name}")
     except (OSError, KeyError, json.JSONDecodeError) as exc:
         errors.append(f"invalid dependencies lock: {exc}")
     return errors
@@ -194,8 +257,7 @@ def command_validate(args: argparse.Namespace) -> int:
             if run(["git", "worktree", "add", "--detach", str(checkout), revision], check=False).returncode:
                 return INVALID
             try:
-                candidate = checkout / "bin" / "agent-config"
-                return run([str(candidate), "validate"], cwd=checkout, check=False).returncode if candidate.exists() else INVALID
+                return OK if validate_checkout(checkout, include_gitleaks=False) else INVALID
             finally:
                 run(["git", "worktree", "remove", "--force", str(checkout)], check=False)
     errors = validate_profile()
@@ -211,6 +273,39 @@ def command_validate(args: argparse.Namespace) -> int:
     return OK
 
 
+def validate_checkout(checkout: Path, *, include_gitleaks: bool = True) -> bool:
+    """Validate an untrusted checkout as data using only the current trusted tools."""
+    errors = validate_profile(checkout)
+    privacy = run(
+        [sys.executable, str(ROOT / "scripts" / "privacy_scan.py"), "--root", str(checkout)],
+        cwd=checkout,
+        check=False,
+    )
+    if privacy.returncode:
+        errors.append("privacy scan failed")
+    if include_gitleaks:
+        if shutil.which("gitleaks") is None:
+            errors.append("gitleaks is required")
+        else:
+            leaked = run(
+                [
+                    "gitleaks", "dir", "--redact", "--no-banner",
+                    "--ignore-gitleaks-allow", "--gitleaks-ignore-path", "/dev/null",
+                    "--config", str(ROOT / ".gitleaks.toml"), str(checkout),
+                ],
+                cwd=checkout,
+                check=False,
+            )
+            if leaked.returncode:
+                errors.append("gitleaks candidate scan failed")
+    if errors:
+        print("candidate validation failed:")
+        for error in errors:
+            print(f"  - {error}")
+        return False
+    return True
+
+
 def command_security_scan(_: argparse.Namespace) -> int:
     if command_validate(argparse.Namespace()) != OK:
         return INVALID
@@ -221,7 +316,11 @@ def command_security_scan(_: argparse.Namespace) -> int:
         ["gitleaks", "git", "--redact", "--no-banner", "--config", str(ROOT / ".gitleaks.toml"), str(ROOT)],
         check=False,
     )
-    return OK if result.returncode == 0 else INVALID
+    history_privacy = run(
+        [sys.executable, str(ROOT / "scripts" / "privacy_scan.py"), "--root", str(ROOT), "--git-history"],
+        check=False,
+    )
+    return OK if result.returncode == 0 and history_privacy.returncode == 0 else INVALID
 
 
 def describe_link(target: Path, source: Path) -> tuple[str, bool]:
@@ -262,8 +361,8 @@ def command_link(args: argparse.Namespace) -> int:
         state[str(target)] = str(source)
     write_links_state(state)
     current_head = git_head()
-    if current_head:
-        prior = read_profile_state().get("last_good_head")
+    prior = read_profile_state().get("last_good_head")
+    if current_head and prior != current_head:
         write_profile_state(last_good_head=current_head, previous_head=prior, event="link")
     print(f"linked {len(links)} managed targets")
     return OK
@@ -336,7 +435,14 @@ def git_state(fetch: bool = False) -> tuple[str, int, int]:
     return "synced", ahead, behind
 
 
-STATE_CODES = {"dirty": DIRTY, "behind": BEHIND, "ahead": AHEAD, "diverged": DIVERGED, "offline": OFFLINE}
+STATE_CODES = {
+    "dirty": DIRTY,
+    "behind": BEHIND,
+    "ahead": AHEAD,
+    "diverged": DIVERGED,
+    "no-upstream": NO_UPSTREAM,
+    "offline": OFFLINE,
+}
 
 
 def command_status(args: argparse.Namespace) -> int:
@@ -357,6 +463,7 @@ def command_status(args: argparse.Namespace) -> int:
 
 
 def command_doctor(_: argparse.Namespace) -> int:
+    secure_tree(ensure_private_state_root())
     print(f"repo={ROOT}")
     print(f"home={home()}")
     print(f"codex_home={codex_home()}")
@@ -402,11 +509,16 @@ def command_adopt(args: argparse.Namespace) -> int:
         return OK
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    backup_root = state_root() / "backups" / stamp / "adopt"
+    backup_root = ensure_private_state_root() / "backups" / stamp / "adopt"
     target_backup = backup_root / "target" / target.name
     source_backup = backup_root / "repo-source" / source.name
-    copy_path(target, target_backup)
-    copy_path(source, source_backup)
+    previous_umask = os.umask(0o077)
+    try:
+        copy_path(target, target_backup)
+        copy_path(source, source_backup)
+    finally:
+        os.umask(previous_umask)
+    secure_tree(backup_root)
     try:
         if source.is_dir():
             shutil.rmtree(source)
@@ -431,6 +543,10 @@ def command_adopt(args: argparse.Namespace) -> int:
     state = read_links_state()
     state[str(target)] = str(source)
     write_links_state(state)
+    current_head = git_head()
+    prior = read_profile_state().get("last_good_head")
+    if current_head:
+        write_profile_state(last_good_head=current_head, previous_head=prior if prior != current_head else None, event="adopt")
     print(f"adopted and linked; backup={backup_root}")
     return OK
 
@@ -442,10 +558,64 @@ def validate_remote_candidate() -> bool:
         if added.returncode:
             return False
         try:
-            candidate = checkout / "bin" / "agent-config"
-            return candidate.exists() and run([str(candidate), "security-scan"], cwd=checkout, check=False).returncode == 0
+            try:
+                return validate_checkout(checkout, include_gitleaks=True) and preflight_candidate_links(checkout)
+            except (OSError, UnicodeError, ValueError, TypeError, KeyError, subprocess.SubprocessError) as exc:
+                print(f"candidate validation failed closed: {type(exc).__name__}")
+                return False
         finally:
             run(["git", "worktree", "remove", "--force", str(checkout)], check=False)
+
+
+def preflight_candidate_links(checkout: Path) -> bool:
+    """Check candidate link collisions before advancing HEAD."""
+    try:
+        links = expected_links(manifest_root=checkout, source_root=ROOT)
+    except ConfigError as exc:
+        print(f"candidate link preflight failed: {exc}")
+        return False
+    errors: list[str] = []
+    for target, source in links.items():
+        status, safe = describe_link(target, source)
+        if not safe:
+            errors.append(f"{target}: {status}")
+        parent = target.parent
+        while not parent.exists() and parent != parent.parent:
+            parent = parent.parent
+        if not os.access(parent, os.W_OK):
+            errors.append(f"{target}: parent is not writable")
+    if errors:
+        print("candidate link preflight failed:")
+        for error in errors:
+            print(f"  - {error}")
+        return False
+    return True
+
+
+def restore_deployment(previous_head: str, links_before: dict[str, str], profile_before: dict[str, str]) -> bool:
+    """Best-effort transaction rollback after an unexpected deployment failure."""
+    if run(["git", "reset", "--keep", previous_head], check=False).returncode:
+        print("automatic checkout rollback failed; manual recovery required", file=sys.stderr)
+        return False
+    current = read_links_state()
+    for target_text, source_text in list(current.items()):
+        if links_before.get(target_text) == source_text:
+            continue
+        target, source = Path(target_text), Path(source_text)
+        if owned_link(target, source, current):
+            target.unlink()
+    for target_text, source_text in links_before.items():
+        target, source = Path(target_text), Path(source_text)
+        status, safe = describe_link(target, source)
+        if not safe:
+            print(f"automatic link rollback failed: {target}: {status}", file=sys.stderr)
+            return False
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if not target.is_symlink():
+            target.symlink_to(source, target_is_directory=source.is_dir())
+    write_links_state(links_before)
+    restore_profile_state(profile_before)
+    return True
 
 
 def command_sync(args: argparse.Namespace) -> int:
@@ -474,13 +644,20 @@ def command_sync(args: argparse.Namespace) -> int:
             print("remote candidate failed validation")
             return INVALID
         previous_head = git_head()
+        links_before = read_links_state()
+        profile_before = read_profile_state()
         if run(["git", "merge", "--ff-only", "@{upstream}"], check=False).returncode:
             return DIVERGED
-        if command_reconcile(argparse.Namespace(apply=True)) != OK:
-            return INVALID
-        linked = command_link(argparse.Namespace(apply=True))
+        try:
+            reconciled = command_reconcile(argparse.Namespace(apply=True))
+            linked = command_link(argparse.Namespace(apply=True)) if reconciled == OK else INVALID
+        except OSError as exc:
+            print(f"deployment failed: {exc}", file=sys.stderr)
+            linked = INVALID
         if linked == OK:
             write_profile_state(last_good_head=git_head(), previous_head=previous_head, event="pull")
+            return OK
+        restore_deployment(previous_head, links_before, profile_before)
         return linked
     if args.push:
         if state == "behind":
@@ -525,15 +702,18 @@ def command_automation(args: argparse.Namespace) -> int:
             destination.unlink()
         print(f"uninstalled {label}")
         return OK
-    log_dir = state_root() / "logs"
-    log_dir.mkdir(parents=True, exist_ok=True)
+    log_dir = ensure_private_state_root() / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+    log_dir.chmod(0o700)
     template = (ROOT / "launchd" / "com.chenzebin.agent-config-check.plist.template").read_text(encoding="utf-8")
     rendered = template.replace("__EXECUTABLE__", str(Path(__file__).resolve())).replace("__LOG_DIR__", str(log_dir))
     plistlib.loads(rendered.encode())
     destination.parent.mkdir(parents=True, exist_ok=True)
     temporary = destination.with_suffix(".tmp")
     temporary.write_text(rendered, encoding="utf-8")
+    temporary.chmod(0o600)
     temporary.replace(destination)
+    destination.chmod(0o600)
     run(["launchctl", "bootout", domain, str(destination)], check=False)
     result = run(["launchctl", "bootstrap", domain, str(destination)], check=False)
     if result.returncode:
