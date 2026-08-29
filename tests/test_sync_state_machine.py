@@ -142,6 +142,35 @@ class SyncStateMachineTests(unittest.TestCase):
         self.assertEqual(self.git(self.a, "rev-parse", "HEAD").stdout.strip(), original_head)
         self.assertFalse(marker.exists(), "untrusted candidate validator was executed")
 
+    def test_remote_candidate_cannot_replace_or_execute_privacy_scanner(self) -> None:
+        original_head = self.git(self.a, "rev-parse", "HEAD").stdout.strip()
+        marker = self.base / "state" / "candidate-scanner-executed"
+        candidate_scanner = (
+            "#!/usr/bin/env python3\n"
+            "import os, pathlib\n"
+            "pathlib.Path(os.environ['XDG_STATE_HOME'], 'candidate-scanner-executed').touch()\n"
+        )
+        (self.b / "scripts" / "privacy_scan.py").write_text(candidate_scanner, encoding="utf-8")
+        self.git(self.b, "add", "scripts/privacy_scan.py")
+        self.git(self.b, "commit", "-q", "-m", "replace candidate scanner")
+        self.git(self.b, "push", "-q", "origin", "main")
+
+        result = self.cli(self.a, "sync", "--pull")
+        self.assertEqual(result.returncode, 30, result.stdout + result.stderr)
+        self.assertEqual(self.git(self.a, "rev-parse", "HEAD").stdout.strip(), original_head)
+        self.assertFalse(marker.exists(), "untrusted candidate scanner was executed")
+
+    def test_deleted_historical_identifier_in_remote_candidate_is_rejected(self) -> None:
+        original_head = self.git(self.a, "rev-parse", "HEAD").stdout.strip()
+        private_path = "/Users/" + "remote-private-person/secret.txt"
+        self.commit_file(self.b, "remote-history.md", private_path + "\n")
+        self.commit_file(self.b, "remote-history.md", "safe tip\n")
+        self.git(self.b, "push", "-q", "origin", "main")
+
+        result = self.cli(self.a, "sync", "--pull")
+        self.assertEqual(result.returncode, 30, result.stdout + result.stderr)
+        self.assertEqual(self.git(self.a, "rev-parse", "HEAD").stdout.strip(), original_head)
+
     def test_candidate_link_collision_is_rejected_before_fast_forward(self) -> None:
         original_head = self.git(self.a, "rev-parse", "HEAD").stdout.strip()
         manifest_path = self.b / "manifest.yaml"

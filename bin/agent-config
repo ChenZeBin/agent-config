@@ -27,6 +27,12 @@ INVALID = 30
 OFFLINE = 40
 
 ROOT = Path(__file__).resolve().parents[1]
+PROTECTED_CONTROL_PATHS = (
+    ".githooks/",
+    ".gitleaks.toml",
+    "bin/",
+    "scripts/",
+)
 class ConfigError(RuntimeError):
     pass
 
@@ -273,11 +279,16 @@ def command_validate(args: argparse.Namespace) -> int:
     return OK
 
 
-def validate_checkout(checkout: Path, *, include_gitleaks: bool = True) -> bool:
+def validate_checkout(
+    checkout: Path, *, include_gitleaks: bool = True, include_history: bool = False
+) -> bool:
     """Validate an untrusted checkout as data using only the current trusted tools."""
     errors = validate_profile(checkout)
+    privacy_args = [sys.executable, str(ROOT / "scripts" / "privacy_scan.py"), "--root", str(checkout)]
+    if include_history:
+        privacy_args.append("--git-history")
     privacy = run(
-        [sys.executable, str(ROOT / "scripts" / "privacy_scan.py"), "--root", str(checkout)],
+        privacy_args,
         cwd=checkout,
         check=False,
     )
@@ -287,9 +298,10 @@ def validate_checkout(checkout: Path, *, include_gitleaks: bool = True) -> bool:
         if shutil.which("gitleaks") is None:
             errors.append("gitleaks is required")
         else:
+            scan_mode = "git" if include_history else "dir"
             leaked = run(
                 [
-                    "gitleaks", "dir", "--redact", "--no-banner",
+                    "gitleaks", scan_mode, "--redact", "--no-banner",
                     "--ignore-gitleaks-allow", "--gitleaks-ignore-path", "/dev/null",
                     "--config", str(ROOT / ".gitleaks.toml"), str(checkout),
                 ],
@@ -337,8 +349,8 @@ def describe_link(target: Path, source: Path) -> tuple[str, bool]:
     return "missing", True
 
 
-def command_link(args: argparse.Namespace) -> int:
-    if command_validate(argparse.Namespace()) != OK:
+def command_link(args: argparse.Namespace, *, trusted_prevalidated: bool = False) -> int:
+    if not trusted_prevalidated and command_validate(argparse.Namespace()) != OK:
         return INVALID
     links = expected_links()
     collisions = []
@@ -552,6 +564,25 @@ def command_adopt(args: argparse.Namespace) -> int:
 
 
 def validate_remote_candidate() -> bool:
+    changed = run(
+        ["git", "diff", "--name-only", "-z", "HEAD..origin/main"],
+        check=False,
+        capture=True,
+    )
+    if changed.returncode:
+        print("candidate control-plane check failed")
+        return False
+    changed_paths = [path for path in changed.stdout.split("\0") if path]
+    protected = [
+        path
+        for path in changed_paths
+        if any(path == prefix or path.startswith(prefix) for prefix in PROTECTED_CONTROL_PATHS)
+    ]
+    if protected:
+        print("candidate changes protected local control-plane paths; review and update manually:")
+        for path in protected:
+            print(f"  - {path}")
+        return False
     with tempfile.TemporaryDirectory(prefix="agent-config-worktree-") as temporary:
         checkout = Path(temporary) / "candidate"
         added = run(["git", "worktree", "add", "--detach", str(checkout), "origin/main"], check=False)
@@ -559,7 +590,9 @@ def validate_remote_candidate() -> bool:
             return False
         try:
             try:
-                return validate_checkout(checkout, include_gitleaks=True) and preflight_candidate_links(checkout)
+                return validate_checkout(
+                    checkout, include_gitleaks=True, include_history=True
+                ) and preflight_candidate_links(checkout)
             except (OSError, UnicodeError, ValueError, TypeError, KeyError, subprocess.SubprocessError) as exc:
                 print(f"candidate validation failed closed: {type(exc).__name__}")
                 return False
@@ -650,7 +683,13 @@ def command_sync(args: argparse.Namespace) -> int:
             return DIVERGED
         try:
             reconciled = command_reconcile(argparse.Namespace(apply=True))
-            linked = command_link(argparse.Namespace(apply=True)) if reconciled == OK else INVALID
+            # The candidate was validated before HEAD advanced. Do not execute any
+            # validator from the newly checked-out tree during this transaction.
+            linked = (
+                command_link(argparse.Namespace(apply=True), trusted_prevalidated=True)
+                if reconciled == OK
+                else INVALID
+            )
         except OSError as exc:
             print(f"deployment failed: {exc}", file=sys.stderr)
             linked = INVALID
