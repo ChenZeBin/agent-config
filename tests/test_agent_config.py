@@ -69,6 +69,13 @@ class AgentConfigTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("agents_override=SHADOWING", result.stdout)
 
+    def test_explicit_dry_run_and_missing_link_status(self) -> None:
+        dry_run = self.run_cli("link", "--dry-run")
+        self.assertEqual(dry_run.returncode, 0, dry_run.stdout + dry_run.stderr)
+        self.assertFalse((Path(self.env["CODEX_HOME"]) / "AGENTS.md").exists())
+        status = self.run_cli("status")
+        self.assertEqual(status.returncode, 20, status.stdout + status.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

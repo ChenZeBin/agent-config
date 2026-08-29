@@ -46,6 +46,7 @@ bin/agent-config sync --push       # 禁止 force push
 ## 恢复与迁移
 
 - 链接冲突会 fail closed，退出码 `20`，原文件不会被覆盖。
+- 显式导入既有配置可先运行 `adopt agents --dry-run` 或 `adopt skill <name> --dry-run`，确认后改用 `--apply`。
 - 旧文件在首次接管时备份到 `~/.local/state/agent-config/backups/<timestamp>/`。
 - `bin/agent-config reconcile --apply` 只删除 `links.json` 中登记且已从 manifest 移除的链接。
 - `bin/agent-config unlink --apply` 只删除本工具拥有、仍指向当前仓库的链接。

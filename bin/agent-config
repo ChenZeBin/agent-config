@@ -155,7 +155,18 @@ def validate_profile() -> list[str]:
     return errors
 
 
-def command_validate(_: argparse.Namespace) -> int:
+def command_validate(args: argparse.Namespace) -> int:
+    revision = getattr(args, "rev", None)
+    if revision:
+        with tempfile.TemporaryDirectory(prefix="agent-config-validate-") as temporary:
+            checkout = Path(temporary) / "revision"
+            if run(["git", "worktree", "add", "--detach", str(checkout), revision], check=False).returncode:
+                return INVALID
+            try:
+                candidate = checkout / "bin" / "agent-config"
+                return run([str(candidate), "validate"], cwd=checkout, check=False).returncode if candidate.exists() else INVALID
+            finally:
+                run(["git", "worktree", "remove", "--force", str(checkout)], check=False)
     errors = validate_profile()
     privacy = run([sys.executable, str(ROOT / "scripts" / "privacy_scan.py"), "--root", str(ROOT)], check=False)
     if privacy.returncode:
@@ -301,7 +312,7 @@ def command_status(args: argparse.Namespace) -> int:
         status, safe = describe_link(target, source)
         if status != "ok":
             print(f"link={status} target={target}")
-        bad_link = bad_link or not safe
+        bad_link = bad_link or status != "ok"
     override = codex_home() / "AGENTS.override.md"
     if override.exists() and override.stat().st_size:
         print(f"shadowed_by_override={override}")
@@ -323,6 +334,70 @@ def command_doctor(_: argparse.Namespace) -> int:
     duplicates = [name for name in load_manifest()["profile"]["skills"] if (duplicate_root / name).exists()]
     print(f"legacy_codex_skill_duplicates={','.join(duplicates) if duplicates else 'none'}")
     return command_validate(argparse.Namespace())
+
+
+def copy_path(source: Path, destination: Path) -> None:
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if source.is_dir():
+        shutil.copytree(source, destination)
+    else:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, destination)
+
+
+def command_adopt(args: argparse.Namespace) -> int:
+    links = expected_links()
+    if args.kind == "agents":
+        target = codex_home() / "AGENTS.md"
+    else:
+        if not args.name:
+            print("adopt skill requires a manifest skill name")
+            return INVALID
+        target = home() / ".agents" / "skills" / args.name
+    source = links.get(target)
+    if source is None:
+        print("adopt target is not declared in manifest")
+        return INVALID
+    if target.is_symlink() or not target.exists():
+        print("adopt requires an existing unmanaged regular file or directory")
+        return COLLISION
+    print(f"adopt {target} -> {source}")
+    if not args.apply:
+        print("dry-run only; use --apply")
+        return OK
+
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    backup_root = state_root() / "backups" / stamp / "adopt"
+    target_backup = backup_root / "target" / target.name
+    source_backup = backup_root / "repo-source" / source.name
+    copy_path(target, target_backup)
+    copy_path(source, source_backup)
+    try:
+        if source.is_dir():
+            shutil.rmtree(source)
+        else:
+            source.unlink()
+        copy_path(target, source)
+        if command_validate(argparse.Namespace(rev=None)) != OK:
+            raise ConfigError("adopted content failed validation")
+    except Exception:
+        if source.exists():
+            if source.is_dir():
+                shutil.rmtree(source)
+            else:
+                source.unlink()
+        copy_path(source_backup, source)
+        raise
+    if target.is_dir():
+        shutil.rmtree(target)
+    else:
+        target.unlink()
+    target.symlink_to(source, target_is_directory=source.is_dir())
+    state = read_links_state()
+    state[str(target)] = str(source)
+    write_links_state(state)
+    print(f"adopted and linked; backup={backup_root}")
+    return OK
 
 
 def validate_remote_candidate() -> bool:
@@ -436,12 +511,18 @@ def command_rollback(args: argparse.Namespace) -> int:
     if valid_target.returncode:
         print("rollback target predates the managed profile layout or is invalid")
         return INVALID
+    current_paths = set(run(["git", "ls-files"], capture=True).stdout.splitlines())
+    target_paths = set(run(["git", "ls-tree", "-r", "--name-only", args.commit], capture=True).stdout.splitlines())
     run(["git", "restore", "--source", args.commit, "--staged", "--worktree", "--", "."])
+    removed = sorted(current_paths - target_paths)
+    if removed:
+        run(["git", "rm", "-f", "--", *removed])
+    run(["git", "add", "-A"])
     if command_validate(argparse.Namespace()) != OK:
         run(["git", "restore", "--source", "HEAD", "--staged", "--worktree", "--", "."])
         print("rollback target failed validation; restored current HEAD")
         return INVALID
-    run(["git", "commit", "-am", f"Rollback profile to {args.commit}"])
+    run(["git", "commit", "-m", f"Rollback profile to {args.commit}"])
     print("rollback committed without rewriting history")
     return OK
 
@@ -453,15 +534,28 @@ def build_parser() -> argparse.ArgumentParser:
     status = sub.add_parser("status")
     status.add_argument("--fetch", action="store_true")
     status.set_defaults(func=command_status)
-    sub.add_parser("validate").set_defaults(func=command_validate)
+    validate = sub.add_parser("validate")
+    validate.add_argument("--rev")
+    validate.set_defaults(func=command_validate)
     sub.add_parser("security-scan").set_defaults(func=command_security_scan)
     link = sub.add_parser("link")
-    link.add_argument("--apply", action="store_true")
+    link_mode = link.add_mutually_exclusive_group()
+    link_mode.add_argument("--apply", action="store_true")
+    link_mode.add_argument("--dry-run", action="store_true")
     link.set_defaults(func=command_link)
     for name, func in (("unlink", command_unlink), ("reconcile", command_reconcile)):
         item = sub.add_parser(name)
-        item.add_argument("--apply", action="store_true")
+        item_mode = item.add_mutually_exclusive_group()
+        item_mode.add_argument("--apply", action="store_true")
+        item_mode.add_argument("--dry-run", action="store_true")
         item.set_defaults(func=func)
+    adopt = sub.add_parser("adopt")
+    adopt.add_argument("kind", choices=["agents", "skill"])
+    adopt.add_argument("name", nargs="?")
+    adopt_mode = adopt.add_mutually_exclusive_group()
+    adopt_mode.add_argument("--apply", action="store_true")
+    adopt_mode.add_argument("--dry-run", action="store_true")
+    adopt.set_defaults(func=command_adopt)
     sync = sub.add_parser("sync")
     group = sync.add_mutually_exclusive_group(required=True)
     group.add_argument("--check", action="store_true")
