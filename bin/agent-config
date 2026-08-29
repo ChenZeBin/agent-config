@@ -95,6 +95,37 @@ def write_links_state(data: dict[str, str]) -> None:
     temporary.replace(path)
 
 
+def read_profile_state() -> dict[str, str]:
+    path = state_root() / "state.json"
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def write_profile_state(*, last_good_head: str, previous_head: str | None, event: str) -> None:
+    root = state_root()
+    root.mkdir(parents=True, exist_ok=True)
+    data = {
+        "event": event,
+        "last_good_head": last_good_head,
+        "previous_head": previous_head or "",
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    path = root / "state.json"
+    temporary = path.with_suffix(".tmp")
+    temporary.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    temporary.replace(path)
+
+
+def git_head(revision: str = "HEAD") -> str:
+    result = run(["git", "rev-parse", "--verify", revision], check=False, capture=True)
+    return result.stdout.strip() if result.returncode == 0 else ""
+
+
 def validate_profile() -> list[str]:
     errors: list[str] = []
     try:
@@ -230,6 +261,10 @@ def command_link(args: argparse.Namespace) -> int:
             target.symlink_to(source, target_is_directory=source.is_dir())
         state[str(target)] = str(source)
     write_links_state(state)
+    current_head = git_head()
+    if current_head:
+        prior = read_profile_state().get("last_good_head")
+        write_profile_state(last_good_head=current_head, previous_head=prior, event="link")
     print(f"linked {len(links)} managed targets")
     return OK
 
@@ -408,7 +443,7 @@ def validate_remote_candidate() -> bool:
             return False
         try:
             candidate = checkout / "bin" / "agent-config"
-            return candidate.exists() and run([str(candidate), "validate"], cwd=checkout, check=False).returncode == 0
+            return candidate.exists() and run([str(candidate), "security-scan"], cwd=checkout, check=False).returncode == 0
         finally:
             run(["git", "worktree", "remove", "--force", str(checkout)], check=False)
 
@@ -438,10 +473,15 @@ def command_sync(args: argparse.Namespace) -> int:
         if not validate_remote_candidate():
             print("remote candidate failed validation")
             return INVALID
+        previous_head = git_head()
         if run(["git", "merge", "--ff-only", "@{upstream}"], check=False).returncode:
             return DIVERGED
-        command_reconcile(argparse.Namespace(apply=True))
-        return command_link(argparse.Namespace(apply=True))
+        if command_reconcile(argparse.Namespace(apply=True)) != OK:
+            return INVALID
+        linked = command_link(argparse.Namespace(apply=True))
+        if linked == OK:
+            write_profile_state(last_good_head=git_head(), previous_head=previous_head, event="pull")
+        return linked
     if args.push:
         if state == "behind":
             print("push aborted: pull and validate remote changes first")
@@ -511,18 +551,15 @@ def command_rollback(args: argparse.Namespace) -> int:
     if valid_target.returncode:
         print("rollback target predates the managed profile layout or is invalid")
         return INVALID
-    current_paths = set(run(["git", "ls-files"], capture=True).stdout.splitlines())
-    target_paths = set(run(["git", "ls-tree", "-r", "--name-only", args.commit], capture=True).stdout.splitlines())
     run(["git", "restore", "--source", args.commit, "--staged", "--worktree", "--", "."])
-    removed = sorted(current_paths - target_paths)
-    if removed:
-        run(["git", "rm", "-f", "--", *removed])
     run(["git", "add", "-A"])
     if command_validate(argparse.Namespace()) != OK:
         run(["git", "restore", "--source", "HEAD", "--staged", "--worktree", "--", "."])
         print("rollback target failed validation; restored current HEAD")
         return INVALID
+    previous_head = git_head()
     run(["git", "commit", "-m", f"Rollback profile to {args.commit}"])
+    write_profile_state(last_good_head=git_head(), previous_head=previous_head, event="rollback")
     print("rollback committed without rewriting history")
     return OK
 

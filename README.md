@@ -42,6 +42,7 @@ bin/agent-config sync --push       # 禁止 force push
 - `.gitignore` 不是秘密管理器；凭据只放环境变量、macOS Keychain 或密码管理器。
 - `.skillignore` 不会影响仓库级扫描。
 - 公开策略与事故处理见 `security/public-content-policy.md`。
+- 安全问题请通过 GitHub 私密漏洞报告入口提交，见 `SECURITY.md`；不要把凭据粘贴到公开 Issue。
 
 ## 恢复与迁移
 
@@ -51,6 +52,7 @@ bin/agent-config sync --push       # 禁止 force push
 - `bin/agent-config reconcile --apply` 只删除 `links.json` 中登记且已从 manifest 移除的链接。
 - `bin/agent-config unlink --apply` 只删除本工具拥有、仍指向当前仓库的链接。
 - `bin/agent-config rollback <commit>` 在 clean 工作树上创建恢复提交，不改写历史。
+- 每次成功接管、拉取或回滚都会原子更新 `~/.local/state/agent-config/state.json`，记录 `last_good_head` 与 `previous_head`。
 
 ## 自动检查
 
