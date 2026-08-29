@@ -91,9 +91,9 @@ def scan_staged(root: Path) -> list[str]:
     return findings
 
 
-def history_blob_entries(root: Path) -> list[tuple[str, str]]:
+def history_blob_entries(root: Path, revisions: list[str]) -> list[tuple[str, str]]:
     commits = subprocess.run(
-        ["git", "rev-list", "--all"], cwd=root, check=True, text=True, capture_output=True
+        ["git", "rev-list", *revisions], cwd=root, check=True, text=True, capture_output=True
     ).stdout.splitlines()
     entries: list[tuple[str, str]] = []
     seen: set[str] = set()
@@ -120,9 +120,9 @@ def history_blob_entries(root: Path) -> list[tuple[str, str]]:
     return entries
 
 
-def scan_history(root: Path) -> list[str]:
+def scan_history(root: Path, revisions: list[str]) -> list[str]:
     findings: list[str] = []
-    for sha, path in history_blob_entries(root):
+    for sha, path in history_blob_entries(root, revisions):
         content = subprocess.run(["git", "cat-file", "blob", sha], cwd=root, check=True, capture_output=True).stdout
         try:
             text = content.decode("utf-8")
@@ -137,11 +137,12 @@ def main() -> int:
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--staged", action="store_true")
     parser.add_argument("--git-history", action="store_true")
+    parser.add_argument("--git-revision", action="append")
     args = parser.parse_args()
     root = args.root.resolve()
     findings = scan_staged(root) if args.staged else scan(root)
     if args.git_history:
-        findings.extend(scan_history(root))
+        findings.extend(scan_history(root, args.git_revision or ["--all"]))
     if findings:
         print("privacy scan failed (values redacted):")
         for finding in findings:

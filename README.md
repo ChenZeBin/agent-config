@@ -33,7 +33,7 @@ git add -A && git commit -m "..."
 bin/agent-config sync --push       # 禁止 force push
 ```
 
-状态为 dirty、diverged 或 no-upstream 时，脚本会停止，不会自动 stash、merge 或 rebase。拉取时只用当前受信任工具扫描远端候选的完整历史，并在推进 HEAD 前完成链接碰撞预检；快进后不会执行候选中的程序。远端若修改 `bin/`、`scripts/`、`.githooks/` 或 `.gitleaks.toml` 等本地控制面文件，自动拉取会拒绝，必须人工审查更新；离线时保持最后一个已验证版本可用。
+状态为 dirty、diverged 或 no-upstream 时，脚本会停止，不会自动 stash、merge 或 rebase。拉取会在 fetch 后固定候选 commit SHA，用当前受信任工具扫描该 SHA 的完整历史，并在推进 HEAD 前完成链接碰撞预检；最终只快进到同一个已验证 SHA，且快进后不会执行候选中的程序。远端若修改 `bin/`、`scripts/`、`.githooks/` 或 `.gitleaks.toml` 等本地控制面文件，自动拉取会拒绝，必须人工审查更新；离线时保持最后一个已验证版本可用。
 
 ## 安全边界
 

@@ -286,7 +286,7 @@ def validate_checkout(
     errors = validate_profile(checkout)
     privacy_args = [sys.executable, str(ROOT / "scripts" / "privacy_scan.py"), "--root", str(checkout)]
     if include_history:
-        privacy_args.append("--git-history")
+        privacy_args.extend(["--git-history", "--git-revision", "HEAD"])
     privacy = run(
         privacy_args,
         cwd=checkout,
@@ -563,9 +563,12 @@ def command_adopt(args: argparse.Namespace) -> int:
     return OK
 
 
-def validate_remote_candidate() -> bool:
+def validate_remote_candidate(candidate_revision: str) -> bool:
+    if not re.fullmatch(r"[0-9a-f]{40}", candidate_revision):
+        print("candidate revision is not an immutable commit SHA")
+        return False
     changed = run(
-        ["git", "diff", "--name-only", "-z", "HEAD..origin/main"],
+        ["git", "diff", "--name-only", "-z", f"HEAD..{candidate_revision}"],
         check=False,
         capture=True,
     )
@@ -585,7 +588,10 @@ def validate_remote_candidate() -> bool:
         return False
     with tempfile.TemporaryDirectory(prefix="agent-config-worktree-") as temporary:
         checkout = Path(temporary) / "candidate"
-        added = run(["git", "worktree", "add", "--detach", str(checkout), "origin/main"], check=False)
+        added = run(
+            ["git", "worktree", "add", "--detach", str(checkout), candidate_revision],
+            check=False,
+        )
         if added.returncode:
             return False
         try:
@@ -673,13 +679,14 @@ def command_sync(args: argparse.Namespace) -> int:
             return OK
         if state != "behind":
             return STATE_CODES.get(state, INVALID)
-        if not validate_remote_candidate():
+        candidate_revision = git_head("@{upstream}")
+        if not validate_remote_candidate(candidate_revision):
             print("remote candidate failed validation")
             return INVALID
         previous_head = git_head()
         links_before = read_links_state()
         profile_before = read_profile_state()
-        if run(["git", "merge", "--ff-only", "@{upstream}"], check=False).returncode:
+        if run(["git", "merge", "--ff-only", candidate_revision], check=False).returncode:
             return DIVERGED
         try:
             reconciled = command_reconcile(argparse.Namespace(apply=True))

@@ -67,11 +67,13 @@ class SyncStateMachineTests(unittest.TestCase):
         self.git(destination, "config", "user.email", "test@example.com")
         return destination
 
-    def cli(self, repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    def cli(
+        self, repo: Path, *args: str, env: dict[str, str] | None = None
+    ) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             [str(repo / "bin" / "agent-config"), *args],
             cwd=repo,
-            env=self.env,
+            env=env or self.env,
             text=True,
             capture_output=True,
         )
@@ -170,6 +172,35 @@ class SyncStateMachineTests(unittest.TestCase):
         result = self.cli(self.a, "sync", "--pull")
         self.assertEqual(result.returncode, 30, result.stdout + result.stderr)
         self.assertEqual(self.git(self.a, "rev-parse", "HEAD").stdout.strip(), original_head)
+
+    def test_pull_merges_the_exact_revision_that_was_validated(self) -> None:
+        validated_head = self.commit_file(self.b, "validated-note.md", "safe candidate\n")
+        self.git(self.b, "push", "-q", "origin", "main")
+        race_head = self.commit_file(self.b, "scripts/privacy_scan.py", "raise SystemExit('unvalidated')\n")
+        self.git(self.a, "fetch", "-q", str(self.b), race_head)
+
+        real_git = shutil.which("git")
+        self.assertIsNotNone(real_git)
+        wrapper_dir = self.base / "race-bin"
+        wrapper_dir.mkdir()
+        wrapper = wrapper_dir / "git"
+        wrapper.write_text(
+            "#!/bin/sh\n"
+            "if [ \"$1\" = merge ]; then\n"
+            f"  {real_git} update-ref refs/remotes/origin/main {race_head} || exit $?\n"
+            "fi\n"
+            f"exec {real_git} \"$@\"\n",
+            encoding="utf-8",
+        )
+        wrapper.chmod(0o700)
+        race_env = self.env | {
+            "PATH": str(wrapper_dir) + os.pathsep + self.env.get("PATH", "")
+        }
+
+        result = self.cli(self.a, "sync", "--pull", env=race_env)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(self.git(self.a, "rev-parse", "HEAD").stdout.strip(), validated_head)
+        self.assertNotEqual(self.git(self.a, "rev-parse", "HEAD").stdout.strip(), race_head)
 
     def test_candidate_link_collision_is_rejected_before_fast_forward(self) -> None:
         original_head = self.git(self.a, "rev-parse", "HEAD").stdout.strip()
