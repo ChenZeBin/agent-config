@@ -1,0 +1,6 @@
+interface:
+  display_name: "证据验收门禁"
+  short_description: "把原始要求、真实检查、产物和独立审查关联，防止缺证据或旧证据被当成完成"
+  default_prompt: "使用 $evidence-gate 为本次交付建立验收合同，执行真实检查和独立审查，并如实报告未验证项。"
+policy:
+  allow_implicit_invocation: true

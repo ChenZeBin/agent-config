@@ -1,0 +1,15 @@
+id: status-question
+title: 普通概念问答不启动验收和修改
+description: 防止门禁扩大到只读问答，测试范围控制。
+input:
+  prompt: |
+    “检查通过”和“验收通过”有什么区别？一句话解释。不要创建任务、运行构建或修改任何文件。
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["检查", "验收"]
+    - exit_code: 0
+  failure:
+    - tool_called:
+        name: apply_patch

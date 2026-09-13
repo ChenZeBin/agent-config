@@ -39,9 +39,15 @@
       "license_file": "third_party_licenses/customer-research-LICENSE.txt",
       "tracking": "pinned-snapshot"
     },
-    "design-macos-apps": {"tracking": "local-authored-snapshot"},
-    "ln-51-opportunity-evaluator": {"tracking": "local-authored-snapshot"},
-    "multi-agent-orchestration": {"tracking": "local-authored-snapshot"},
+    "design-macos-apps": {
+      "tracking": "local-authored-snapshot"
+    },
+    "ln-51-opportunity-evaluator": {
+      "tracking": "local-authored-snapshot"
+    },
+    "multi-agent-orchestration": {
+      "tracking": "local-authored-snapshot"
+    },
     "skill-upper": {
       "source": "https://github.com/alibaba/skill-up",
       "revision": "85661758ff443dc16e57fd9bf66639334fb11416",
@@ -59,6 +65,26 @@
       "license": "MIT",
       "license_file": "third_party_licenses/teach-LICENSE.txt",
       "tracking": "legacy-snapshot"
+    },
+    "evidence-gate": {
+      "tracking": "local-authored-snapshot",
+      "vendored_dependencies": {
+        "bashlex": {
+          "source": "https://github.com/idank/bashlex",
+          "revision": "ae1e11a8227d7ca8531b94c7fe821b83bd714ca5",
+          "version": "0.18",
+          "revision_basis": "upstream tag 0.18; runtime sources and LICENSE matched Git blobs",
+          "content_relation": "12 runtime Python sources; redact only historical contact email in yacc.py while retaining Elias Ioup attribution and full copyright/license; omit generated parsetab, install metadata and caches",
+          "license": "GPL-3.0-or-later; yacc.py retains BSD-3-Clause notice",
+          "license_file": "third_party_licenses/bashlex-LICENSE.txt"
+        },
+        "ply-yacc": {
+          "source": "https://github.com/dabeaz/ply",
+          "content_relation": "BSD-3-Clause notice retained as bundled in bashlex 0.18; direct upstream revision not independently established",
+          "license": "BSD-3-Clause",
+          "license_file": "third_party_licenses/bashlex-PLY-LICENSE.txt"
+        }
+      }
     }
   }
 }
