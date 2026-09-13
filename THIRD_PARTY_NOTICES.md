@@ -5,7 +5,6 @@
 | Skill | Upstream | License |
 |---|---|---|
 | `agent-reach` | [Panniantong/Agent-Reach](https://github.com/Panniantong/Agent-Reach) | MIT |
-| `claude-md-progressive-disclosurer` | [daymade/claude-code-skills](https://github.com/daymade/claude-code-skills) | MIT |
 | `evidence-gate` → `bashlex` | [idank/bashlex](https://github.com/idank/bashlex) | GPL-3.0-or-later；`yacc.py` 保留 BSD-3-Clause 声明 |
 | `customer-research` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | MIT |
 | `last30days` | [mvanhorn/last30days-skill](https://github.com/mvanhorn/last30days-skill) | MIT |

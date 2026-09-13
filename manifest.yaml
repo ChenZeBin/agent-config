@@ -4,7 +4,6 @@
     "agents": "profile/AGENTS.md",
     "skills": [
       "agent-reach",
-      "claude-md-progressive-disclosurer",
       "customer-research",
       "design-macos-apps",
       "evidence-gate",

@@ -56,6 +56,8 @@ metadata:
 
 ## 零配置快速命令
 
+普通网页先读 [网页路由](references/web.md)：默认 Jina；明确动态渲染、批量/分页提取时选 Crawl4AI；正文缺失或目标字段不全时按该文档回退。HTTP 200 不代表成功。专用平台仍走上表，登录/验证码不自动换爬虫绕过；用户明确指定工具时优先遵从其选择。
+
 ```bash
 # Exa 网页搜索
 mcporter call exa.web_search_exa query="query" numResults=5

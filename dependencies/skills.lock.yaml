@@ -5,7 +5,7 @@
       "source": "https://github.com/Panniantong/Agent-Reach",
       "revision": "93ae1d18c37b707dec053c7c4f9d91cd8ef8943d",
       "revision_basis": "upstream HEAD at the 2026-08-23 legacy import cutoff",
-      "content_relation": "exact SKILL.md match",
+      "content_relation": "locally modified from pinned upstream revision; conditional Crawl4AI web routing",
       "license": "MIT",
       "license_file": "third_party_licenses/agent-reach-LICENSE.txt",
       "tracking": "legacy-snapshot"
@@ -19,15 +19,6 @@
       "license": "MIT",
       "license_file": "third_party_licenses/last30days-LICENSE.txt",
       "tracking": "pinned-snapshot"
-    },
-    "claude-md-progressive-disclosurer": {
-      "source": "https://github.com/daymade/claude-code-skills",
-      "revision": "d7456dcb2f4495c9e3d08faf04941455309235bc",
-      "revision_basis": "upstream HEAD at the 2026-08-23 legacy import cutoff",
-      "content_relation": "exact SKILL.md match",
-      "license": "MIT",
-      "license_file": "third_party_licenses/claude-md-progressive-disclosurer-LICENSE.txt",
-      "tracking": "legacy-snapshot"
     },
     "customer-research": {
       "source": "https://github.com/coreyhaines31/marketingskills",
