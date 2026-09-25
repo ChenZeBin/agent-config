@@ -9,3 +9,4 @@ __pycache__/
 .idea/
 .vscode/
 .security-scan-passed
+.agent-config-setup-remote.json

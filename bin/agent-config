@@ -89,6 +89,14 @@ def expected_links(*, manifest_root: Path = ROOT, source_root: Path = ROOT) -> d
     return links
 
 
+def command_entrypoints() -> dict[Path, Path]:
+    commands_dir = home() / ".local" / "bin"
+    return {
+        commands_dir / "agent-config": (ROOT / "bin" / "agent-config").resolve(),
+        commands_dir / "codex-hybrid": (ROOT / "bin" / "codex-hybrid").resolve(),
+    }
+
+
 def within(path: Path, parent: Path) -> bool:
     try:
         path.relative_to(parent)
@@ -405,7 +413,10 @@ def command_unlink(args: argparse.Namespace) -> int:
 
 def command_reconcile(args: argparse.Namespace) -> int:
     state = read_links_state()
-    expected = {str(target): str(source) for target, source in expected_links().items()}
+    expected = {
+        str(target): str(source)
+        for target, source in {**expected_links(), **command_entrypoints()}.items()
+    }
     removed = 0
     for target_text, source_text in list(state.items()):
         if expected.get(target_text) == source_text:
@@ -731,6 +742,179 @@ def command_hooks(args: argparse.Namespace) -> int:
     return OK
 
 
+def setup_shell_profile(commands_dir: Path) -> tuple[Path | None, bytes | None, bytes | None]:
+    if str(commands_dir) in os.environ.get("PATH", "").split(os.pathsep):
+        return None, None, None
+    shell = Path(os.environ.get("SHELL", "/bin/zsh")).name
+    filename = {"zsh": ".zprofile", "bash": ".bash_profile"}.get(shell)
+    if filename is None:
+        raise ConfigError(f"unsupported login shell for automatic PATH setup: {shell}")
+    directory = Path(os.environ.get("ZDOTDIR", str(home()))) if shell == "zsh" else home()
+    directory = directory.expanduser().resolve()
+    if not within(directory, home()) and directory != home():
+        raise ConfigError(f"shell configuration directory is outside HOME: {directory}")
+    profile = directory / filename
+    if profile.is_symlink() or (profile.exists() and not profile.is_file()):
+        raise ConfigError(f"shell profile is not a regular file: {profile}")
+    original = profile.read_bytes() if profile.exists() else None
+    line = b'export PATH="$HOME/.local/bin:$PATH" # agent-config setup\n'
+    if original is not None and line in original:
+        return profile, original, None
+    prefix = b"\n" if original and not original.endswith(b"\n") else b""
+    return profile, original, (original or b"") + prefix + line
+
+
+def write_shell_profile(profile: Path, content: bytes, original: bytes | None) -> None:
+    current = profile.read_bytes() if profile.exists() else None
+    if profile.is_symlink() or current != original:
+        raise ConfigError(f"shell profile changed during setup: {profile}")
+    profile.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(prefix=f".{profile.name}.setup-", dir=profile.parent)
+    temporary = Path(temporary_name)
+    try:
+        os.fchmod(descriptor, profile.stat().st_mode & 0o777 if original is not None else 0o600)
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        temporary.replace(profile)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def command_setup(args: argparse.Namespace) -> int:
+    """Install the managed profile and command entrypoints without replacing user files."""
+    if command_validate(argparse.Namespace(rev=None)) != OK:
+        return INVALID
+
+    commands_dir = home() / ".local" / "bin"
+    if commands_dir.is_symlink() or (commands_dir.exists() and not commands_dir.is_dir()):
+        print(f"setup aborted: command directory is not a regular directory: {commands_dir}", file=sys.stderr)
+        return COLLISION
+
+    commands = command_entrypoints()
+    for source in commands.values():
+        if not source.is_file() or not os.access(source, os.X_OK):
+            print(f"setup aborted: command is missing or not executable: {source}", file=sys.stderr)
+            return INVALID
+    for name in ("pre-commit", "pre-push"):
+        hook = ROOT / ".githooks" / name
+        if not hook.is_file() or not os.access(hook, os.X_OK):
+            print(f"setup aborted: required hook is missing or not executable: {hook}", file=sys.stderr)
+            return INVALID
+    collisions = []
+    for target, source in {**expected_links(), **commands}.items():
+        status, safe = describe_link(target, source)
+        print(f"{status:38} {target} -> {source}")
+        if not safe:
+            collisions.append(target)
+
+    hooks_path = run(["git", "config", "--get", "core.hooksPath"], check=False, capture=True).stdout.strip()
+    if hooks_path not in ("", ".githooks"):
+        print(f"collision: existing core.hooksPath={hooks_path}", file=sys.stderr)
+        collisions.append(ROOT / ".git" / "config")
+    try:
+        shell_profile, shell_original, shell_content = setup_shell_profile(commands_dir)
+    except ConfigError as error:
+        print(f"setup aborted: {error}", file=sys.stderr)
+        return COLLISION
+    if collisions:
+        print("setup aborted; no paths changed", file=sys.stderr)
+        return COLLISION
+    gitleaks_missing = shutil.which("gitleaks") is None
+    brew = shutil.which("brew") if sys.platform == "darwin" else None
+    if gitleaks_missing and brew is None:
+        print("setup aborted: install gitleaks first (macOS: install Homebrew, then rerun setup)", file=sys.stderr)
+        return INVALID
+    if args.dry_run:
+        if shell_content is not None:
+            print(f"would add command path to {shell_profile}")
+        if gitleaks_missing:
+            print("would install gitleaks with Homebrew")
+        print("dry-run only; run setup without --dry-run to install")
+        return OK
+    if gitleaks_missing:
+        print("installing gitleaks with Homebrew")
+        installed = run([brew, "install", "gitleaks"], check=False)
+        if installed.returncode != 0 or shutil.which("gitleaks") is None:
+            print("setup aborted: Homebrew could not install gitleaks", file=sys.stderr)
+            return INVALID
+
+    all_links = {**expected_links(), **commands}
+    links_path = state_root() / "links.json"
+    profile_state_path = state_root() / "state.json"
+    links_before = links_path.read_bytes() if links_path.exists() else None
+    profile_before = profile_state_path.read_bytes() if profile_state_path.exists() else None
+    local_hooks = run(["git", "config", "--local", "--get", "core.hooksPath"], check=False, capture=True).stdout.strip()
+    created_links: list[Path] = []
+    created_dirs: list[Path] = []
+    hooks_changed = False
+    shell_changed = False
+    try:
+        for target, source in all_links.items():
+            if target.is_symlink():
+                continue
+            missing_dirs = []
+            parent = target.parent
+            while not parent.exists():
+                missing_dirs.append(parent)
+                parent = parent.parent
+            for directory in reversed(missing_dirs):
+                directory.mkdir()
+                created_dirs.append(directory)
+            target.symlink_to(source, target_is_directory=source.is_dir())
+            created_links.append(target)
+
+        state = read_links_state()
+        state.update({str(target): str(source) for target, source in all_links.items()})
+        if state != read_links_state():
+            write_links_state(state)
+        current_head = git_head()
+        prior = read_profile_state().get("last_good_head")
+        if current_head and prior != current_head:
+            write_profile_state(last_good_head=current_head, previous_head=prior, event="setup")
+        if hooks_path != ".githooks":
+            run(["git", "config", "--local", "core.hooksPath", ".githooks"])
+            hooks_changed = True
+        if shell_content is not None and shell_profile is not None:
+            write_shell_profile(shell_profile, shell_content, shell_original)
+            shell_changed = True
+    except Exception as error:
+        if shell_changed and shell_profile is not None:
+            if shell_original is None:
+                shell_profile.unlink(missing_ok=True)
+            else:
+                write_shell_profile(shell_profile, shell_original, shell_original)
+        if hooks_changed:
+            if local_hooks:
+                run(["git", "config", "--local", "core.hooksPath", local_hooks], check=False)
+            else:
+                run(["git", "config", "--local", "--unset", "core.hooksPath"], check=False)
+        for target in reversed(created_links):
+            if target.is_symlink() and target.resolve(strict=False) == all_links[target]:
+                target.unlink()
+        for path, original in ((links_path, links_before), (profile_state_path, profile_before)):
+            try:
+                if original is None:
+                    path.unlink(missing_ok=True)
+                elif path.parent.is_dir():
+                    path.write_bytes(original)
+            except OSError:
+                pass
+        for directory in reversed(created_dirs):
+            try:
+                directory.rmdir()
+            except OSError:
+                pass
+        print(f"setup failed and rolled back: {error}", file=sys.stderr)
+        return INVALID
+
+    if shell_content is not None:
+        print(f"added command path to {shell_profile}; open a new terminal to use command names")
+    print("setup complete")
+    return OK
+
+
 def automation_path() -> Path:
     return home() / "Library" / "LaunchAgents" / "com.chenzebin.agent-config-check.plist"
 
@@ -801,6 +985,9 @@ def build_parser() -> argparse.ArgumentParser:
     validate.add_argument("--rev")
     validate.set_defaults(func=command_validate)
     sub.add_parser("security-scan").set_defaults(func=command_security_scan)
+    setup = sub.add_parser("setup")
+    setup.add_argument("--dry-run", action="store_true")
+    setup.set_defaults(func=command_setup)
     link = sub.add_parser("link")
     link_mode = link.add_mutually_exclusive_group()
     link_mode.add_argument("--apply", action="store_true")

@@ -4,20 +4,31 @@
 
 ## 安装
 
+需要 Git 和 Python 3.11+。macOS 如尚未安装 Gitleaks，还需要 Homebrew；
+`setup` 会自动运行 `brew install gitleaks`。其他系统请先安装 Gitleaks。
+克隆后运行一次 `setup`：
+
 ```bash
 git clone git@github.com:ChenZeBin/agent-config.git ~/.config/agent-config
 cd ~/.config/agent-config
-bin/agent-config doctor
-bin/agent-config validate
-bin/agent-config link --apply
-bin/agent-config hooks install
+bin/agent-config setup
 ```
 
-实际链接：
+`setup` 校验仓库内容，安装清单中的叶级链接、仓库 Git hooks，并将
+`agent-config` 与 `codex-hybrid` 链接到 `~/.local/bin/`。重复运行不会覆盖已有文件；
+如需先预览，运行 `bin/agent-config setup --dry-run`。如遇到既有配置或 hooks
+冲突，命令会在修改前停止；先检查提示，再使用 `adopt` 显式导入需要保留的内容。
+若 `~/.local/bin` 不在 `PATH`，`setup` 会写入 zsh 的 `.zprofile` 或 bash 的
+`.bash_profile`；打开新终端即可按名称使用。当前终端可直接运行
+`~/.local/bin/agent-config` 和 `~/.local/bin/codex-hybrid`。仓库 hooks 会在提交和推送时检查 Gitleaks。
+
+安装后的链接：
 
 ```text
 ~/.codex/AGENTS.md              -> profile/AGENTS.md
 ~/.agents/skills/<skill-name>   -> profile/skills/<skill-name>
+~/.local/bin/agent-config       -> bin/agent-config
+~/.local/bin/codex-hybrid       -> bin/codex-hybrid
 ```
 
 工具不会管理 `~/.codex/AGENTS.override.md`，但 `doctor` 会报告它是否遮蔽全局规则。工具也不会链接整个运行时目录，因此 `auth.json`、session、log、cache 和数据库不会进入 Git。
@@ -46,8 +57,7 @@ codex-hybrid status   # 查看当前状态
 
 开关只影响新建会话，已经运行的会话不会热切换。备份保存在
 `$CODEX_HOME/backups/hybrid-switch/`；未设置 `CODEX_HOME` 时使用 `~/.codex`。
-建议把仓库中的命令符号链接到现有 `PATH`，例如
-`~/.local/bin/codex-hybrid`。
+`setup` 会创建命令入口；macOS 上可直接使用以上命令。
 
 状态为 dirty、diverged 或 no-upstream 时，脚本会停止，不会自动 stash、merge 或 rebase。拉取会在 fetch 后固定候选 commit SHA，用当前受信任工具扫描该 SHA 的完整历史，并在推进 HEAD 前完成链接碰撞预检；最终只快进到同一个已验证 SHA，且快进后不会执行候选中的程序。远端若修改 `bin/`、`scripts/`、`.githooks/` 或 `.gitleaks.toml` 等本地控制面文件，自动拉取会拒绝，必须人工审查更新；离线时保持最后一个已验证版本可用。
 
