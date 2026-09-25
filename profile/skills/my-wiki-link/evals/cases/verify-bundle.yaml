@@ -1,0 +1,21 @@
+id: verify-bundle
+title: 校验已有不可变 raw bundle
+description: 验证 Skill 会调用 verify 并使用机器可读输出
+
+input:
+  prompt: |
+    给出校验 my-wiki 中这个现有 bundle 的命令，不要执行：raw/x/example-bundle
+
+expect:
+  must_contain:
+    - my-wiki-link verify
+    - --json
+
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all:
+          - my-wiki-link verify
+          - --json
+    - exit_code: 0

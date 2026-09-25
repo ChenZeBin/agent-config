@@ -1,0 +1,27 @@
+id: distill-boundary
+title: 炼化请求不能停在 raw capture
+description: 验证 Skill 明确 CLI 采集与完整 Wiki 炼化的边界
+
+input:
+  prompt: |
+    我说“炼化这个微信公众号链接”时，你会怎样使用 my-wiki-link？只说明命令和完成门槛，不要真的执行：https://mp.weixin.qq.com/s/example
+
+expect:
+  must_contain:
+    - my-wiki-link capture
+    - article-ingest
+    - consistent
+  must_not_contain:
+    - capture 就算完成
+
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all:
+          - my-wiki-link capture
+          - article-ingest
+          - consistent
+        not:
+          - capture 就算完成
+    - exit_code: 0

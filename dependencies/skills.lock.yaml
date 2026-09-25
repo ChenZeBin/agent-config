@@ -39,6 +39,9 @@
     "multi-agent-orchestration": {
       "tracking": "local-authored-snapshot"
     },
+    "my-wiki-link": {
+      "tracking": "local-authored-snapshot"
+    },
     "skill-upper": {
       "source": "https://github.com/alibaba/skill-up",
       "revision": "85661758ff443dc16e57fd9bf66639334fb11416",

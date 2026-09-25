@@ -1,0 +1,25 @@
+id: classify-only
+title: 只判断 YouTube 链接支持范围
+description: 验证 Skill 会选择无写入的 classify，而不是提前采集
+
+input:
+  prompt: |
+    只判断这个链接是否受 my-wiki 支持并给出规范化命令，不要执行或采集：https://youtu.be/dQw4w9WgXcQ?si=fixture
+
+expect:
+  must_contain:
+    - my-wiki-link classify
+    - --json
+  must_not_contain:
+    - my-wiki-link capture
+
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all:
+          - my-wiki-link classify
+          - --json
+        not:
+          - my-wiki-link capture
+    - exit_code: 0

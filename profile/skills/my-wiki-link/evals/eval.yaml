@@ -1,0 +1,37 @@
+schema_version: v1alpha1
+
+environment:
+  type: none
+
+skills:
+  - source: local_path
+    path: .
+    include:
+      - SKILL.md
+
+engine:
+  name: codex
+
+cases:
+  files:
+    - evals/cases/classify-only.yaml
+    - evals/cases/distill-boundary.yaml
+    - evals/cases/verify-bundle.yaml
+  defaults:
+    timeout_seconds: 180
+    max_turns: 6
+    expect:
+      exit_code: 0
+  parallelism: 1
+
+judge:
+  type: rule_based
+
+benchmark:
+  enabled: false
+
+report:
+  formats:
+    - json
+  artifacts:
+    - transcript

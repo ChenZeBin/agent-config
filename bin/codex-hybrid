@@ -1,0 +1,462 @@
+#!/usr/bin/env python3
+"""Atomically switch the local Codex mixed-model agent setup on or off."""
+
+from __future__ import annotations
+
+import argparse
+import ctypes
+import fcntl
+import json
+import os
+from pathlib import Path
+import re
+import stat
+import sys
+import tempfile
+import time
+import tomllib
+import uuid
+
+
+HYBRID_MODEL = "gpt-6-sol"
+HYBRID_REASONING_EFFORT = "xhigh"
+COMMANDS = ("on", "off", "toggle", "status")
+SECTION_PATTERN = re.compile(r"^\s*\[([^\[\]]+)\]\s*(?:#.*)?(?:\r?\n)?$")
+RENAME_SWAP = 0x00000002
+
+
+class HybridSwitchError(RuntimeError):
+    pass
+
+
+def codex_home() -> Path:
+    configured = os.environ.get("CODEX_HOME")
+    return Path(configured).expanduser() if configured else Path.home() / ".codex"
+
+
+def read_config(config_path: Path) -> tuple[bytes, dict]:
+    if config_path.is_symlink():
+        raise HybridSwitchError(f"拒绝修改符号链接：{config_path}")
+    if not config_path.is_file():
+        raise HybridSwitchError(f"找不到常规配置文件：{config_path}")
+
+    raw = config_path.read_bytes()
+    try:
+        parsed = tomllib.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, tomllib.TOMLDecodeError) as error:
+        raise HybridSwitchError(f"config.toml 无法解析：{error}") from error
+    return raw, parsed
+
+
+def section_ranges(lines: list[str]) -> list[tuple[str, int, int]]:
+    starts: list[tuple[str, int]] = []
+    for index, line in enumerate(lines):
+        match = SECTION_PATTERN.match(line)
+        if match:
+            starts.append((match.group(1).strip(), index))
+
+    ranges: list[tuple[str, int, int]] = []
+    for position, (name, start) in enumerate(starts):
+        end = starts[position + 1][1] if position + 1 < len(starts) else len(lines)
+        ranges.append((name, start, end))
+    return ranges
+
+
+def assignment_pattern(key: str) -> re.Pattern[str]:
+    return re.compile(
+        rf"^(?P<indent>\s*){re.escape(key)}(?P<separator>\s*=\s*)"
+        r"(?P<rest>.*)$"
+    )
+
+
+def inline_comment_suffix(rest: str) -> str:
+    quote: str | None = None
+    escaped = False
+    for index, character in enumerate(rest):
+        if quote == '"':
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                quote = None
+        elif quote == "'":
+            if character == "'":
+                quote = None
+        elif character in ('"', "'"):
+            quote = character
+        elif character == "#":
+            comment_start = index
+            while comment_start > 0 and rest[comment_start - 1].isspace():
+                comment_start -= 1
+            return rest[comment_start:]
+    return ""
+
+
+def replace_assignment(line: str, key: str, value: str) -> str | None:
+    if line.endswith("\r\n"):
+        body, newline = line[:-2], "\r\n"
+    elif line.endswith("\n"):
+        body, newline = line[:-1], "\n"
+    else:
+        body, newline = line, ""
+
+    match = assignment_pattern(key).match(body)
+    if not match:
+        return None
+    comment = inline_comment_suffix(match.group("rest"))
+    return (
+        f"{match.group('indent')}{key}{match.group('separator')}{value}"
+        f"{comment}{newline}"
+    )
+
+
+def set_key(
+    lines: list[str],
+    *,
+    section: str | None,
+    key: str,
+    value: str,
+) -> list[str]:
+    updated = list(lines)
+    ranges = section_ranges(updated)
+
+    if section is None:
+        section_start = 0
+        section_end = ranges[0][1] if ranges else len(updated)
+        header_index = None
+    else:
+        matching = [item for item in ranges if item[0] == section]
+        if len(matching) > 1:
+            raise HybridSwitchError(f"配置包含多个 [{section}] 段，拒绝自动修改")
+        if not matching:
+            if updated and not updated[-1].endswith(("\n", "\r")):
+                updated[-1] += "\n"
+            if updated and updated[-1].strip():
+                updated.append("\n")
+            updated.extend([f"[{section}]\n", f"{key} = {value}\n"])
+            return updated
+        _, header_index, section_end = matching[0]
+        section_start = header_index + 1
+
+    matches: list[tuple[int, str]] = []
+    for index in range(section_start, section_end):
+        replacement = replace_assignment(updated[index], key, value)
+        if replacement is not None:
+            matches.append((index, replacement))
+
+    if len(matches) > 1:
+        location = "顶层" if section is None else f"[{section}]"
+        raise HybridSwitchError(f"{location}包含多个 {key}，拒绝自动修改")
+    if matches:
+        index, replacement = matches[0]
+        updated[index] = replacement
+        return updated
+
+    insert_at = section_end if section is None else header_index + 1
+    updated.insert(insert_at, f"{key} = {value}\n")
+    return updated
+
+
+def render_config(original: bytes, *, enabled: bool, configure_main: bool) -> bytes:
+    text = original.decode("utf-8")
+    lines = text.splitlines(keepends=True)
+    if not lines:
+        lines = []
+
+    if configure_main:
+        lines = set_key(lines, section=None, key="model", value=json.dumps(HYBRID_MODEL))
+        lines = set_key(
+            lines,
+            section=None,
+            key="model_reasoning_effort",
+            value=json.dumps(HYBRID_REASONING_EFFORT),
+        )
+    lines = set_key(
+        lines,
+        section="agents",
+        key="enabled",
+        value="true" if enabled else "false",
+    )
+    rendered = "".join(lines).encode("utf-8")
+
+    try:
+        parsed = tomllib.loads(rendered.decode("utf-8"))
+    except tomllib.TOMLDecodeError as error:
+        raise HybridSwitchError(f"修改后的 config.toml 无法解析：{error}") from error
+
+    if parsed.get("agents", {}).get("enabled") is not enabled:
+        raise HybridSwitchError("修改后的 agents.enabled 与目标状态不一致")
+    if configure_main:
+        if parsed.get("model") != HYBRID_MODEL:
+            raise HybridSwitchError("修改后的主 Agent 模型与混动配置不一致")
+        if parsed.get("model_reasoning_effort") != HYBRID_REASONING_EFFORT:
+            raise HybridSwitchError("修改后的主 Agent 推理强度与混动配置不一致")
+    return rendered
+
+
+def fsync_directory(directory: Path) -> None:
+    descriptor = os.open(directory, os.O_RDONLY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def atomic_write(path: Path, data: bytes, mode: int) -> None:
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{path.name}.hybrid-", dir=path.parent
+    )
+    temporary_path = Path(temporary_name)
+    try:
+        os.fchmod(descriptor, mode)
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(data)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary_path, path)
+        fsync_directory(path.parent)
+    except Exception:
+        try:
+            temporary_path.unlink(missing_ok=True)
+        finally:
+            raise
+
+
+def temporary_file_for(path: Path, data: bytes, mode: int) -> Path:
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{path.name}.hybrid-", dir=path.parent
+    )
+    temporary_path = Path(temporary_name)
+    try:
+        os.fchmod(descriptor, mode)
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(data)
+            handle.flush()
+            os.fsync(handle.fileno())
+    except Exception:
+        temporary_path.unlink(missing_ok=True)
+        raise
+    return temporary_path
+
+
+def atomic_swap(left: Path, right: Path) -> None:
+    if sys.platform != "darwin":
+        raise HybridSwitchError("并发安全的配置切换目前仅支持 macOS")
+    libc = ctypes.CDLL(None, use_errno=True)
+    renamex_np = libc.renamex_np
+    renamex_np.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint]
+    renamex_np.restype = ctypes.c_int
+    result = renamex_np(os.fsencode(left), os.fsencode(right), RENAME_SWAP)
+    if result != 0:
+        error_number = ctypes.get_errno()
+        raise OSError(error_number, os.strerror(error_number), str(right))
+
+
+def locked_config(config_path: Path) -> int:
+    lock_path = config_path.with_name(f".{config_path.name}.hybrid.lock")
+    if lock_path.is_symlink():
+        raise HybridSwitchError(f"拒绝使用符号链接锁文件：{lock_path}")
+    flags = os.O_RDWR | os.O_CREAT
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    descriptor = os.open(lock_path, flags, 0o600)
+    os.fchmod(descriptor, 0o600)
+    return descriptor
+
+
+def create_backup(codex_directory: Path, original: bytes) -> Path:
+    backup_directory = codex_directory / "backups" / "hybrid-switch"
+    if backup_directory.is_symlink():
+        raise HybridSwitchError(f"拒绝使用符号链接备份目录：{backup_directory}")
+    backup_directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+    os.chmod(backup_directory, 0o700)
+
+    timestamp = time.strftime("%Y%m%d-%H%M%S", time.localtime())
+    backup_path = backup_directory / (
+        f"config-{timestamp}-{os.getpid()}-{uuid.uuid4().hex[:8]}.toml"
+    )
+    descriptor = os.open(
+        backup_path,
+        os.O_WRONLY | os.O_CREAT | os.O_EXCL,
+        0o600,
+    )
+    with os.fdopen(descriptor, "wb") as handle:
+        handle.write(original)
+        handle.flush()
+        os.fsync(handle.fileno())
+    fsync_directory(backup_directory)
+    return backup_path
+
+
+def refresh_backup(backup_path: Path, original: bytes) -> None:
+    atomic_write(backup_path, original, 0o600)
+
+
+def desired_state(parsed: dict, *, enabled: bool) -> bool:
+    if parsed.get("agents", {}).get("enabled") is not enabled:
+        return False
+    if enabled:
+        return (
+            parsed.get("model") == HYBRID_MODEL
+            and parsed.get("model_reasoning_effort") == HYBRID_REASONING_EFFORT
+        )
+    return True
+
+
+def update_config(
+    config_path: Path,
+    codex_directory: Path,
+    *,
+    command: str,
+) -> tuple[dict, bool, Path | None]:
+    lock_descriptor = locked_config(config_path)
+    try:
+        fcntl.flock(lock_descriptor, fcntl.LOCK_EX)
+        base, parsed = read_config(config_path)
+        current_enabled = parsed.get("agents", {}).get("enabled") is True
+        target_enabled = not current_enabled if command == "toggle" else command == "on"
+        expected_current = base
+        mode = stat.S_IMODE(config_path.stat().st_mode)
+        backup_path: Path | None = None
+
+        while True:
+            rendered = render_config(
+                base,
+                enabled=target_enabled,
+                configure_main=target_enabled,
+            )
+
+            if rendered == base and expected_current == base:
+                latest, latest_parsed = read_config(config_path)
+                if latest == base:
+                    return latest_parsed, False, None
+                base = latest
+                expected_current = latest
+                parsed = latest_parsed
+                mode = stat.S_IMODE(config_path.stat().st_mode)
+                continue
+
+            if backup_path is None:
+                backup_path = create_backup(codex_directory, base)
+            else:
+                refresh_backup(backup_path, base)
+
+            temporary_path = temporary_file_for(config_path, rendered, mode)
+            try:
+                atomic_swap(temporary_path, config_path)
+                displaced = temporary_path.read_bytes()
+                displaced_mode = stat.S_IMODE(temporary_path.stat().st_mode)
+                fsync_directory(config_path.parent)
+            finally:
+                temporary_path.unlink(missing_ok=True)
+
+            if displaced != expected_current:
+                try:
+                    parsed = tomllib.loads(displaced.decode("utf-8"))
+                except (UnicodeDecodeError, tomllib.TOMLDecodeError) as error:
+                    raise HybridSwitchError(
+                        "检测到并发写入且新内容无法解析；已停止继续切换"
+                    ) from error
+                base = displaced
+                expected_current = rendered
+                mode = displaced_mode
+                continue
+
+            current, verified = read_config(config_path)
+            if desired_state(verified, enabled=target_enabled):
+                return verified, True, backup_path
+
+            # A writer changed the configuration after the successful swap.
+            base = current
+            expected_current = current
+            parsed = verified
+            mode = stat.S_IMODE(config_path.stat().st_mode)
+    finally:
+        try:
+            fcntl.flock(lock_descriptor, fcntl.LOCK_UN)
+        finally:
+            os.close(lock_descriptor)
+
+
+def state_payload(parsed: dict, *, changed: bool, backup: Path | None) -> dict:
+    enabled = parsed.get("agents", {}).get("enabled") is True
+    model = parsed.get("model")
+    effort = parsed.get("model_reasoning_effort")
+    return {
+        "mode": "hybrid" if enabled else "non-hybrid",
+        "hybridEnabled": enabled,
+        "model": model,
+        "reasoningEffort": effort,
+        "hybridMainConfigured": (
+            model == HYBRID_MODEL and effort == HYBRID_REASONING_EFFORT
+        ),
+        "changed": changed,
+        "backup": str(backup) if backup else None,
+        "appliesTo": "new_sessions",
+    }
+
+
+def print_payload(payload: dict, *, as_json: bool) -> None:
+    if as_json:
+        print(json.dumps(payload, ensure_ascii=False, sort_keys=True))
+        return
+
+    state = "已开启" if payload["hybridEnabled"] else "已关闭"
+    print(f"混动模式{state}")
+    print(f"主 Agent：{payload['model']} / {payload['reasoningEffort']}")
+    if payload["backup"]:
+        print(f"备份：{payload['backup']}")
+    print("生效范围：新建会话（当前已运行会话不会热切换）")
+
+
+def execute(command: str, *, as_json: bool) -> int:
+    codex_directory = codex_home()
+    config_path = codex_directory / "config.toml"
+
+    if command == "status":
+        _, parsed = read_config(config_path)
+        print_payload(state_payload(parsed, changed=False, backup=None), as_json=as_json)
+        return 0
+
+    verified, changed, backup_path = update_config(
+        config_path,
+        codex_directory,
+        command=command,
+    )
+
+    print_payload(
+        state_payload(verified, changed=changed, backup=backup_path),
+        as_json=as_json,
+    )
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        prog="codex-hybrid",
+        description="开启、关闭或查看 Codex 混动多 Agent 配置。",
+    )
+    parser.add_argument("command", choices=COMMANDS)
+    parser.add_argument("--json", action="store_true", help="输出机器可读 JSON")
+    arguments = parser.parse_args()
+
+    try:
+        return execute(arguments.command, as_json=arguments.json)
+    except HybridSwitchError as error:
+        if arguments.json:
+            print(
+                json.dumps(
+                    {"error": str(error), "command": arguments.command},
+                    ensure_ascii=False,
+                    sort_keys=True,
+                ),
+                file=sys.stderr,
+            )
+        else:
+            print(f"codex-hybrid: {error}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

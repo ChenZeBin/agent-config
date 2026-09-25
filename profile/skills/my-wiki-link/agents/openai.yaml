@@ -1,0 +1,4 @@
+interface:
+  display_name: My Wiki Link
+  short_description: 识别并安全采集 my-wiki 支持的多平台公开链接
+  default_prompt: 使用 $my-wiki-link 识别或采集这个链接，并用 JSON 给出可核验结果。

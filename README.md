@@ -33,6 +33,22 @@ git add -A && git commit -m "..."
 bin/agent-config sync --push       # 禁止 force push
 ```
 
+## Codex 混动开关
+
+`bin/codex-hybrid` 管理本机 `config.toml` 中的混动状态，并在每次实际修改前创建私有备份：
+
+```bash
+codex-hybrid on       # 开启 Subagent 混动；主 Agent 设为 gpt-6-sol / xhigh
+codex-hybrid off      # 关闭 Subagent 混动；不改写主 Agent 模型和强度
+codex-hybrid toggle   # 在两种状态之间切换
+codex-hybrid status   # 查看当前状态
+```
+
+开关只影响新建会话，已经运行的会话不会热切换。备份保存在
+`$CODEX_HOME/backups/hybrid-switch/`；未设置 `CODEX_HOME` 时使用 `~/.codex`。
+建议把仓库中的命令符号链接到现有 `PATH`，例如
+`~/.local/bin/codex-hybrid`。
+
 状态为 dirty、diverged 或 no-upstream 时，脚本会停止，不会自动 stash、merge 或 rebase。拉取会在 fetch 后固定候选 commit SHA，用当前受信任工具扫描该 SHA 的完整历史，并在推进 HEAD 前完成链接碰撞预检；最终只快进到同一个已验证 SHA，且快进后不会执行候选中的程序。远端若修改 `bin/`、`scripts/`、`.githooks/` 或 `.gitleaks.toml` 等本地控制面文件，自动拉取会拒绝，必须人工审查更新；离线时保持最后一个已验证版本可用。
 
 ## 安全边界
