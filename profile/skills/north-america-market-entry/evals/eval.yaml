@@ -1,0 +1,21 @@
+schema_version: v1alpha1
+environment:
+  type: none
+skills:
+  - source: local_path
+    path: .
+engine:
+  name: codex
+  model:
+    provider: openai
+    name: gpt-5.6-luna
+cases:
+  files:
+    - evals/cases/us-photo-app.yaml
+    - evals/cases/canada-kids.yaml
+    - evals/cases/mexico-expansion.yaml
+  defaults:
+    timeout_seconds: 600
+    max_turns: 5
+report:
+  formats: [json]

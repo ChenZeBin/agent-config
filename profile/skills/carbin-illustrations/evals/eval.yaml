@@ -1,0 +1,35 @@
+schema_version: v1alpha1
+
+environment:
+  type: none
+
+skills:
+  - source: local_path
+    path: .
+    include: [SKILL.md, "references/**", "NOTICE.md"]
+
+engine:
+  name: codex
+
+cases:
+  files:
+    - evals/cases/plan-only-default-style.yaml
+    - evals/cases/default-expressive-comic-planning.yaml
+    - evals/cases/explicit-restrained-style-override.yaml
+    - evals/cases/explicit-style-and-count-override.yaml
+    - evals/cases/image-tool-unavailable-is-honest.yaml
+  defaults:
+    timeout_seconds: 240
+    max_turns: 6
+    expect:
+      exit_code: 0
+  parallelism: 1
+  retry_policy:
+    max_retries: 0
+
+benchmark:
+  enabled: false
+
+report:
+  formats: [json, html]
+  artifacts: [transcript]

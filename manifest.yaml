@@ -4,15 +4,20 @@
     "agents": "profile/AGENTS.md",
     "skills": [
       "agent-reach",
+      "carbin-illustrations",
+      "codex-session-controller",
       "customer-research",
       "design-macos-apps",
       "evidence-gate",
+      "interaction-design",
       "last30days",
       "ln-51-opportunity-evaluator",
       "multi-agent-orchestration",
       "my-wiki-link",
+      "north-america-market-entry",
       "skill-upper",
-      "teach"
+      "teach",
+      "typeless-ui-style"
     ]
   }
 }

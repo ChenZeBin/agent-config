@@ -44,6 +44,14 @@ git add -A && git commit -m "..."
 bin/agent-config sync --push       # 禁止 force push
 ```
 
+## 新建或更新自建 Skill
+
+在本仓库的 `profile/skills/<skill-name>/` 中维护可发布的 `SKILL.md`、引用资料和评测源文件，并同步更新 `manifest.yaml` 与 `dependencies/skills.lock.yaml`。自建内容用 `local-authored-snapshot`；本地改编第三方内容时记录上游 commit 与许可证，并把许可证放入 `third_party_licenses/`。
+
+`~/.codex/skills/` 下的独立目录不会被 `sync --push` 自动发现；评测生成的 `*-workspace/`、日志和缓存也不应复制进公开仓库。入库后先运行 `bin/agent-config validate`、`bin/agent-config security-scan` 和相应 Skill 评测，再执行 `bin/agent-config link --apply` 安装清单中的叶级链接，最后提交并推送。已安装的第三方 Skill 不因位于本机目录就自动成为本仓库的自建内容。
+
+`typeless-ui-style` 的 `evals/fixtures/` 是依赖本机绝对路径与本机 Codex 登录状态的旧评测脚手架，仅保留可移植的 `evals/eval.yaml`、用例和参考资料；不将本机配置、运行日志或夹具脚本发布到公开仓库。
+
 ## Codex 混动开关
 
 `bin/codex-hybrid` 管理本机 `config.toml` 中的混动状态，并在每次实际修改前创建私有备份：

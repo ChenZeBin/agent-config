@@ -1,0 +1,23 @@
+id: explicit-restrained-style-override
+title: 用户指定克制风格时覆盖默认表现力
+description: 验证用户明确要求平静、等比例、无时间成本道具的视觉规则时，Skill 不强加默认的夸张情绪、强对比或蓝色强调。
+
+input:
+  prompt: |
+    先完成一次实际读取步骤。本评测会检查工具轨迹：按照当前会话 Skills catalog 中 `carbin-illustrations` 显示的实际安装路径，读取该路径的 `SKILL.md`，并继续读取相对路径 `references/visual-style.md` 和 `references/qa.md`。不要只根据 catalog 的 description 推断规则；读取完成后再回答。
+
+    只规划，不生成图片。请为下面短文规划恰好两张正文配图。
+
+    短文：每周复盘不需要一次解决所有问题。团队先把本周完成和未完成的事项并排列出，再从中选出下周唯一要优先处理的一项。
+
+    这是明确的视觉覆盖：两张均用纯白背景 #FFFFFF、石墨黑 #1F2937 细线，禁止使用蓝色或其他彩色强调。整体必须克制、平静、等比例、留白充足；人物如果出现，表情中性，动作轻微。不要夸张表情或姿态，不要用大与小、远与近、疏与密制造戏剧性对比，不要画时钟、沙漏、硬币、金额、收据或任何用于说明时间或成本的道具。不要标题、水印、装饰和流程图。文字最多一处，且只能写“下周优先”。
+
+    每张写插入位置、唯一观点、人物或物件动作、构图、比例、颜色和图中文字。不要生成图片、调用工具或写入文件。
+
+constraints:
+  timeout_seconds: 240
+  max_turns: 6
+
+judge:
+  type: script
+  script_path: evals/fixtures/grade_restrained_override.py

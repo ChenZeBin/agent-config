@@ -1,6 +1,18 @@
 {
   "schema_version": 1,
   "skills": {
+    "carbin-illustrations": {
+      "source": "https://github.com/helloianneo/ian-xiaohei-illustrations",
+      "revision": "91b560849e8f883922cc2fa8a358a668caa94105",
+      "revision_basis": "upstream revision recorded in the local NOTICE.md",
+      "content_relation": "locally adapted Chinese workflow; original sample images and character not copied",
+      "license": "MIT",
+      "license_file": "third_party_licenses/carbin-illustrations-LICENSE.txt",
+      "tracking": "local-adapted-snapshot"
+    },
+    "codex-session-controller": {
+      "tracking": "local-authored-snapshot"
+    },
     "agent-reach": {
       "source": "https://github.com/Panniantong/Agent-Reach",
       "revision": "93ae1d18c37b707dec053c7c4f9d91cd8ef8943d",
@@ -33,6 +45,9 @@
     "design-macos-apps": {
       "tracking": "local-authored-snapshot"
     },
+    "interaction-design": {
+      "tracking": "local-authored-snapshot"
+    },
     "ln-51-opportunity-evaluator": {
       "tracking": "local-authored-snapshot"
     },
@@ -40,6 +55,9 @@
       "tracking": "local-authored-snapshot"
     },
     "my-wiki-link": {
+      "tracking": "local-authored-snapshot"
+    },
+    "north-america-market-entry": {
       "tracking": "local-authored-snapshot"
     },
     "skill-upper": {
@@ -59,6 +77,10 @@
       "license": "MIT",
       "license_file": "third_party_licenses/teach-LICENSE.txt",
       "tracking": "legacy-snapshot"
+    },
+    "typeless-ui-style": {
+      "tracking": "local-authored-snapshot",
+      "reference_product": "Typeless 2.7.0 settings screenshot is observational evidence, not an official design system"
     },
     "evidence-gate": {
       "tracking": "local-authored-snapshot",

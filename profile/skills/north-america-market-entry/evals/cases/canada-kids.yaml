@@ -1,0 +1,15 @@
+id: canada-kids
+title: Canada children's app differentiation
+input:
+  prompt: |
+    我们要在加拿大推出儿童拍照游戏，可能处理儿童照片，也计划给家长发营销邮件。请评估用户需求、隐私和上架风险，以及上线前需要收集的证据。不要把美国法规直接当成加拿大法规。
+expect:
+  must_contain:
+    - "加拿大"
+    - "儿童"
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["加拿大", "隐私", "邮件"]
+        any: ["核验", "复核", "确认"]

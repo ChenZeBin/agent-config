@@ -1,0 +1,13 @@
+id: reject-dark-misread
+title: 纠正暗黑霓虹误读
+description: 验证 Skill 能指出真实观察基准是浅色，并在用户没有明确覆盖时避免错误风格推断。
+
+input:
+  prompt: |
+    我只说“做成 Typeless 风格”，同事却建议默认上全黑背景、荧光紫描边、霓虹发光和强玻璃拟态。请依据 typeless-ui-style 用 120 字以内给出判断和替代方向。
+
+judge:
+  type: rule_based
+  success:
+    - output_matches:
+        all: ["浅色|近白|白色", "不符合|不采纳|不建议|不是|并非|不属于|偏离|违背|相悖|而非|误读", "低对比|细边框|柔和阴影|留白", "强调色|品牌色|蓝色|紫色仅用于|仅用于焦点|关键动作"]

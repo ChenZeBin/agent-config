@@ -1,0 +1,17 @@
+id: us-photo-app
+title: US photo app market scan
+input:
+  prompt: |
+    我在做 iPhone 拍照 App：取景时显示预设姿势，在本机识别单人骨架，匹配后自动拍照。我在中国大陆，想先测试美国市场能否赚钱。请运行北美市场进入扫描，区分事实和假设，不编收入预测。
+expect:
+  must_contain:
+    - "美国"
+    - "隐私"
+    - "验证"
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["美国", "订阅", "假设"]
+    - output_matches:
+        all: ["https?://"]

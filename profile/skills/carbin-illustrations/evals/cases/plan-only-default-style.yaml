@@ -1,0 +1,25 @@
+id: plan-only-default-style
+title: 仅规划时提炼正文并遵守默认视觉规则
+description: 验证 Skill 先读完整文章，规划两张各自只表达一个观点的插图，并在用户明确不要生成时停在规划阶段。
+
+input:
+  prompt: |
+    先完成一次实际读取步骤。本评测会检查工具轨迹：按照当前会话 Skills catalog 中 `carbin-illustrations` 显示的实际安装路径，读取该路径的 `SKILL.md`，并继续读取相对路径 `references/visual-style.md` 和 `references/qa.md`。不要只根据 catalog 的 description 推断规则；读取完成后再回答。
+
+    请为下面的文章规划两张正文配图。只做规划，不要生成图片、不要调用任何生图工具，也不要给我文件路径。
+
+    标题：别用更多任务掩盖瓶颈
+
+    正文：团队交付延迟时，常见反应是同时启动更多任务，仿佛忙碌本身会提高速度。但当设计评审是共同的瓶颈，更多任务只会在评审前排队，等待时间更长。
+
+    更有效的做法是先把阻塞状态摆到台面上，让每个人看见卡住的环节。随后限制同时进行的工作，只把已经畅通、最接近完成的任务向前拉动。这样减少切换和排队，交付才会稳定。
+
+    每张图都请写清插入位置、它解释的唯一观点、场景隐喻、人物正在做的关键动作、必要元素、比例和图中文字。没有特别要求时采用此 Skill 的默认风格。
+
+constraints:
+  timeout_seconds: 240
+  max_turns: 6
+
+judge:
+  type: script
+  script_path: evals/fixtures/grade_plan_only_default.py

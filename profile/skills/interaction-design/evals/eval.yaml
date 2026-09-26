@@ -1,0 +1,47 @@
+{
+  "schema_version": "v1alpha1",
+  "environment": {
+    "type": "none"
+  },
+  "skills": [
+    {
+      "source": "local_path",
+      "path": ".",
+      "include": [
+        "SKILL.md",
+        "references/**"
+      ]
+    }
+  ],
+  "engine": {
+    "name": "codex"
+  },
+  "cases": {
+    "files": [
+      "evals/cases/clipboard.yaml",
+      "evals/cases/transfer.yaml",
+      "evals/cases/reading.yaml",
+      "evals/cases/local.yaml"
+    ],
+    "defaults": {
+      "timeout_seconds": 480,
+      "max_turns": 8,
+      "expect": {
+        "exit_code": 0
+      }
+    },
+    "parallelism": 2
+  },
+  "benchmark": {
+    "enabled": false
+  },
+  "report": {
+    "formats": [
+      "json",
+      "html"
+    ],
+    "artifacts": [
+      "transcript"
+    ]
+  }
+}

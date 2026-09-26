@@ -1,0 +1,5 @@
+interface:
+  display_name: "Typeless UI Style"
+  short_description: "将 Typeless 的克制浅色视觉语言转译到产品界面"
+  brand_color: "#1D1D1F"
+  default_prompt: "使用 $typeless-ui-style 为当前产品设计一套保留品牌语义的 Typeless 风格界面。"

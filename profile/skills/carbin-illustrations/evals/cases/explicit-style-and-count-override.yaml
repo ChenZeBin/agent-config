@@ -1,0 +1,21 @@
+id: explicit-style-and-count-override
+title: 用户的数量和视觉要求覆盖默认值
+description: 验证 Skill 精确规划三张图，并以用户指定的角色、配色和比例替代默认人物、蓝色和横版规则。
+
+input:
+  prompt: |
+    先完成一次实际读取步骤。本评测会检查工具轨迹：按照当前会话 Skills catalog 中 `carbin-illustrations` 显示的实际安装路径，读取该路径的 `SKILL.md`，并继续读取相对路径 `references/visual-style.md` 和 `references/qa.md`。不要只根据 catalog 的 description 推断规则；读取完成后再回答。
+
+    只规划，不生成图片。请为这段文章规划恰好三张配图：文章讲的是把大目标拆成可恢复的小步骤，失败时保留检查点，再从最近的检查点继续。
+
+    本次是一个明确的视觉覆盖：三张都要竖版 4:5，背景是淡奶油色 #FFF7ED，深棕色 #2D241F 手绘线条，只能使用橘红色 #EA580C 作为强调色。不要画人物；每张都让一只纸船亲自推动或修正核心物件。不要使用默认的白底、蓝色、16:9 或通用短发人物。图中文字最多一处，且只有第二张可以写“检查点”。
+
+    对每张图写插入位置、唯一意思、纸船动作、关键物件、构图、比例、颜色和文字。不要把三张塞进一张流程图，也不要生成任何图片或文件。
+
+constraints:
+  timeout_seconds: 240
+  max_turns: 6
+
+judge:
+  type: script
+  script_path: evals/fixtures/grade_explicit_override.py

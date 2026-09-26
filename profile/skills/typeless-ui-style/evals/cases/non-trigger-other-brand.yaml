@@ -1,0 +1,14 @@
+id: non-trigger-other-brand
+title: 无关品牌请求不强行套用 Typeless
+description: 验证 Skill 面对未提及 Typeless 的独立品牌方向时遵守适用边界。
+
+input:
+  prompt: |
+    为一个热带潜水旅行落地页提出一句话视觉方向。品牌要求是海洋蓝、高饱和珊瑚色、阳光感和大幅水下摄影；保持消费品牌与沉浸式内容体验，不要做成桌面工具产品。
+
+judge:
+  type: rule_based
+  success:
+    - output_matches:
+        all: ["海洋蓝|深海蓝|海蓝", "珊瑚", "高饱和|点亮|鲜艳", "阳光|明亮", "水下摄影|水下"]
+        not: ["Typeless", "设置页", "软件界面"]

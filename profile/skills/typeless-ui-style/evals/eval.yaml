@@ -1,0 +1,39 @@
+schema_version: v1alpha1
+
+environment:
+  type: none
+
+skills:
+  - source: local_path
+    path: .
+    include: [SKILL.md, "references/**"]
+
+engine:
+  name: codex
+  model:
+    provider: openai
+    name: gpt-5.6-luna
+
+cases:
+  files:
+    - evals/cases/finder-right-transfer.yaml
+    - evals/cases/finder-right-implicit-ui.yaml
+    - evals/cases/preserve-target-brand.yaml
+    - evals/cases/reject-dark-misread.yaml
+    - evals/cases/validation-handoff.yaml
+    - evals/cases/non-trigger-other-brand.yaml
+  defaults:
+    timeout_seconds: 240
+    max_turns: 5
+    expect:
+      exit_code: 0
+  parallelism: 1
+  retry_policy:
+    max_retries: 0
+
+benchmark:
+  enabled: false
+
+report:
+  formats: [json, html]
+  artifacts: [transcript]

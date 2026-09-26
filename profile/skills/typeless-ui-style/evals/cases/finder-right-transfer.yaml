@@ -1,0 +1,16 @@
+id: finder-right-transfer
+title: 将 Typeless 视觉语言转译到 FinderRight
+description: 验证 Skill 保留文件工具语义，并给出浅色层级、可实现 token 与真实验证要求。
+
+input:
+  prompt: |
+    这是一个无需读取仓库、不修改代码的短答。请使用当前安装的 typeless-ui-style Skill，在 10 条以内为 FinderRight 的“超级右键”操作中心写精简但可实现的 HTML 视觉规格。FinderRight 必须保留文件转换、复制路径、终端打开和快捷键等语义，不能变成参考产品的设置页复刻。
+
+    请说明转译原则，提供一小段关键 CSS tokens，列出核心组件和交互状态，并给出实现后的验证计划。本轮只写规格，不生成代码或截图。
+
+judge:
+  type: rule_based
+  success:
+    - output_matches:
+        all: ["FinderRight", "浅色|近白|白色", "tokens|token", "真实.*环境|真实.*浏览器|实际.*浏览器|真实.*HTML|真实.*渲染|目标浏览器|浏览器中", "截图|截屏"]
+        not: ["把 FinderRight 改名为 Typeless", "使用 Typeless 商标作为产品标志"]

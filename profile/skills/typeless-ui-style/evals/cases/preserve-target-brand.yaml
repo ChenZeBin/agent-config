@@ -1,0 +1,21 @@
+id: preserve-target-brand
+title: 保留目标产品品牌语义
+description: 验证 Skill 不复制 Typeless 品牌，并将已有品牌色映射到稀缺强调色槽位。
+
+input:
+  prompt: |
+    我有一款叫“蓝笺”的知识卡片 App，现有品牌蓝是 #2457D6，核心信息架构是“收集、连接、复习”。请用 typeless-ui-style 给出 8 条界面改造决定。
+
+    这是强约束：产品名称、三个核心栏目和品牌蓝都不能被替换。请说明怎样吸收参考风格又保持这些既有资产，并覆盖焦点、开关或关键动作的颜色策略。
+
+expect:
+  must_contain: ["蓝笺", "#2457D6", "收集", "连接", "复习"]
+  must_not_contain: ["把产品改名为 Typeless"]
+
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["蓝笺", "#2457D6", "收集", "连接", "复习"]
+        any: ["焦点", "开启态", "关键动作"]
+        not: ["把产品改名为 Typeless"]

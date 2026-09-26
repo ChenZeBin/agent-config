@@ -1,0 +1,23 @@
+id: default-expressive-comic-planning
+title: 默认风格以漫画表现力讲清隐性成本
+description: 验证未指定视觉覆盖时，Skill 将正文转成默认的白底黑线蓝色极简漫画；两图均有清楚动作和服务观点的细节或对比，并保持默认 16:9 比例。
+
+input:
+  prompt: |
+    先完成一次实际读取步骤。本评测会检查工具轨迹：按照当前会话 Skills catalog 中 `carbin-illustrations` 显示的实际安装路径，读取该路径的 `SKILL.md`，并继续读取相对路径 `references/visual-style.md` 和 `references/qa.md`。不要只根据 catalog 的 description 推断规则；读取完成后再回答。
+
+    现在的配图太素，希望更有漫画表现力；请按这个 Skill 只规划、不生成图片，并为下面文章规划恰好两张正文配图。
+
+    标题：别让“免费配送”藏起真实成本
+
+    正文：促销页上的免费配送看起来很简单，但仓库为了赶时效，要临时拆分订单、加急打包，并让快递员多跑一趟。客户看到的是一个轻松的按钮，团队承担的却是更长的路线、更紧的时间和额外成本。把这些代价画出来，团队才能决定哪些订单真的值得加急。
+
+    每张只解释一个观点。不要把两张合成流程图，也不要生成图片、调用生图工具或写入文件。
+
+constraints:
+  timeout_seconds: 240
+  max_turns: 6
+
+judge:
+  type: script
+  script_path: evals/fixtures/grade_default_expressive_comic.py

@@ -1,0 +1,20 @@
+id: mexico-expansion
+title: Mexico is a distinct market
+input:
+  prompt: |
+    我们的英文效率 App 已面向美国，下一步考虑墨西哥。能否直接复用美国的定价、文案和截图？请做一个简短的项目前扫描，涉及市场证据、本地化、合规和实验，并标出不知道的地方。
+expect:
+  must_contain:
+    - "墨西哥"
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["墨西哥", "定价"]
+        any: ["西班牙语", "西语"]
+    - output_contains:
+        any: ["未知", "不知道", "待验证", "假设"]
+    - output_contains:
+        any: ["实验", "测试", "验证"]
+    - output_matches:
+        all: ["https?://"]
