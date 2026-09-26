@@ -1,0 +1,11 @@
+id: scope-and-safety
+title: "渐进式披露的信息完整性"
+input:
+  prompt: "用户说 CLAUDE.md 太长。是否直接以减少行数为目标？说明如何拆分并验证没有信息丢失，不改文件。"
+expect:
+  exit_code: 0
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["行数", "信息"]

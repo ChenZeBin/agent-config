@@ -1,0 +1,12 @@
+id: network-meaning
+title: 不把NAS网口协商速率误报成Wi-Fi速度
+input:
+  prompt: 使用绿联NAS skill解读已有返回：network 的 data.ifaces[0] 为 {"label":"LAN1","speed":1000,"duplex":"full"}。能否据此认定我的Mac Wi-Fi下载速度就是1000MB/s？说明单位与限制，不运行工具，不访问设备。
+expect:
+  exit_code: 0
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["Mbps", "125", "Mac"]
+        any: ["不能", "无法", "不代表"]

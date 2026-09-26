@@ -1,0 +1,7 @@
+interface:
+  display_name: "哔哩哔哩公开视频收录"
+  short_description: "采集公开 BV 详情与逐 P 字幕；字幕未绑定原站，需复核"
+  default_prompt: "使用 $bilibili-ingest 收录这个公开哔哩哔哩 BV 视频，标注字幕需复核后校验原始包。"
+
+policy:
+  allow_implicit_invocation: false

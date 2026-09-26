@@ -1,0 +1,16 @@
+{
+  "name": "my-wiki-wechat-official-account",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.22.0 <23"
+  },
+  "scripts": {
+    "build": "node ../../../node_modules/typescript/bin/tsc -p tsconfig.json",
+    "typecheck": "node ../../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test --test-concurrency=1 ../../../staging/wechat-official-account-dist/test/unit/*.test.js ../../../staging/wechat-official-account-dist/test/integration/*.test.js",
+    "start": "node --env-file-if-exists=.env ../../../staging/wechat-official-account-dist/src/main.js",
+    "pairing:hmac": "node --env-file-if-exists=.env ../../../staging/wechat-official-account-dist/src/pairing-hmac.js"
+  }
+}

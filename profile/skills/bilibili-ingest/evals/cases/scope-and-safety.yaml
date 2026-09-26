@@ -1,0 +1,11 @@
+id: scope-and-safety
+title: "B 站字幕的证据状态"
+input:
+  prompt: "公开 B 站 BV 视频若只有 OpenCLI 字幕，归档后的证据状态应该是什么？只解释，不采集。"
+expect:
+  exit_code: 0
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["needs-review", "字幕"]

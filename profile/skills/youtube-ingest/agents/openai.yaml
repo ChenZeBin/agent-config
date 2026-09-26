@@ -1,0 +1,7 @@
+interface:
+  display_name: "YouTube公开视频收录"
+  short_description: "采集公开YouTube元数据与字幕并固化为可验证证据包"
+  default_prompt: "使用 $youtube-ingest 收录这个公开 YouTube 视频并校验原始包。"
+
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,6 @@
+interface:
+  display_name: "来源链接自动入库"
+  short_description: "微信、X、Bilibili 与 YouTube 链接采集并编入本地 Wiki"
+  default_prompt: "使用 $article-ingest 自动收录这个受支持的来源链接并完成 Wiki 编译。"
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,6 @@
+interface:
+  display_name: "微信文章自动收录"
+  short_description: "手机发送微信链接，自动采集、校验并编入本地 Wiki"
+  default_prompt: "使用 $wechat-ingest 自动收录这个微信公众号链接，校验后编入本地 wiki。"
+policy:
+  allow_implicit_invocation: false

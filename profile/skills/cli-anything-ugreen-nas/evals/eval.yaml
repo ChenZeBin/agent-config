@@ -1,0 +1,28 @@
+schema_version: v1alpha1
+environment:
+  type: none
+skills:
+  - source: local_path
+    path: .
+    include: [SKILL.md]
+engine:
+  name: codex
+  model:
+    provider: openai
+    name: gpt-5.6-luna
+cases:
+  files:
+    - evals/cases/capacity-command.yaml
+    - evals/cases/network-meaning.yaml
+    - evals/cases/auth-failure.yaml
+  defaults:
+    timeout_seconds: 180
+    max_turns: 8
+  parallelism: 1
+judge:
+  type: rule_based
+benchmark:
+  enabled: false
+report:
+  formats: [json]
+  artifacts: [transcript]

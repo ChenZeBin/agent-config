@@ -1,0 +1,13 @@
+id: capacity-command
+title: 正确选择容量只读命令
+input:
+  prompt: 请用绿联NAS skill告诉我查询现有NAS存储剩余空间的精确命令和返回字段。本题给出命令、返回字段和容量单位，不运行，不访问设备，不读取登录信息。
+expect:
+  exit_code: 0
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["cli-anything-ugreen-nas --json storage", "available", "字节"]
+    - output_contains:
+        not: ["project new"]

@@ -14,7 +14,11 @@
     }
   ],
   "engine": {
-    "name": "codex"
+    "name": "codex",
+    "model": {
+      "provider": "openai",
+      "name": "gpt-5.6-luna"
+    }
   },
   "cases": {
     "files": [

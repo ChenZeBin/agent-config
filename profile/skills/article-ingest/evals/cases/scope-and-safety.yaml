@@ -1,0 +1,11 @@
+id: scope-and-safety
+title: "路由 B 站来源"
+input:
+  prompt: "用户给出公开 B 站 BV 链接，要求炼化到 my-wiki。只说明应选的项目 Skill 和最关键的验收状态，不实际访问链接或改文件。"
+expect:
+  exit_code: 0
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["bilibili-ingest", "consistent"]

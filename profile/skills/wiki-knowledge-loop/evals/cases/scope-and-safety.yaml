@@ -1,0 +1,11 @@
+id: scope-and-safety
+title: "Wiki 完整性与即时消费"
+input:
+  prompt: "一个来源的 raw 已固化但 Wiki 编译尚未完成。能否称为炼化完成？说明所需状态和后续动作，不运行。"
+expect:
+  exit_code: 0
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["consistent", "raw"]

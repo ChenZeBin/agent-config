@@ -4,8 +4,11 @@
     "agents": "profile/AGENTS.md",
     "skills": [
       "agent-reach",
+      "article-ingest",
+      "bilibili-ingest",
       "carbin-illustrations",
-      "codex-session-controller",
+      "claude-md-progressive-disclosurer",
+      "cli-anything-ugreen-nas",
       "customer-research",
       "design-macos-apps",
       "evidence-gate",
@@ -17,7 +20,13 @@
       "north-america-market-entry",
       "skill-upper",
       "teach",
-      "typeless-ui-style"
+      "typeless-ui-style",
+      "wechat-channels-ingest",
+      "wechat-ingest",
+      "wechat-official-account",
+      "wiki-knowledge-loop",
+      "x-ingest",
+      "youtube-ingest"
     ]
   }
 }

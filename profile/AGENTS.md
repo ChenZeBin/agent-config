@@ -63,6 +63,12 @@
 
 - 创建任何 Skill 后，必须使用 `skill-upper` Skill 运行评测：先执行 `skill-up validate`，再执行真实 `skill-up run`，读取 `result.json` 和逐例评分后再交付；评测失败或报错时如实报告，不得削弱有效断言来制造通过。
 
+### 自有 Skill 发布到 agent-config
+
+- 今后创建或实质改编的自有 Skill，不论最初写在 `~/.codex/skills/`、`~/.agents/skills/` 或项目目录，都要在创建当次同步到 `$HOME/.config/agent-config`。在 `profile/skills/<name>/` 维护可公开源文件，同步 `manifest.yaml` 与 `dependencies/skills.lock.yaml`；不能仅保存在本机原目录。
+- 完成 `skill-up validate`、真实 `skill-up run`、仓库 `validate`、`security-scan` 和适用的证据验收后，提交并非强制推送到 `ChenZeBin/agent-config` 的 `main`，再核对远端。推送失败时明确报告未同步，不得声称已发布。
+- 第三方原版 Skill 不因安装在本机就自动复制；实质改编时记录上游版本与许可证。凭据、本机配置、会话、日志、缓存和评测运行产物不得随 Skill 上传。
+
 ## Mac mini 大文件与 NAS 归档
 
 - 仅在磁盘整理、NAS 归档或对应定时任务中触发，不在普通开发任务中扫描。NAS 地址、共享名及归档路径保存在本机私有文件 `$HOME/.config/agent-config-local/nas-archive.md`；使用前读取该文件并核对 `mount` 的服务器、共享名及真实路径。挂载点可能变化；未挂载时不得创建同名本地目录冒充 NAS。

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Wiki 知识闭环"
+  short_description: "贯通任务召回、会话炼化、即时消费、Wiki 体检与质量评测"
+  default_prompt: "Use $wiki-knowledge-loop to recall relevant knowledge before this task or run a Wiki lifecycle workflow."

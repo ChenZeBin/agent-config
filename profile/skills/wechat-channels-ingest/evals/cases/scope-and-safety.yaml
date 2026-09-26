@@ -1,0 +1,11 @@
+id: scope-and-safety
+title: "视频号元数据边界"
+input:
+  prompt: "微信视频号公开分享短链只得到第一方预览元数据，没有视频和字幕，可以声称视频已炼化吗？只解释。"
+expect:
+  exit_code: 0
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["metadata-only", "archive-only"]

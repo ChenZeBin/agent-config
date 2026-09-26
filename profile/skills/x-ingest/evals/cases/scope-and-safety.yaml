@@ -1,0 +1,11 @@
+id: scope-and-safety
+title: "X 链接采集范围"
+input:
+  prompt: "用户给出公开 x.com 状态链接并要求归档。说出该 Skill 的范围和验证步骤，不访问网络。"
+expect:
+  exit_code: 0
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["status", "verify"]

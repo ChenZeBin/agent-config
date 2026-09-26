@@ -1,0 +1,12 @@
+<xml>
+  <ToUserName><![CDATA[gh_example_account]]></ToUserName>
+  <FromUserName><![CDATA[openid_example_sender]]></FromUserName>
+  <CreateTime>1712345678</CreateTime>
+  <MsgType><![CDATA[link]]></MsgType>
+  <Title><![CDATA[Example article]]></Title>
+  <Description><![CDATA[Example description]]></Description>
+  <Url>https://mp.weixin.qq.com/s/example?source=probe&amp;scene=1</Url>
+  <MsgId>9223372036854775807</MsgId>
+  <MsgDataId><![CDATA[msg-data-example]]></MsgDataId>
+  <Idx>7</Idx>
+</xml>

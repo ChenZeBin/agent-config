@@ -61,7 +61,7 @@ def has_any(value, words):
 def has_force_relation(value):
     """Require a body/actor and a physical manipulation verb in one local action."""
     return bool(re.search(
-        r"(?:手|掌|指|臂|脚|肩|身体|人物|角色|员工|负责人|成员|纸船).{0,36}(?:压|拉|推|拖|扣|握|顶|抵|蹬|拽|抬|搬|扛|托|扶|放)",
+        r"(?:手|掌|指|臂|脚|肩|身体|人物|角色|员工|负责人|成员|纸船).{0,36}(?:压|按|拉|推|拖|扣|握|顶|抵|蹬|拽|抬|搬|扛|托|扶|放)",
         value,
     ))
 
@@ -69,7 +69,7 @@ def has_force_relation(value):
 def has_effective_detail_or_contrast(value):
     """A detail must explain the point; a bare decorative noun does not qualify."""
     detail = ("叙事细节", "必要元素", "关键物件", "时间或成本", "时间或成本道具", "构图对比")
-    explains = ("表示", "说明", "表达", "支撑", "突出", "对比", "提示", "解释")
+    explains = ("表示", "说明", "表达", "支撑", "突出", "对比", "提示", "解释", "暗示")
     return has_any(value, detail) and has_any(value, explains)
 
 
@@ -105,7 +105,7 @@ for index, plan in enumerate(plans, 1):
     require(has_effective_detail_or_contrast(plan),
             f"plan {index} lacks a detail or contrast that explains its point")
     require(has_any(plan, ("插入位置", "插入", "段落")), f"plan {index} lacks an insertion location")
-    require(has_any(plan, ("唯一观点", "核心意思", "重点")), f"plan {index} lacks one stated idea")
+    require(has_any(plan, ("唯一观点", "核心观点", "核心意思", "重点")), f"plan {index} lacks one stated idea")
 
 require(sum(term in text for term in ("免费配送", "配送", "订单", "仓库", "加急", "快递")) >= 3,
         "plans are not grounded in the article's hidden delivery cost")

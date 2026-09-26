@@ -10,9 +10,6 @@
       "license_file": "third_party_licenses/carbin-illustrations-LICENSE.txt",
       "tracking": "local-adapted-snapshot"
     },
-    "codex-session-controller": {
-      "tracking": "local-authored-snapshot"
-    },
     "agent-reach": {
       "source": "https://github.com/Panniantong/Agent-Reach",
       "revision": "93ae1d18c37b707dec053c7c4f9d91cd8ef8943d",
@@ -101,6 +98,55 @@
           "license_file": "third_party_licenses/bashlex-PLY-LICENSE.txt"
         }
       }
+    },
+    "article-ingest": {
+      "tracking": "local-authored-snapshot",
+      "scope": "my-wiki project",
+      "runtime_dependency": "my-wiki repository and its local workflows; publishable Skill copy excludes private data"
+    },
+    "bilibili-ingest": {
+      "tracking": "local-authored-snapshot",
+      "scope": "my-wiki project",
+      "runtime_dependency": "my-wiki repository and its local workflows; publishable Skill copy excludes private data"
+    },
+    "wechat-channels-ingest": {
+      "tracking": "local-authored-snapshot",
+      "scope": "my-wiki project",
+      "runtime_dependency": "my-wiki repository and its local workflows; publishable Skill copy excludes private data"
+    },
+    "wechat-ingest": {
+      "tracking": "local-authored-snapshot",
+      "scope": "my-wiki project",
+      "runtime_dependency": "my-wiki repository and its local workflows; publishable Skill copy excludes private data"
+    },
+    "wechat-official-account": {
+      "tracking": "local-authored-snapshot",
+      "scope": "my-wiki project",
+      "runtime_dependency": "my-wiki repository and its local workflows; publishable Skill copy excludes private data"
+    },
+    "wiki-knowledge-loop": {
+      "tracking": "local-authored-snapshot",
+      "scope": "my-wiki project",
+      "runtime_dependency": "my-wiki repository and its local workflows; publishable Skill copy excludes private data"
+    },
+    "x-ingest": {
+      "tracking": "local-authored-snapshot",
+      "scope": "my-wiki project",
+      "runtime_dependency": "my-wiki repository and its local workflows; publishable Skill copy excludes private data"
+    },
+    "youtube-ingest": {
+      "tracking": "local-authored-snapshot",
+      "scope": "my-wiki project",
+      "runtime_dependency": "my-wiki repository and its local workflows; publishable Skill copy excludes private data"
+    },
+    "cli-anything-ugreen-nas": {
+      "tracking": "local-authored-snapshot",
+      "scope": "ugreen-nas-cli project",
+      "runtime_dependency": "locally installed cli-anything-ugreen-nas and signed-in UGREEN NAS desktop client"
+    },
+    "claude-md-progressive-disclosurer": {
+      "tracking": "local-authored-snapshot",
+      "scope": "AGENTS.md project"
     }
   }
 }

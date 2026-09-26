@@ -1,0 +1,7 @@
+interface:
+  display_name: "微信视频号公开分享收录"
+  short_description: "固化视频号第一方公开预览；无媒体或字幕时只归档"
+  default_prompt: "使用 $wechat-channels-ingest 收录这个公开微信视频号分享链接，校验原始包并明确内容证据缺口。"
+
+policy:
+  allow_implicit_invocation: false
