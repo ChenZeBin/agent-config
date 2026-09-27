@@ -1,0 +1,19 @@
+id: us-mac-utility
+title: 美国 Mac 小工具的文案与上架扫描
+description: 验证美国用户措辞、Mac 界面与 Mac App Store 地区化能进入同一份决策
+input:
+  prompt: |
+    我准备批量做 Mac 小应用，第一款是菜单栏窗口整理工具，先上美国 Mac App Store。请跑一次发布前的北美市场进入扫描：我想把中文介绍直接机翻成英文，截图也沿用中文版本。请给我最低限度的文案、界面和商店验证清单；没有用户研究和实际运行证据时不要宣称已本地化或会赚钱。
+expect:
+  must_contain: ["美国", "Mac", "截图"]
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        any: ["en-US", "美式英语"]
+    - output_contains:
+        any: ["关键词", "搜索词"]
+    - output_contains:
+        any: ["键盘", "快捷键", "VoiceOver"]
+    - output_contains:
+        any: ["假设", "未知", "待核验"]

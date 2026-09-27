@@ -55,7 +55,28 @@
       "tracking": "local-authored-snapshot"
     },
     "north-america-market-entry": {
-      "tracking": "local-authored-snapshot"
+      "tracking": "local-authored-snapshot",
+      "content_relation": "Original locally authored market-entry skill; synthesized workflow ideas from three MIT-licensed public skills in original Chinese wording, without copying their text or assets",
+      "informed_by": [
+        {
+          "source": "https://github.com/jezweb/claude-skills/blob/176df0f01dfb629fb5f0db144d2e4aa76931d862/plugins/writing/skills/us-business-english/SKILL.md",
+          "revision": "176df0f01dfb629fb5f0db144d2e4aa76931d862",
+          "license": "MIT",
+          "scope": "US English tone and spelling; adapted only for product copy checks"
+        },
+        {
+          "source": "https://github.com/owl-listener/designer-skills/blob/9a6930cf84a822eb458624bd11c61aac5bbdf224/design-systems/skills/localization-design/SKILL.md",
+          "revision": "9a6930cf84a822eb458624bd11c61aac5bbdf224",
+          "license": "MIT",
+          "scope": "Language expansion, locale formatting and cross-cultural interface QA; web-specific implementation omitted"
+        },
+        {
+          "source": "https://github.com/appeeky/aso-skills/blob/8de1ee18d8971723ac49320f01c574b8972ed1a5/skills/localization/SKILL.md",
+          "revision": "8de1ee18d8971723ac49320f01c574b8972ed1a5",
+          "license": "MIT",
+          "scope": "Per-market keyword, metadata and screenshot research; iPhone-specific field assumptions omitted"
+        }
+      ]
     },
     "skill-upper": {
       "source": "https://github.com/alibaba/skill-up",

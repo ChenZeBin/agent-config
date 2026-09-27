@@ -1,0 +1,19 @@
+id: mexico-mac-store
+title: 墨西哥 Mac 商店素材不能从美国逐字翻译
+description: 验证西语地区、搜索词与商店素材需要单独研究
+input:
+  prompt: |
+    美国 Mac App Store 的剪贴板小工具已有英文关键词、美元价格和英文截图。准备进墨西哥 Mac App Store，我想把关键词逐字翻成西班牙语并沿用截图顺序。请做一次简短扩区扫描，指出先验证哪些用户用词、商店展示和本地体验；拿不到实时数据时标明未知，不要报具体收入提升百分比。
+expect:
+  must_contain: ["墨西哥", "截图"]
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        any: ["es-MX", "墨西哥西语", "墨西哥西班牙语"]
+    - output_contains:
+        any: ["关键词", "搜索词"]
+    - output_contains:
+        any: ["核验", "测试", "实验"]
+    - output_contains:
+        any: ["未知", "假设", "待核验"]

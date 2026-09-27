@@ -23,8 +23,14 @@
 - 魁北克法语及商业展示：[Office québécois de la langue française](https://www.oqlf.gouv.qc.ca/)；按产品、渠道核对适用条款。
 - 墨西哥法律原文：[Cámara de Diputados 法律库](https://www.diputados.gob.mx/LeyesBiblio/)；检索当前个人数据与消费者保护法规、修订与实施规则。
 
-## iOS / Android
+## Apple 平台与 Mac App Store
 
-- [Apple App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/)、[App Store Connect 隐私披露](https://developer.apple.com/help/app-store-connect/manage-app-information/manage-app-privacy)、[Apple 本地化](https://developer.apple.com/localization/)、[Apple 无障碍设计](https://developer.apple.com/design/human-interface-guidelines/accessibility)。
+- [Apple App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/)、[App Store Connect 隐私披露](https://developer.apple.com/help/app-store-connect/manage-app-information/manage-app-privacy)、[Apple 无障碍设计](https://developer.apple.com/design/human-interface-guidelines/accessibility)。
+- [Xcode Localization](https://developer.apple.com/documentation/xcode/localization)、[界面本地化准备与伪语言测试](https://developer.apple.com/documentation/xcode/preparing-your-interface-for-localization)：用于核对 macOS 应用本体的字符串、布局和实机测试。
+- [App Store 本地化语言与 storefront](https://developer.apple.com/help/app-store-connect/reference/app-information/app-store-localizations)、[本地化应用信息](https://developer.apple.com/help/app-store-connect/manage-app-information/localize-app-information)：商店展示语言不单由国家决定，元数据语言和二进制内语言也不同。
+- [平台版本元数据](https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information)、[Mac 截图与预览上传](https://developer.apple.com/help/app-store-connect/manage-app-information/upload-app-previews-and-screenshots)：每次上架前核验当前 macOS 字段与素材要求，不套用 iPhone 的尺寸或限制。
+
+## Android 与跨平台
+
 - [Google Play Developer Policy Center](https://play.google.com/about/developer-content-policy/)、[Google Play 照片与视频权限](https://support.google.com/googleplay/android-developer/answer/14115180)。
 - [W3C 移动无障碍](https://www.w3.org/WAI/standards-guidelines/mobile/)；将其用于可用性检查，不替代平台和当地法律要求。

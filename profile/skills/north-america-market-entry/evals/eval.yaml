@@ -14,6 +14,9 @@ cases:
     - evals/cases/us-photo-app.yaml
     - evals/cases/canada-kids.yaml
     - evals/cases/mexico-expansion.yaml
+    - evals/cases/us-mac-utility.yaml
+    - evals/cases/canada-mac-locales.yaml
+    - evals/cases/mexico-mac-store.yaml
   defaults:
     timeout_seconds: 600
     max_turns: 5

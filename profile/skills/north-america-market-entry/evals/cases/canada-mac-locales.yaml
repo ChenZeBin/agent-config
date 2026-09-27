@@ -1,0 +1,19 @@
+id: canada-mac-locales
+title: 加拿大英语与魁北克法语分开核验
+description: 验证不能把美国英语或单一加拿大市场直接用于魁北克
+input:
+  prompt: |
+    一款英文 Mac 习惯追踪 App 已在美国上架。现在准备进入加拿大，包括魁北克。我想原样复用 en-US 的应用文案、英文商店页和截图，不做额外检查。请运行扩区扫描，列出语言、界面、商店和需要核验的要求；不要把美国规则当成加拿大规则。
+expect:
+  must_contain: ["加拿大", "魁北克"]
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        any: ["en-CA", "加拿大英语"]
+    - output_contains:
+        any: ["fr-CA", "法语"]
+    - output_contains:
+        any: ["核验", "确认", "待查"]
+    - output_contains:
+        any: ["截图", "商店"]
