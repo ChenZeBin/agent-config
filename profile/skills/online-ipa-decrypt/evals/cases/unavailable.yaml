@@ -1,0 +1,11 @@
+id: unavailable
+title: 网站不可用时不编造替代入口
+input:
+  prompt: 使用 online-ipa-decrypt Skill。前面那个砸壳网站今天打不开。我不想装任何本地工具，只说明现在怎么办，不联网、不操作设备。
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["https://decrypt.34306.lol/"]
+        any: ["稍后", "重试", "恢复"]
+        not: ["./setup.sh", "brew install", "网站当前正常", "已经恢复"]

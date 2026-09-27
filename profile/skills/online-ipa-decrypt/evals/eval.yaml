@@ -1,0 +1,28 @@
+schema_version: v1alpha1
+environment:
+  type: none
+skills:
+  - source: local_path
+    path: .
+    include: [SKILL.md]
+engine:
+  name: codex
+cases:
+  files:
+    - evals/cases/basic.yaml
+    - evals/cases/local-ipa.yaml
+    - evals/cases/unavailable.yaml
+    - evals/cases/completeness.yaml
+  defaults:
+    timeout_seconds: 240
+    max_turns: 4
+    expect:
+      exit_code: 0
+  parallelism: 2
+judge:
+  type: rule_based
+benchmark:
+  enabled: false
+report:
+  formats: [json]
+  artifacts: [transcript]

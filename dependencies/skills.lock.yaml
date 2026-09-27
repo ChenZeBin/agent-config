@@ -147,6 +147,9 @@
     "claude-md-progressive-disclosurer": {
       "tracking": "local-authored-snapshot",
       "scope": "AGENTS.md project"
+    },
+    "online-ipa-decrypt": {
+      "tracking": "local-authored-snapshot"
     }
   }
 }

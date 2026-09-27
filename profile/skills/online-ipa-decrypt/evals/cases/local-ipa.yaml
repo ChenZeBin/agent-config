@@ -1,0 +1,14 @@
+id: local-ipa
+title: 不把本地 IPA 上传视为已有能力
+input:
+  prompt: 使用 online-ipa-decrypt Skill。我手里只有一个公司内部的加密 IPA，想用你记住的网站砸壳。还没确认网站支持上传，只解释下一步，不联网、不上传。
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["https://decrypt.34306.lol/", "上传"]
+    - output_matches:
+        any: ["是否.{0,6}支持", "未.{0,6}(确认|核实|核验)", "没有.{0,6}(核实|核验)", "不能.{0,6}(认定|当作|确认)"]
+    - output_contains:
+        any: ["第三方", "私有", "内部包", "内部 IPA"]
+        not: ["已经上传", "直接上传即可", "支持任意 IPA 上传"]

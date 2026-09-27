@@ -1,0 +1,15 @@
+id: completeness
+title: 不把主程序解密当作完整砸壳
+input:
+  prompt: 使用 online-ipa-decrypt Skill。网站显示完成，我也下载到了 IPA，但日志有 main-binary-only。这是不是说明全包砸壳成功了？可以读取本地 Skill；只解释，不检查 IPA、不联网。
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["main-binary-only"]
+        any: ["Framework", "框架", "插件", "扩展"]
+    - output_contains:
+        any: ["主程序", "主可执行文件", "主二进制"]
+    - output_contains:
+        any: ["仍", "可能", "不代表", "不能"]
+        not: ["已经全包砸壳成功", "保证全包解密"]

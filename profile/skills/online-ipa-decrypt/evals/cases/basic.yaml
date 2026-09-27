@@ -1,0 +1,11 @@
+id: basic
+title: 无越狱设备时直接引导在线下载
+input:
+  prompt: 我需要给一个 App 砸壳，没有越狱 iPhone。只告诉我网站和怎么操作，不要联网或实际操作。
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["https://decrypt.34306.lol/", "搜索", ".ipa"]
+        any: ["下载", "保存"]
+        not: ["已为你下载", "请先提供 Apple ID 密码", "./setup.sh"]
