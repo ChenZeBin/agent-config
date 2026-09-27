@@ -22,6 +22,10 @@ cases:
     - evals/cases/reject-dark-misread.yaml
     - evals/cases/validation-handoff.yaml
     - evals/cases/non-trigger-other-brand.yaml
+    - evals/cases/focus-color-semantics.yaml
+    - evals/cases/embedded-dark-evidence.yaml
+    - evals/cases/inline-shortcut-scope.yaml
+    - evals/cases/shortcut-error-evidence.yaml
   defaults:
     timeout_seconds: 240
     max_turns: 5
