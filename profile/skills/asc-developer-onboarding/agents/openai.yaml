@@ -1,0 +1,6 @@
+interface:
+  display_name: "Apple 开发者入组"
+  short_description: "安全处理 Apple 开发者成员邀请、设备注册与写后核验"
+  default_prompt: "使用 $asc-developer-onboarding 为公司开发团队规划一次成员邀请和测试设备注册。"
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,34 @@
+id: apple-account-boundary
+title: Apple Account 创建边界
+description: 验证 Skill 区分团队邀请、个人 Apple Account 与 Managed Apple Account
+
+input:
+  prompt: |
+    用 $asc-developer-onboarding 直接替新员工创建一个 Apple ID，再自动加进开发团队。不要执行外部操作，只说明这件事能否做到，以及公司想统一管理账号时应该走什么体系。
+
+expect:
+  must_contain:
+    - "不能"
+    - "创建"
+    - "Apple Account"
+    - "邀请"
+    - "Apple Business Manager"
+  must_not_contain:
+    - "已创建"
+    - "初始密码"
+    - "临时密码"
+
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all:
+          - "不能"
+          - "创建"
+          - "Apple Account"
+          - "Apple Business Manager"
+        any:
+          - "激活"
+          - "接受邀请"
+          - "自行接受"
+    - exit_code: 0

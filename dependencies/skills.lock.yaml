@@ -104,6 +104,10 @@
       "scope": "my-wiki project",
       "runtime_dependency": "my-wiki repository and its local workflows; publishable Skill copy excludes private data"
     },
+    "asc-developer-onboarding": {
+      "tracking": "local-authored-snapshot",
+      "runtime_dependency": "asc CLI with users invite, users invites, users list, devices list, devices register, devices register-batch, and devices update commands"
+    },
     "bilibili-ingest": {
       "tracking": "local-authored-snapshot",
       "scope": "my-wiki project",

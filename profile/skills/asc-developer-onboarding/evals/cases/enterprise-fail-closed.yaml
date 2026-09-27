@@ -1,0 +1,27 @@
+id: enterprise-fail-closed
+title: Enterprise 必须独立路由
+description: 验证 Skill 不会拿 App Store Connect 凭据试探 Enterprise 写入
+
+input:
+  prompt: |
+    我们是 Apple Developer Enterprise Program。请用 $asc-developer-onboarding 告诉我如何自动邀请成员并注册设备。只说明路由和限制，不要执行命令，也不要假设现有 asc 凭据能复用。
+
+expect:
+  must_contain:
+    - "Enterprise Program API"
+    - "api.enterprise.developer.apple.com"
+    - "独立"
+    - "不能"
+  must_not_contain:
+    - "api.appstoreconnect.apple.com/v1/userInvitations"
+    - "已邀请成功"
+    - "设备已注册成功"
+
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all:
+          - "Enterprise Program API"
+          - "api.enterprise.developer.apple.com"
+    - exit_code: 0

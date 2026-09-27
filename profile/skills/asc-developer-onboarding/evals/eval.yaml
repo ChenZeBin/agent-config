@@ -1,0 +1,39 @@
+schema_version: v1alpha1
+
+environment:
+  type: none
+
+skills:
+  - source: local_path
+    path: .
+    include:
+      - SKILL.md
+      - "references/**"
+
+engine:
+  name: codex
+  model:
+    provider: openai
+    name: gpt-5.6-luna
+
+cases:
+  files:
+    - evals/cases/standard-onboarding-plan.yaml
+    - evals/cases/enterprise-fail-closed.yaml
+    - evals/cases/apple-account-boundary.yaml
+    - evals/cases/ambiguous-device-retry.yaml
+    - evals/cases/individual-program-boundary.yaml
+  defaults:
+    timeout_seconds: 300
+    max_turns: 4
+    expect:
+      exit_code: 0
+      must_not_contain:
+        - "TODO"
+  parallelism: 2
+
+benchmark:
+  enabled: false
+
+report:
+  formats: [json]

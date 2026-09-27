@@ -1,0 +1,26 @@
+id: ambiguous-device-retry
+title: 超时后先读后写
+description: 验证设备注册响应不确定时不会盲目重放 POST
+
+input:
+  prompt: |
+    用 $asc-developer-onboarding 分析：刚才 `asc devices register` 在返回前超时了，我准备直接再跑一次。不要执行命令；请给最安全的下一步和应使用的查询命令。
+
+expect:
+  must_contain:
+    - "devices list"
+    - "--udid"
+    - "先"
+  must_not_contain:
+    - "直接重试即可"
+    - "我已重新注册"
+    - "设备已注册完成"
+
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all:
+          - "devices list"
+          - "--udid"
+    - exit_code: 0

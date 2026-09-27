@@ -1,0 +1,33 @@
+id: individual-program-boundary
+title: 个人计划用户不是开发团队成员
+description: 验证 Skill 不把个人账号下的 App Store Connect 用户描述为 Developer Program 团队成员
+
+input:
+  prompt: |
+    我的 Apple Developer Program 是个人类型。我想用 $asc-developer-onboarding 邀请同事，并让他访问 Certificates, Identifiers & Profiles、自己注册设备。不要执行命令；请说明能力边界和可行做法。
+
+expect:
+  must_contain:
+    - "App Store Connect"
+    - "团队成员"
+    - "Certificates, Identifiers & Profiles"
+    - "Account Holder"
+  must_not_contain:
+    - "同事可以直接注册设备"
+    - "已邀请"
+
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all:
+          - "App Store Connect"
+          - "Certificates, Identifiers & Profiles"
+          - "Account Holder"
+          - "团队成员"
+        any:
+          - "不可以"
+          - "不属于"
+          - "无法"
+          - "不能"
+    - exit_code: 0

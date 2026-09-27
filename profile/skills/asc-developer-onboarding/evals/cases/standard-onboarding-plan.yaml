@@ -1,0 +1,34 @@
+id: standard-onboarding-plan
+title: 组织账号成员与设备入组计划
+description: 验证 Skill 能给出只读预检、精确确认、写入和写后核验流程
+
+input:
+  prompt: |
+    我们是 Apple Developer Program 组织账号。请用 $asc-developer-onboarding 规划把 developer@example.com 以 DEVELOPER 加入 APP_ID，并注册一台名为“测试机”的 iPhone UDID。只说明会采取的流程和准备执行的命令，不要实际运行任何命令。请明确列出预检、确认、执行和写后核验。
+
+expect:
+  must_contain:
+    - "asc auth doctor"
+    - "users list"
+    - "asc users invite"
+    - "devices list"
+    - "asc devices register"
+    - "确认"
+    - "写后"
+  must_not_contain:
+    - "已经邀请成功"
+    - "设备已注册成功"
+
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all:
+          - "asc users invite"
+          - "asc devices register"
+          - "确认"
+          - "写后"
+        any:
+          - "重复"
+          - "已存在"
+    - exit_code: 0
