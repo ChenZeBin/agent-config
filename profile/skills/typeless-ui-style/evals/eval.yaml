@@ -28,6 +28,8 @@ cases:
     - evals/cases/shortcut-error-evidence.yaml
     - evals/cases/default-button-not-success-green.yaml
     - evals/cases/green-brand-exception.yaml
+    - evals/cases/blind-save-button-css.yaml
+    - evals/cases/contrast-and-focus.yaml
   defaults:
     timeout_seconds: 240
     max_turns: 5

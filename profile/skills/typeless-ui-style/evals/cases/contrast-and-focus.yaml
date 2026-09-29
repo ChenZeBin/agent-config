@@ -1,0 +1,20 @@
+id: contrast-and-focus
+title: 浅色表面上的错误与焦点可读性
+description: 检查示例 token 不诱导低对比错误文字或只有浅色光晕的焦点。
+
+input:
+  prompt: |
+    请用 typeless-ui-style 给 Web 设置页写一段可用的 CSS：白色表单区中有说明文字、一个输入框、输入错误说明和键盘 focus-visible；另有 #f6f6f7 的柔灰区域也放说明文字与输入框。产品尚无品牌色。请说明哪些边界是分组装饰，哪些需要让用户识别可操作控件。不改文件。
+
+expect:
+  must_contain: ["focus-visible", "错误"]
+
+judge:
+  type: agent_judge
+  model: openai/gpt-5.6-luna
+  criteria:
+    - "普通说明和错误文字在白色及 #f6f6f7 背景上使用足够深的颜色；不能直接把 #9b9ba0 或 #d64b48 用作这些背景上的必要小字。"
+    - "focus-visible 使用清楚可见的轮廓或等效强对比提示，不把低透明度蓝色光晕当成唯一焦点线索。"
+    - "区分装饰分隔线和识别控件所必需的边界，后者使用更强的对比度或提供同等清晰的可操作线索。"
+    - "包含可用 CSS 和错误文字说明，未将示例色误称为 Typeless 官方或精确测得的颜色。"
+  pass_threshold: 1.0

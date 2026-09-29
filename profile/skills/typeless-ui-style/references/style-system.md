@@ -1,6 +1,6 @@
 # Typeless 视觉系统转译指南
 
-这份指南来自 Typeless 2.7.0 设置截图、[2.8.0 多状态实机观察](observations-2.8.0.md)，以及一次 FinderRight HTML 转译验证。数值是可复用的设计近似，不是 Typeless 源码或官方规范。
+这份指南来自一张采集记录标为 Typeless 2.7.0、但画面无版本号的早期设置截图，[2.8.0 多状态实机观察](observations-2.8.0.md)，以及一次 FinderRight HTML 转译验证。数值是可复用的设计近似，不是 Typeless 源码或官方规范。
 
 观察基准文件为 `typeless-settings-reference.png`，捕获尺寸 `2296 × 1636`，SHA-256 为 `e5e2ef41451c08481b90d3f79feaab1d726098bb7a74b3f363996fdd06172cd3`。该摘要用于确认 Skill 内引用的截图与原始观察材料一致，不代表截图本身是官方设计规范。
 
@@ -42,10 +42,10 @@
   --ty-surface-hover: #f0f0f1;
   --ty-surface-selected: #e7e7e8;
   --ty-text-primary: #1c1c1e;
-  --ty-text-secondary: #76767b;
-  --ty-text-faint: #9b9ba0;
+  --ty-text-secondary: #6a6a70;
   --ty-border-subtle: #e1e1e4;
   --ty-border-strong: #d2d2d6;
+  --ty-border-control: #7f7f86;
   --ty-accent: #2f69dc;
   --ty-accent-soft: #edf3ff;
   --ty-action-primary: #1c1c1e;
@@ -53,16 +53,15 @@
   --ty-focus-outline: #262626;
   --ty-chart-category-1: #6b95ef;
   --ty-chart-category-2: #63b7db;
-  --ty-danger: #d64b48;
+  --ty-danger: #b03a36;
   --ty-radius-panel: 18px;
   --ty-radius-control: 12px;
   --ty-radius-small: 8px;
   --ty-shadow-panel: 0 24px 64px rgba(20, 22, 26, .18), 0 3px 12px rgba(20, 22, 26, .08);
-  --ty-focus-ring: 0 0 0 3px rgba(47, 105, 220, .20);
 }
 ```
 
-这些 token 全部是转译起点，不是不可变模板或像素取样结果。`--ty-focus-outline` 可用于 2px 轮廓加 2px offset；它与品牌焦点环择一使用。`--ty-chart-category-*` 只表达数据类别，并配标签或纹理，不用于按钮或错误。旧版示例里的绿色成功色没有 Typeless 观察依据，已从默认 token 移除；不要从“Typeless 风格”推出绿色成功反馈。无品牌色时 `--ty-action-primary` 给主按钮深色中性底；保存成功可沿用 `--ty-text-primary` 配明确文案、勾选图标或轻量状态提示。目标产品已有品牌色时，将 `--ty-accent` 映射为品牌强调色，并检查对比度；中性色和层级关系可以保留。`--ty-text-faint` 只用于非关键元数据，细边框不能成为唯一状态提示。
+这些 token 全部是转译起点，不是不可变模板或像素取样结果。`--ty-focus-outline` 可用于 2px 实线轮廓加 2px offset；若改用品牌焦点环，也须在实际相邻背景上保持足够对比度，低透明度蓝色光晕不能作为唯一焦点提示。`--ty-border-subtle` 与 `--ty-border-strong` 用于装饰或分组；当边框是识别可操作控件的必要线索时，改用 `--ty-border-control` 或按背景验算的同等强度边界。`--ty-text-secondary` 在白底和 `--ty-surface-soft` 上约为 5.37:1 和 4.97:1；`--ty-danger` 约为 5.99:1 和 5.55:1；`--ty-border-control` 约为 3.98:1 和 3.68:1。数值只适用于这些纯色组合；叠层、透明度和暗色须重新核对。Web 实现应按 [WCAG 2.2](https://www.w3.org/TR/WCAG22/) 检查普通文字至少 4.5:1、必要控件线索至少 3:1。`--ty-chart-category-*` 只表达数据类别，并配标签或纹理，不用于按钮或错误。旧版示例里的绿色成功色没有 Typeless 观察依据，已从默认 token 移除；不要从“Typeless 风格”推出绿色成功反馈。无品牌色时 `--ty-action-primary` 给主按钮深色中性底；保存成功可沿用 `--ty-text-primary` 配明确文案、勾选图标或轻量状态提示。目标产品已有品牌色时，将 `--ty-accent` 映射为品牌强调色，并检查对比度；中性色和层级关系可以保留。
 
 ## 3. 排版与空间
 
@@ -100,7 +99,7 @@
 
 ### 输入、下拉与按钮
 
-- 白底、1px 细边、10–12px 圆角；内部水平间距通常 12–14px。
+- 白底、1px 细边、10–12px 圆角；内部水平间距通常 12–14px。细边承担控件识别时使用 `--ty-border-control`，不要把装饰性的浅灰分隔线直接用于唯一控件边界。
 - 区分形状角色：表单框用圆角矩形，简短次级动作可用胶囊；不要全页统一超大圆角。
 - 次级按钮保持白底描边。无既定品牌色时，主按钮优先使用深色中性底和高对比文字；目标产品已有品牌强调色时，关键主按钮可按品牌策略使用该色，同屏尽量只有一个视觉主动作。成功状态使用文字、图标等清楚表达，不因按钮执行成功就改成绿色；若品牌本身是绿色，绿色主按钮来自目标产品的品牌决策。
 - 快捷键可用轻描边 chip；2.8.0 观察到单个修饰键标签位于外层输入框内，不能宣称实测了组合键逐键拆分。组合键如何分组由目标产品语义决定。
@@ -132,7 +131,7 @@
 
 ### 遮罩、阴影与滚动
 
-- 遮罩建议 `rgba(0, 0, 0, .28–.40)`；若使用背景模糊，要有不支持模糊时的实色回退。
+- 遮罩黑色不透明度可从 0.28–0.40 试起，例如 `rgba(0, 0, 0, 0.32)`；若使用背景模糊，要有不支持模糊时的实色回退。
 - 面板阴影应宽而柔和，不使用霓虹发光。
 - 滚动条可低对比，但不能完全隐藏到用户无法判断内容可滚动。
 

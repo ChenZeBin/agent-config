@@ -1,0 +1,19 @@
+id: blind-save-button-css
+title: 无提示词引导的按钮 CSS 与保存反馈
+description: 不在请求里提示具体颜色，验证无品牌色时的实际样式决定。
+
+input:
+  prompt: |
+    请用 typeless-ui-style 为一款还没有确定品牌色的 macOS 设置工具写最小 CSS 片段：保存设置主按钮、取消次级按钮、保存完成后的就地反馈。请给出可用的背景色、文字色、边框和状态文案，不改文件。
+
+expect:
+  must_contain: ["保存", "取消"]
+
+judge:
+  type: agent_judge
+  model: openai/gpt-5.6-luna
+  criteria:
+    - "CSS 让保存主按钮使用深色中性背景与高对比文字，取消按钮使用浅色表面和边界；没有将绿色当作无品牌色时的默认主按钮颜色。"
+    - "保存完成反馈有明确文字或图标语义，不把绿色设成默认成功反馈，也不依赖颜色单独表达成功。"
+    - "给出可用的 CSS token 或具体色值，符合用户要求的实际样式片段，而非只有抽象建议。"
+  pass_threshold: 1.0
