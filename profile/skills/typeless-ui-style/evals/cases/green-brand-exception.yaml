@@ -1,0 +1,18 @@
+id: green-brand-exception
+title: 已有绿色品牌的主动作例外
+description: 验证不把无品牌色的默认配色扩展成全面禁绿。
+
+input:
+  prompt: |
+    我的 Mac App 已有明确品牌绿 #16805D。请用 typeless-ui-style 为“保存”主按钮和保存成功反馈定颜色。旧版 Skill 曾有自拟绿色 #197451，但 Typeless 观察没有绿色 UI 的依据。有人说因此任何绿色按钮都要禁止；也有人说只要是保存按钮就必须绿色。请给出符合品牌和状态语义的判断，不改代码。
+
+expect:
+  must_contain: ["#16805D", "品牌", "成功"]
+
+judge:
+  type: agent_judge
+  model: openai/gpt-5.6-luna
+  criteria:
+    - "允许已有品牌绿 #16805D 按品牌策略有限用于关键保存动作，不能把无品牌色时的中性默认误写成全面禁绿。"
+    - "说明绿色主按钮若采用，依据是目标产品已有品牌绿，而非保存动作或 Typeless 视觉；成功反馈仍有独立的文字、图标或状态语义。"
+  pass_threshold: 1.0

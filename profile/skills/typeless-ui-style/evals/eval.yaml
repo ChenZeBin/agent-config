@@ -26,6 +26,8 @@ cases:
     - evals/cases/embedded-dark-evidence.yaml
     - evals/cases/inline-shortcut-scope.yaml
     - evals/cases/shortcut-error-evidence.yaml
+    - evals/cases/default-button-not-success-green.yaml
+    - evals/cases/green-brand-exception.yaml
   defaults:
     timeout_seconds: 240
     max_turns: 5
