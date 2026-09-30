@@ -1,0 +1,26 @@
+{
+  "id": "hardware-physical-host",
+  "title": "休眠与合盖在独立实体 Mac 验收",
+  "input": {
+    "prompt": "按 $mac-app-experience-officer 判断环境。需要验证 Mac App 对实体合盖、系统休眠和 USB 外设断连的处理。用户当前 Mac 正在使用；仅有这台 Mac 上的虚拟机和另一个 Space，没有另一台实体测试 Mac，也没有授权中断当前工作。先用只读文件工具读取已安装的 $mac-app-experience-officer 的 SKILL.md，再做文本决策；不启动 App、不执行 UI 操作、不修改文件。只返回 JSON，字段为 route（contained/isolated/physical）、action（execute/blocked/stop）、vm_test_covers_physical_lid、other_space_is_isolation、may_suspend_working_mac。 输出类型要求：route、driver、action 如存在则是字符串；其他所有字段必须是 JSON 布尔值 true 或 false，不填解释文字。action 的含义：execute 表示开始执行；blocked 表示测试尚未开始且条件不满足；stop 表示立即停止当前仍在运行中的受影响测试。"
+  },
+  "judge": {
+    "type": "rule_based",
+    "success": [
+      {
+        "output_matches": {
+          "all": [
+            "\"route\"\\s*:\\s*\"physical\"",
+            "\"action\"\\s*:\\s*\"blocked\"",
+            "\"vm_test_covers_physical_lid\"\\s*:\\s*false",
+            "\"other_space_is_isolation\"\\s*:\\s*false",
+            "\"may_suspend_working_mac\"\\s*:\\s*false"
+          ]
+        }
+      },
+      {
+        "exit_code": 0
+      }
+    ]
+  }
+}

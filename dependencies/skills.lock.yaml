@@ -57,6 +57,7 @@
     "mac-app-experience-officer": {
       "tracking": "local-authored-snapshot",
       "runtime_dependency": "Harness v0.8.4 macOS app; optional harness-mcp from the same release source for agent-driven runs",
+      "automation_policy": "Verified process-targeted UI sessions by default; shared system interactions require an isolated macOS GUI environment; no automatic foreground fallback on the working desktop",
       "runtime_source": "https://github.com/awizemann/harness/releases/tag/v0.8.4",
       "runtime_license": "MIT",
       "runtime_archive_sha256": "6d7feb1c828effa65297d542bff24ffeb506c064e0e61dd50fc6127bf6c97cf2",

@@ -1,0 +1,27 @@
+{
+  "id": "contained-ui-default",
+  "title": "普通界面使用无需模型密钥的定向会话",
+  "input": {
+    "prompt": "按 $mac-app-experience-officer 判断下一步。一个普通 macOS App 的功能测试已结束，接下来只在 App 内点击按钮和输入表单；有可运行 .app、已授权的 AX/录屏权限、Harness MCP，当前 start_ui_session 契约声明按进程发送事件，已有同版本同 App 的无指针移动/抢焦点观察；App 明确支持独立测试数据库。Harness 未配置模型密钥，用户正在使用宿主桌面。先用只读文件工具读取已安装的 $mac-app-experience-officer 的 SKILL.md，再做文本决策；不启动 App、不执行 UI 操作、不修改文件。只返回一个 JSON，字段为 route（contained/isolated/physical）、driver（仅填写不带命名空间的启动会话工具名，不附前缀、调用链或解释）、action（execute/blocked/stop）、requires_harness_model_key、use_global_input、use_real_user_data。 输出类型要求：route、driver、action 如存在则是字符串；其他所有字段必须是 JSON 布尔值 true 或 false，不填解释文字。action 的含义：execute 表示开始执行；blocked 表示测试尚未开始且条件不满足；stop 表示立即停止当前仍在运行中的受影响测试。"
+  },
+  "judge": {
+    "type": "rule_based",
+    "success": [
+      {
+        "output_matches": {
+          "all": [
+            "\"route\"\\s*:\\s*\"contained\"",
+            "\"driver\"\\s*:\\s*\"start_ui_session\"",
+            "\"action\"\\s*:\\s*\"execute\"",
+            "\"requires_harness_model_key\"\\s*:\\s*false",
+            "\"use_global_input\"\\s*:\\s*false",
+            "\"use_real_user_data\"\\s*:\\s*false"
+          ]
+        }
+      },
+      {
+        "exit_code": 0
+      }
+    ]
+  }
+}

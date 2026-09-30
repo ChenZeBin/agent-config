@@ -1,6 +1,6 @@
 ---
 name: mac-app-experience-officer
-description: 每次端到端测试之后，使用 Harness 以用户目标走查实际界面、记录可回放操作和体验阻力；以 macOS App 为主，也支持 Web App 与 iOS Simulator。无法运行实际界面时报告阻塞。
+description: 端到端测试后用 Harness 走查真实界面、留存操作与体验证据；macOS 默认定向会话，共享系统交互使用独立测试环境。也支持 Web 与 iOS Simulator；缺少可运行界面或安全执行环境时报告阻塞。
 ---
 
 # Mac App 体验官
@@ -13,11 +13,21 @@ description: 每次端到端测试之后，使用 Harness 以用户目标走查�
 - 用户单独要求体验审查：可直接开始，不必额外制造一轮端到端测试。
 - 先定位测试对象和可运行入口：macOS 的 `.app`、Web URL，或 iOS Simulator 中的 App，并核对版本、运行环境和用户目标。找不到可运行界面或缺少必需权限时，记录阻塞，不能改看源码或静态截图后声称已经体验；说明须修复环境后才能继续走查。
 
+## 执行环境与桌面隔离
+
+此处约束体验走查的工具选择；功能端到端测试本身也必须遵守全局的“Mac App 自动化测试与桌面隔离”。
+
+- **普通 App 内交互**：先核验当前 Harness 的 macOS 定向会话契约，采用 AX 或按目标进程发送事件的路径。工具声明“不移动真实鼠标、不抢焦点”只说明后端设计；目标 App 的启动、自行激活和具体控件仍须按实际观察核验。发现抢焦点、指针移动或其他桌面干扰，停止受影响用例，不把后台定向操作宣称为对所有 App 的零干扰保证。
+- **共享系统交互**：Finder、跨 App 拖拽、全局快捷键、真实剪贴板、系统设置和权限弹窗，转到独立 macOS 虚拟机或另一台测试 Mac。先确认 App 与驱动器都在目标测试环境，关闭共享剪贴板、限制共享目录；另一个 Space 或第二块屏幕不算隔离。休眠、合盖、电源和外设等硬件行为使用独立实体 Mac。
+- **测试数据**：使用独立目录、数据库及账号。只有 App 实际支持相应测试模式时才通过 `env` / `launch_args` 启用；设置变量本身不证明数据已经隔离。
+- **停止与例外**：定向工具缺失或失败、权限不足、边界不明、隔离环境未就绪，均保留“未执行/阻塞/待验收”，继续可独立完成的非 UI 工作。不得为完成验收自动操作当前工作桌面的全局鼠标键盘、切换前台窗口或打开 Harness GUI。用户明确授权当次当前桌面的前台测试时，可在已授权范围内执行，说明占用范围与结束条件；不重复索取已有授权。
+- **报告**：记录执行主机/会话及工具版本、环境边界、实际操作和截图；明确受阻与未覆盖路径，不把定向会话的局部通过当作系统交互或硬件测试通过。
+
 ## 连接 Harness
 
 1. 核对 `$HOME/Applications/Harness.app` 或实际安装路径，以及 `harness-mcp` 是否可用。优先使用已连接的 Harness MCP；本机常见二进制为 `$HOME/.local/bin/harness-mcp`。用 `harness-mcp --version` 核对版本；当前验证版本为 `0.8.4`，升级后重新核对工具契约。
-2. 自主测试可通过 MCP 的 `list_personas`、`list_applications`、`create_application`、`start_run`、`get_run_status`、`get_run_result` 和 `get_step_screenshot` 操作。依据实际工具 schema 填参，不猜测字段。Harness GUI 也可选择 `.app`、persona 和 goal 发起运行。
-3. 如未配置 Harness 支持的模型密钥，可用 MCP 的 `start_ui_session` → `observe_ui` → `act_ui` → `end_ui_session` 逐步操作目标界面；这一模式不需要 Harness 自身的模型密钥，但 AI 仍须阅读真实画面并自己决策。用 `artifact_dir` 保存干净截图和 `steps.jsonl`。MCP 不可用时，若当前智能体具备原生界面操作工具，可通过它操作 Harness GUI 并保留同等证据；否则报告尚未执行。
+2. 如需自主测试，可通过 MCP 的 `list_personas`、`list_applications`、`create_application`、`start_run`、`get_run_status`、`get_run_result` 和 `get_step_screenshot` 操作；macOS 须先核验该路径的事件发送边界同样满足上述隔离要求。依据实际工具 schema 填参，不猜测字段。Harness GUI 的操作只限已核验的独立测试环境或用户明确授权的当次前台测试。
+3. macOS 默认用 MCP 的 `start_ui_session(platform: "macos", app_path: …)` → `observe_ui` → `act_ui` → `end_ui_session` 逐步操作真实构建产物；此方式不需要 Harness 自身的模型密钥。AI 须读取实际画面并决策，用 `artifact_dir` 保存干净截图和 `steps.jsonl`。MCP 不可用或失败时先报告阻塞；只有在已核验的独立测试环境，或用户已明确授权当次占用当前工作桌面时，才可用原生界面工具操作 Harness GUI。
 4. macOS 首次操作可能需要 Screen Recording 和 Accessibility 权限；iOS Simulator 会话需要 Xcode 与 WebDriverAgent；Web 会话使用 Harness 的 WebKit 环境。按实际平台核对依赖和权限，仅有配置或空白截图不能视为已授权。不要替用户读取或配置模型密钥。测试数据、账号和可能对外发送的内容遵循当前任务授权。
 
 ## 走查方法
