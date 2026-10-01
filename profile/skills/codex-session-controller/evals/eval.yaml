@@ -1,0 +1,81 @@
+{
+  "schema_version": "v1alpha1",
+  "environment": {
+    "type": "none"
+  },
+  "skills": [
+    {
+      "source": "local_path",
+      "path": ".",
+      "include": [
+        "SKILL.md",
+        "references/**"
+      ]
+    }
+  ],
+  "engine": {
+    "name": "codex"
+  },
+  "cases": {
+    "files": [
+      "evals/cases/load-is-not-role.yaml",
+      "evals/cases/global-pull.yaml",
+      "evals/cases/global-inventory.yaml",
+      "evals/cases/project-callback-confirmation.yaml",
+      "evals/cases/per-edge-return.yaml",
+      "evals/cases/batch-explicit-only.yaml",
+      "evals/cases/wrong-level-report.yaml",
+      "evals/cases/unknown-create-result.yaml",
+      "evals/cases/unknown-followup-result.yaml",
+      "evals/cases/rollout-fallback.yaml",
+      "evals/cases/misplaced-worker-rejected.yaml",
+      "evals/cases/lossless-steering-delta.yaml",
+      "evals/cases/closure-evidence.yaml",
+      "evals/cases/mode-specific-handoff.yaml",
+      "evals/cases/controller-report-reentry.yaml",
+      "evals/cases/closure-challenge-reopens.yaml",
+      "evals/cases/insufficient-report-blocks-dependency.yaml",
+      "evals/cases/duplicate-and-conflict.yaml",
+      "evals/cases/handoff-acceptance-gate.yaml",
+      "evals/cases/projectless-successor-rejected.yaml",
+      "evals/cases/direct-takeover-acceptance.yaml",
+      "evals/cases/one-shot-stays-unowned.yaml",
+      "evals/cases/ordinary-domain-goal.yaml",
+      "evals/cases/terse-commit.yaml",
+      "evals/cases/global-domain-goal.yaml",
+      "evals/cases/missing-dispatch-capability.yaml",
+      "evals/cases/critical-path-does-not-override.yaml",
+      "evals/cases/verify-not-replay.yaml",
+      "evals/cases/temporary-explicit-executor.yaml",
+      "evals/cases/missing-message-authority.yaml",
+      "evals/cases/handoff-execution-exception.yaml",
+      "evals/cases/live-controller-default.yaml",
+      "evals/cases/live-explicit-execution.yaml",
+      "evals/cases/live-restores-controller.yaml",
+      "evals/cases/live-normal-worker.yaml"
+    ],
+    "defaults": {
+      "timeout_seconds": 600,
+      "max_turns": 8,
+      "expect": {
+        "exit_code": 0
+      }
+    },
+    "parallelism": 4,
+    "retry_policy": {
+      "max_retries": 0
+    }
+  },
+  "benchmark": {
+    "enabled": false
+  },
+  "report": {
+    "formats": [
+      "json",
+      "html"
+    ],
+    "artifacts": [
+      "transcript"
+    ]
+  }
+}

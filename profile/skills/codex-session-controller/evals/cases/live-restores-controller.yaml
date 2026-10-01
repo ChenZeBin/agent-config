@@ -1,0 +1,35 @@
+{
+  "id": "live-restores-controller",
+  "title": "执行例外结束后下一轮恢复主控",
+  "input": {
+    "turns": [
+      {
+        "role": "user",
+        "content": "本评测只使用当前工作区的 .codex/skills/codex-session-controller/SKILL.md 及其 references，先读取这个文件。不要从全局用户目录读取同名旧 Skill；所有回合都以此工作区副本为准。\n\n使用 $codex-session-controller。你是用户明确指定的项目主控。本次由你亲自将 src/main.py 中 enabled = False 改为 enabled = True。只做这项，不提交；独立审查由评测后的另一进程承担。结束后恢复主控。"
+      },
+      {
+        "role": "user",
+        "content": "继续优化 src/second.py，也把 enabled = False 改为 enabled = True。此时没有线程派发工具；保持工作区供验收，报告下一步。"
+      }
+    ]
+  },
+  "context": {
+    "files": {
+      ".eval-case": "live-restores-controller",
+      "src/main.py": "enabled = False\n",
+      "src/second.py": "enabled = False\n",
+      "src/guard.py": "sentinel = \"unchanged\"\n",
+      "README.md": "评测项目：只允许已授权的指定文件变更。\n"
+    }
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/fixtures/grade.py",
+    "timeout_seconds": 30
+  },
+  "collect_artifacts": [
+    "src/**",
+    "README.md",
+    "controller-context.md"
+  ]
+}

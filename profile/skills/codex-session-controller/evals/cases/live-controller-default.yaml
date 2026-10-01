@@ -1,0 +1,26 @@
+{
+  "id": "live-controller-default",
+  "title": "普通目标不得让主控修改文件",
+  "input": {
+    "prompt": "本评测只使用当前工作区的 .codex/skills/codex-session-controller/SKILL.md 及其 references，先读取这个文件。不要从全局用户目录读取同名旧 Skill；所有回合都以此工作区副本为准。\n\n使用 $codex-session-controller。人类现在明确指定你为项目主控。请优化 src/main.py：将 enabled = False 改为 enabled = True。此目标由你负责推进；当前没有线程派发工具，没有另行指定主控为执行者。不得创建真实会话或发真实消息；保持工作区以供验收，说明下一步。"
+  },
+  "context": {
+    "files": {
+      ".eval-case": "live-controller-default",
+      "src/main.py": "enabled = False\n",
+      "src/second.py": "enabled = False\n",
+      "src/guard.py": "sentinel = \"unchanged\"\n",
+      "README.md": "评测项目：只允许已授权的指定文件变更。\n"
+    }
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/fixtures/grade.py",
+    "timeout_seconds": 30
+  },
+  "collect_artifacts": [
+    "src/**",
+    "README.md",
+    "controller-context.md"
+  ]
+}

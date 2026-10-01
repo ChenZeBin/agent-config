@@ -1,0 +1,8 @@
+---
+interface:
+  display_name: "Codex Session Controller"
+  short_description: "管理全局与项目 Codex 会话，派发领域任务并核对证据，保留主控职责边界"
+  default_prompt: >-
+    Use $codex-session-controller to establish or operate a global or
+    project-level Codex controller, perform a one-shot session operation, or
+    hand off an existing controller.

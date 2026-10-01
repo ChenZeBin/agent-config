@@ -52,6 +52,8 @@ bin/agent-config sync --push       # 禁止 force push
 
 `~/.codex/skills/` 下的独立目录不会被 `sync --push` 自动发现；评测生成的 `*-workspace/`、日志和缓存也不应复制进公开仓库。入库后先运行 `bin/agent-config validate`、`bin/agent-config security-scan` 和相应 Skill 评测，再执行 `bin/agent-config link --apply` 安装清单中的叶级链接，最后提交并推送。已安装的第三方 Skill 不因位于本机目录就自动成为本仓库的自建内容。此前误归类的 `codex-session-controller` 与 [Patrick Fu 的原版](https://github.com/patrick-fu/awesome-skills/tree/70bea73faa43a3afd33e49bdfa2bd5afac36232a/codex-session-controller) 逐文件相同，已从当前公开配置移除；旧提交仍可访问，本机独立安装仍可使用。
 
+本仓库重新纳入了实质改编的 `codex-session-controller`：基于上面固定版本的上游规则，重写主控执行授权与角色恢复边界，并增加真实行为评测；来源与改编关系登记在 `dependencies/skills.lock.yaml`，保留 [MIT 许可证](third_party_licenses/codex-session-controller-LICENSE.txt) 和作者归属。
+
 本次还收录了 `my-wiki` 的八个项目 Skill、`cli-anything-ugreen-nas` 和 `claude-md-progressive-disclosurer`。`my-wiki` Skill 需要目标项目及其依赖；公开副本已去除本机路径、私有 `.env` 与机器专用 launchd 配置。公开仓库只保存 Skill 源码，不包含 Wiki 的 `raw/`、`staging/`、会话或运行数据。
 
 `typeless-ui-style` 的 `evals/fixtures/` 是依赖本机绝对路径与本机 Codex 登录状态的旧评测脚手架，仅保留可移植的 `evals/eval.yaml`、用例和参考资料；不将本机配置、运行日志或夹具脚本发布到公开仓库。

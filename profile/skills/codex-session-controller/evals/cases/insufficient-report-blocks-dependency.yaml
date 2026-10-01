@@ -1,0 +1,24 @@
+{
+  "id": "insufficient-report-blocks-dependency",
+  "title": "工作会话只说 Done，其迁移结果将释放另一个依赖它的任务",
+  "input": {
+    "prompt": "本评测只使用当前工作区的 .codex/skills/codex-session-controller/SKILL.md 及其 references，先读取这个文件。不要从全局用户目录读取同名旧 Skill；所有回合都以此工作区副本为准。\n\n使用 $codex-session-controller 处理以下隔离模拟场景。工具能力在模拟环境中可用，场景给定的授权按原值生效。只规划模拟动作，不实际连接或操作真实会话；这个隔离限制不禁止你在 next_actions 中列出场景已授权的创建、消息或定时动作。只依据 Skill 和本段场景判断，不读取 evals 或评分脚本。\n\n工作会话只说 Done，其迁移结果将释放另一个依赖它的任务。用户已经授权继续向该工作会话索取证据。\n\n只输出一个 JSON 对象，不要代码块：role 为 controller/worker/one_shot；domain_executor 为 controller/worker/none，表示场景领域工作的执行者（控制操作不算领域执行）；return_mode 为 Pull/Callback/Batch/unchanged；next_actions 为本轮完整控制流程的动作标识数组（含必要准备、后续报告及用户决定，不只列第一个步骤）；owner_changes、release_dependency、need_user_authorization 为布尔值；reason 为解释决策依据的中文字符串。请仅从下列动作标识中选实际应该推进的动作，不要把禁止动作列进 next_actions：claim_controller,claim_new_role,restore_role,resolve_project,find_owner,create_worker,link_report,rebuild_index,snapshot,inspect_tickets,wait_loop,schedule,ask_mode,verify_report,set_stop_conditions,per_worker_schedule,resolve_direct_owner,forward_unchanged,accept_report,release_dependency,inspect_delivery,blind_retry,claim_delivered,read_rollout,archive_worker,qualify_worker,transfer_owner,send_delta,preserve_scope,replace_brief,push,rerun_tests,deploy,rebind_callback,drain_reports,pause_batch,preserve_pull,rebind_pull,reopen,preserve_evidence,dismiss_evidence,request_evidence,deduplicate,resolve_conflict,verify_handoff,reconstruct,inspect_report,send_brief,edit_artifact,domain_research,commit,download,verify_binary,prepare_brief,report_blocker,spawn_as_worker,record_exception,declare_execution,restore_controller,independent_review,ask_authorization,preserve_exception,inherit_execution。\n\n输出约定：next_actions 只列当前会话自己获准执行的步骤，不包含独立工作会话的领域步骤；不能把将来检查通过后才能进行的验收、送达声明、所有权转移或依赖释放当作现在的可执行动作。owner_changes/release_dependency 只填写现有证据已支持的状态变化，角色指定或未来条件不算。need_user_authorization 表示本次目标尚缺的人类授权，不重复索取已有授权。动作标识按语义区分：inspect_delivery 是核对创建/消息的实际交付，inspect_tickets 是盘点项目票据；restore_role 是压缩后恢复既有身份，restore_controller 是临时执行结束回到主控；send_brief 是首次完整 brief，send_delta 是已送达 brief 的新增指令；independent_review 是安排未参与实现的工作会话审查，不是主控亲自领域审查；link_report 是交付原样标题的会话链接、host 和状态。授权执行例外的完整流程包含授权记录和回到控制职责，验收未通过则保留未验收。\nnext_actions 按本轮执行顺序排列。增加 details 对象：global-inventory 返回 inventory 的 target_count、batch_sizes、include_link_title_host_state；batch-explicit-only 返回 batch 的 target_count、heartbeat_count、cadence_minutes、run_cap、auto_pause；lossless-steering-delta 返回 delta 的 message 和 preserved 字段（preserved 是未改变要求的标识数组：public_api、targeted_tests、commit、no_push）。其他场景 details 可为空对象。"
+  },
+  "context": {
+    "files": {
+      ".eval-case": "insufficient-report-blocks-dependency",
+      "src/guard.py": "sentinel = \"unchanged\"\n",
+      "README.md": "评测项目：只允许已授权的指定文件变更。\n"
+    }
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/fixtures/grade.py",
+    "timeout_seconds": 30
+  },
+  "collect_artifacts": [
+    "src/**",
+    "README.md",
+    "controller-context.md"
+  ]
+}

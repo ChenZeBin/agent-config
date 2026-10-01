@@ -184,6 +184,16 @@
     },
     "online-ipa-decrypt": {
       "tracking": "local-authored-snapshot"
+    },
+    "codex-session-controller": {
+      "source": "https://github.com/patrick-fu/awesome-skills",
+      "revision": "70bea73faa43a3afd33e49bdfa2bd5afac36232a",
+      "revision_basis": "The six-file installed baseline matched this pinned upstream revision byte for byte",
+      "content_relation": "Substantially adapted controller: rewritten execution authority, role restoration and evaluation workflow; retained delivery, return and handoff foundations",
+      "license": "MIT",
+      "license_file": "third_party_licenses/codex-session-controller-LICENSE.txt",
+      "tracking": "local-adapted-snapshot",
+      "runtime_dependency": "Codex app thread tools; availability and authorization checked at dispatch"
     }
   }
 }
