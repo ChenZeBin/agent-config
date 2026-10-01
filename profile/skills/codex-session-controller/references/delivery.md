@@ -17,6 +17,11 @@ and routing while evidence is unresolved.
 
 ## Unknown create
 
+Preserve the original creation authorization source and scope while recovering;
+neither uncertainty nor a standing delegation permits a duplicate dispatch or
+an expanded brief. Do not ask again for the same valid authorization. Any retry
+must still satisfy the current tool contract and the original scope.
+
 After an unknown `create_thread`, list and read tasks in the resolved saved
 project. Compare source controller, project, environment, exact brief, and the
 before/after task set. One matching task with only the dispatched work is the

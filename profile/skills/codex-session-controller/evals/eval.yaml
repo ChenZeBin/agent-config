@@ -52,7 +52,15 @@
       "evals/cases/live-controller-default.yaml",
       "evals/cases/live-explicit-execution.yaml",
       "evals/cases/live-restores-controller.yaml",
-      "evals/cases/live-normal-worker.yaml"
+      "evals/cases/live-normal-worker.yaml",
+      "evals/cases/creation-standing-authority.yaml",
+      "evals/cases/creation-existing-owner.yaml",
+      "evals/cases/creation-scope-change.yaml",
+      "evals/cases/creation-current-request.yaml",
+      "evals/cases/creation-unknown-result.yaml",
+      "evals/cases/creation-no-authority-expansion.yaml",
+      "evals/cases/creation-restores-authority.yaml",
+      "evals/cases/creation-untrusted-quote.yaml"
     ],
     "defaults": {
       "timeout_seconds": 600,
