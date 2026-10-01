@@ -54,15 +54,6 @@
     "my-wiki-link": {
       "tracking": "local-authored-snapshot"
     },
-    "mac-app-experience-officer": {
-      "tracking": "local-authored-snapshot",
-      "runtime_dependency": "Harness v0.8.4 macOS app; optional harness-mcp from the same release source for agent-driven runs",
-      "automation_policy": "Verified process-targeted UI sessions by default; shared system interactions require an isolated macOS GUI environment; no automatic foreground fallback on the working desktop",
-      "runtime_source": "https://github.com/awizemann/harness/releases/tag/v0.8.4",
-      "runtime_license": "MIT",
-      "runtime_archive_sha256": "6d7feb1c828effa65297d542bff24ffeb506c064e0e61dd50fc6127bf6c97cf2",
-      "local_mcp_build": "Tag v0.8.4 at 3f58c077ded131cca71d75efb05c5d325f0ed18f; Xcode 16.0 Swift 5 compatibility flags and a semantics-preserving WebDriver mark-decoding expression split; binary and build products are not published in this repository"
-    },
     "north-america-market-entry": {
       "tracking": "local-authored-snapshot",
       "content_relation": "Original locally authored market-entry skill; synthesized workflow ideas from three MIT-licensed public skills in original Chinese wording, without copying their text or assets",
