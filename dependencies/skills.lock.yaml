@@ -98,7 +98,8 @@
     },
     "typeless-ui-style": {
       "tracking": "local-authored-snapshot",
-      "reference_product": "Early settings screenshot (capture record labels 2.7.0; version not visible) and v2.8.0 About-screen/UI observations are partial evidence, not an official design system"
+      "reference_product": "Early settings screenshot (capture record labels 2.7.0; version not visible) and v2.8.0 About-screen/UI observations are partial evidence, not an official design system",
+      "color_provenance": "Brand accents require explicit user direction or retention instructions, recognized brand assets or independently traceable confirmed design decisions; implementers cannot self-authorize or use current implementation and acceptance documents alone to establish a brand."
     },
     "evidence-gate": {
       "tracking": "local-authored-snapshot",

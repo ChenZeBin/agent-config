@@ -30,6 +30,9 @@ cases:
     - evals/cases/green-brand-exception.yaml
     - evals/cases/blind-save-button-css.yaml
     - evals/cases/contrast-and-focus.yaml
+    - evals/cases/unverified-existing-green.yaml
+    - evals/cases/unbranded-miniapp-redesign.yaml
+    - evals/cases/self-authored-color-acceptance.yaml
   defaults:
     timeout_seconds: 240
     max_turns: 5
