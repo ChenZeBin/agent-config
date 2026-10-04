@@ -1,0 +1,32 @@
+{
+  "id": "resample-role-conflict",
+  "title": "相似灰色不能合并交互语义",
+  "input": {
+    "prompt": "请使用 typeless-ui-style，只读 Skill 和 references，不联网、不操作 App、不改文件。设置导航 selected、搜索候选 hover、开关 off 与不可添加行 disabled 都是近似灰色。脚本按Dembrandt ΔE<15 合并成一个token，还按跨三页出现推断全应用disabled和品牌色已确认。请审查并给跨页汇总/状态验收规则。"
+  },
+  "judge": {
+    "type": "rule_based",
+    "success": [
+      {
+        "output_matches": {
+          "all": [
+            "selected|选中",
+            "hover|悬停",
+            "off|关闭",
+            "disabled|禁用",
+            "语义|角色",
+            "冲突|成员|候选",
+            "品牌",
+            "页面|跨页",
+            "off.{0,80}(已实测|已有实测|已观察)|已实测关闭态|关闭态.{0,80}(已实测|已有实测|已观察)",
+            "[。！？.!?]\\s*$"
+          ],
+          "not": [
+            "\\]\\(<[^>\\n]*\\)",
+            "off.{0,30}(未验证|未观察|未可靠观察)"
+          ]
+        }
+      }
+    ]
+  }
+}

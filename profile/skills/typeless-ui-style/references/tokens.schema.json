@@ -1,0 +1,724 @@
+{
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "snapshotId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "capturedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "app": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "Typeless"
+        },
+        "installedVersion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "installedBuild": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "installedVersionSourceId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "runningVersion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "runningVersionSourceId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "installedVersion",
+        "installedBuild",
+        "installedVersionSourceId",
+        "runningVersion",
+        "runningVersionSourceId"
+      ],
+      "additionalProperties": false
+    },
+    "environment": {
+      "type": "object",
+      "properties": {
+        "platform": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platformVersion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "toolAndVersion": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "theme": {
+          "enum": [
+            "light",
+            "dark",
+            "system",
+            "unknown"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "windowLogicalSize": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "width": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "height": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "unit": {
+                  "enum": [
+                    "pt",
+                    "px_image",
+                    "px_web"
+                  ]
+                }
+              },
+              "required": [
+                "width",
+                "height",
+                "unit"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "screenshotPixels": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "width": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "height": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "unit": {
+                  "enum": [
+                    "pt",
+                    "px_image",
+                    "px_web"
+                  ]
+                }
+              },
+              "required": [
+                "width",
+                "height",
+                "unit"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "backingScale": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "colorProfile": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "platform",
+        "platformVersion",
+        "toolAndVersion",
+        "theme",
+        "locale",
+        "windowLogicalSize",
+        "screenshotPixels",
+        "backingScale",
+        "colorProfile"
+      ],
+      "additionalProperties": false
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uri": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "bundle_metadata",
+              "screenshot",
+              "ax",
+              "source_declaration",
+              "runtime_measurement",
+              "web_computed_style",
+              "legacy_summary",
+              "proposal"
+            ]
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            ]
+          },
+          "capturedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "appVersion": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scope": {
+            "type": "string",
+            "minLength": 1
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "required": [
+          "id",
+          "uri",
+          "kind",
+          "sha256",
+          "capturedAt",
+          "appVersion",
+          "scope",
+          "limitations"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "tokens": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "enum": [
+              "color",
+              "fontFamily",
+              "fontSize",
+              "fontWeight",
+              "spacing",
+              "radius",
+              "border",
+              "shadow",
+              "motion",
+              "qualitative"
+            ]
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rawValue": {
+            "type": [
+              "string",
+              "number",
+              "null"
+            ]
+          },
+          "value": {
+            "type": [
+              "string",
+              "number",
+              "null"
+            ]
+          },
+          "unit": {
+            "enum": [
+              "srgb_hex",
+              "pt",
+              "px_image",
+              "px_web",
+              "ms",
+              "unitless",
+              "qualitative",
+              "unknown"
+            ]
+          },
+          "precision": {
+            "enum": [
+              "qualitative",
+              "approximate",
+              "exact",
+              "declared",
+              "unknown"
+            ]
+          },
+          "status": {
+            "enum": [
+              "historical_observation",
+              "verified_current",
+              "approximation",
+              "proposal",
+              "unknown"
+            ]
+          },
+          "origin": {
+            "enum": [
+              "screenshot",
+              "ax",
+              "source_declaration",
+              "runtime_measurement",
+              "web_computed_style",
+              "legacy_summary",
+              "proposal",
+              "unknown"
+            ]
+          },
+          "sourceIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "scope": {
+            "type": "object",
+            "properties": {
+              "screen": {
+                "type": "string",
+                "minLength": 1
+              },
+              "component": {
+                "type": "string",
+                "minLength": 1
+              },
+              "state": {
+                "type": "string",
+                "minLength": 1
+              },
+              "theme": {
+                "enum": [
+                  "light",
+                  "dark",
+                  "system",
+                  "unknown"
+                ]
+              },
+              "locale": {
+                "type": "string",
+                "minLength": 1
+              },
+              "observedAppVersion": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "screen",
+              "component",
+              "state",
+              "theme",
+              "locale",
+              "observedAppVersion"
+            ],
+            "additionalProperties": false
+          },
+          "confidence": {
+            "type": "object",
+            "properties": {
+              "level": {
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              },
+              "independentScreens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "independentStates": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "repeatCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "limitations": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [
+              "level",
+              "reason",
+              "independentScreens",
+              "independentStates",
+              "repeatCount",
+              "limitations"
+            ],
+            "additionalProperties": false
+          },
+          "brandStatus": {
+            "enum": [
+              "not_brand",
+              "unconfirmed",
+              "confirmed_user"
+            ]
+          },
+          "brandEvidence": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "clusterMembers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "conflicts": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "role",
+          "rawValue",
+          "value",
+          "unit",
+          "precision",
+          "status",
+          "origin",
+          "sourceIds",
+          "scope",
+          "confidence",
+          "brandStatus",
+          "brandEvidence",
+          "clusterMembers",
+          "conflicts"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "unknown"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "value": {
+                  "type": "null"
+                },
+                "rawValue": {
+                  "type": "null"
+                },
+                "precision": {
+                  "const": "unknown"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "enum": [
+                    "historical_observation",
+                    "verified_current",
+                    "approximation"
+                  ]
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "sourceIds": {
+                  "minItems": 1
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "number"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "precision": {
+                  "const": "exact"
+                }
+              },
+              "required": [
+                "precision"
+              ]
+            },
+            "then": {
+              "properties": {
+                "origin": {
+                  "enum": [
+                    "runtime_measurement",
+                    "web_computed_style"
+                  ]
+                },
+                "sourceIds": {
+                  "minItems": 1
+                },
+                "status": {
+                  "const": "verified_current"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "precision": {
+                  "const": "declared"
+                }
+              },
+              "required": [
+                "precision"
+              ]
+            },
+            "then": {
+              "properties": {
+                "origin": {
+                  "const": "source_declaration"
+                },
+                "sourceIds": {
+                  "minItems": 1
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "proposal"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "origin": {
+                  "const": "proposal"
+                },
+                "precision": {
+                  "enum": [
+                    "qualitative",
+                    "approximate"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "brandStatus": {
+                  "const": "confirmed_user"
+                }
+              },
+              "required": [
+                "brandStatus"
+              ]
+            },
+            "then": {
+              "properties": {
+                "brandEvidence": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "coverage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "screen": {
+            "type": "string",
+            "minLength": 1
+          },
+          "component": {
+            "type": "string",
+            "minLength": 1
+          },
+          "state": {
+            "type": "string",
+            "minLength": 1
+          },
+          "appVersion": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "outcome": {
+            "enum": [
+              "observed",
+              "blocked",
+              "not_sampled",
+              "not_applicable"
+            ]
+          },
+          "sourceIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "screen",
+          "component",
+          "state",
+          "appVersion",
+          "outcome",
+          "sourceIds",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "snapshotId",
+    "capturedAt",
+    "app",
+    "environment",
+    "sources",
+    "tokens",
+    "coverage",
+    "blockers",
+    "notes"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Typeless 原生设计观察记录（非 DTCG）",
+  "description": "JSON Schema 约束形状与基本精度；sourceIds 的存在、取证内容、跨记录覆盖和测量能力需人工/调用方另验。高置信不授予精确度或品牌确认。"
+}

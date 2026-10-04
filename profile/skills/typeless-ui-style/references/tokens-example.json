@@ -1,0 +1,227 @@
+{
+  "schemaVersion": "1.0.0",
+  "snapshotId": "2026-10-01-metadata-only-example",
+  "capturedAt": "2026-10-01T08:03:12.252771+00:00",
+  "app": {
+    "name": "Typeless",
+    "installedVersion": "2.8.1",
+    "installedBuild": "2.8.1.130",
+    "installedVersionSourceId": "installed-metadata",
+    "runningVersion": null,
+    "runningVersionSourceId": null
+  },
+  "environment": {
+    "platform": "macOS",
+    "platformVersion": null,
+    "toolAndVersion": [
+      "cua.getState（资源清单；版本未提供）",
+      "plistlib（安装元数据）"
+    ],
+    "theme": "unknown",
+    "locale": "unknown",
+    "windowLogicalSize": null,
+    "screenshotPixels": null,
+    "backingScale": null,
+    "colorProfile": "unknown"
+  },
+  "sources": [
+    {
+      "id": "installed-metadata",
+      "uri": "app-bundle:Contents/Info.plist",
+      "kind": "bundle_metadata",
+      "sha256": null,
+      "capturedAt": null,
+      "appVersion": "2.8.1",
+      "scope": "安装包版本与构建号",
+      "limitations": [
+        "模板摘录，精确采集时间/摘要请用本次私有证据记录补齐；不证明运行版本"
+      ]
+    },
+    {
+      "id": "legacy-2.8.0",
+      "uri": "observations-2.8.0.md",
+      "kind": "legacy_summary",
+      "sha256": null,
+      "capturedAt": null,
+      "appVersion": "2.8.0",
+      "scope": "历史设置/导航观察摘要",
+      "limitations": [
+        "原图本次未重新复核；不是当前采样"
+      ]
+    },
+    {
+      "id": "target-style-proposal",
+      "uri": "style-system.md",
+      "kind": "proposal",
+      "sha256": null,
+      "capturedAt": null,
+      "appVersion": null,
+      "scope": "目标产品建议 token",
+      "limitations": [
+        "非官方规范、非原生实测"
+      ]
+    }
+  ],
+  "tokens": [
+    {
+      "id": "historical-surface-panel",
+      "type": "qualitative",
+      "role": "surface.panel",
+      "rawValue": "2.8.0 摘要：白色内容主表面",
+      "value": "近白",
+      "unit": "qualitative",
+      "precision": "qualitative",
+      "status": "historical_observation",
+      "origin": "legacy_summary",
+      "sourceIds": [
+        "legacy-2.8.0"
+      ],
+      "scope": {
+        "screen": "settings",
+        "component": "panel",
+        "state": "default",
+        "theme": "light",
+        "locale": "zh-CN",
+        "observedAppVersion": "2.8.0"
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "历史页面记录支持定性层级，原图本次未复核",
+        "independentScreens": 1,
+        "independentStates": 1,
+        "repeatCount": 0,
+        "limitations": [
+          "不支持精确色值或当前版本"
+        ]
+      },
+      "brandStatus": "not_brand",
+      "brandEvidence": null,
+      "clusterMembers": [],
+      "conflicts": []
+    },
+    {
+      "id": "historical-navigation-selected",
+      "type": "qualitative",
+      "role": "surface.selected",
+      "rawValue": "2.8.0 摘要：导航低对比灰色圆角填充",
+      "value": "软灰",
+      "unit": "qualitative",
+      "precision": "qualitative",
+      "status": "historical_observation",
+      "origin": "legacy_summary",
+      "sourceIds": [
+        "legacy-2.8.0"
+      ],
+      "scope": {
+        "screen": "settings",
+        "component": "navigation-item",
+        "state": "selected",
+        "theme": "light",
+        "locale": "zh-CN",
+        "observedAppVersion": "2.8.0"
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "历史页面记录支持定性层级，原图本次未复核",
+        "independentScreens": 1,
+        "independentStates": 1,
+        "repeatCount": 0,
+        "limitations": [
+          "不支持精确色值或当前版本"
+        ]
+      },
+      "brandStatus": "not_brand",
+      "brandEvidence": null,
+      "clusterMembers": [],
+      "conflicts": []
+    },
+    {
+      "id": "target-action-primary-proposal",
+      "type": "color",
+      "role": "action.primary",
+      "rawValue": "#1c1c1e",
+      "value": "#1c1c1e",
+      "unit": "srgb_hex",
+      "precision": "approximate",
+      "status": "proposal",
+      "origin": "proposal",
+      "sourceIds": [
+        "target-style-proposal"
+      ],
+      "scope": {
+        "screen": "target-product",
+        "component": "primary-button",
+        "state": "default",
+        "theme": "light",
+        "locale": "zh-CN",
+        "observedAppVersion": null
+      },
+      "confidence": {
+        "level": "low",
+        "reason": "目标产品可逆转译默认，非 Typeless 实测或品牌确认",
+        "independentScreens": 0,
+        "independentStates": 0,
+        "repeatCount": 0,
+        "limitations": [
+          "目标环境另验对比度与状态"
+        ]
+      },
+      "brandStatus": "not_brand",
+      "brandEvidence": null,
+      "clusterMembers": [],
+      "conflicts": []
+    },
+    {
+      "id": "current-control-radius-unknown",
+      "type": "radius",
+      "role": "radius.control",
+      "rawValue": null,
+      "value": null,
+      "unit": "unknown",
+      "precision": "unknown",
+      "status": "unknown",
+      "origin": "unknown",
+      "sourceIds": [],
+      "scope": {
+        "screen": "settings",
+        "component": "control",
+        "state": "default",
+        "theme": "unknown",
+        "locale": "zh-CN",
+        "observedAppVersion": null
+      },
+      "confidence": {
+        "level": "low",
+        "reason": "当前未采界面，安装元数据不提供几何参数",
+        "independentScreens": 0,
+        "independentStates": 0,
+        "repeatCount": 0,
+        "limitations": [
+          "2.8.1 界面、缩放与逻辑尺寸未验证"
+        ]
+      },
+      "brandStatus": "not_brand",
+      "brandEvidence": null,
+      "clusterMembers": [],
+      "conflicts": []
+    }
+  ],
+  "coverage": [
+    {
+      "screen": "current-ui",
+      "component": "all",
+      "state": "all",
+      "appVersion": null,
+      "outcome": "not_sampled",
+      "sourceIds": [],
+      "reason": "资源清单未列运行中 Typeless；没有进行 UI 操作"
+    }
+  ],
+  "blockers": [
+    "当前未采 2.8.1 界面；不得据此输出无漂移"
+  ],
+  "notes": [
+    "这是方法更新的分层示例，snapshotId/capturedAt 为示例标记，不能作为采样凭据。",
+    "实采 0 页/0 状态；保留历史与建议，精确字体/半径/时长未知。"
+  ]
+}

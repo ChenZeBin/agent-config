@@ -12,5 +12,5 @@ judge:
   type: rule_based
   success:
     - output_matches:
-        all: ["FinderRight", "浅色|近白|白色", "tokens|token", "真实.*环境|真实.*浏览器|实际.*浏览器|真实.*HTML|真实.*渲染|目标浏览器|浏览器中", "截图|截屏"]
+        all: ["FinderRight", "浅色|近白|白色", "tokens|token", "真实.*环境|真实.*浏览器|实际.*浏览器|真实.*HTML|真实.*渲染|目标浏览器|浏览器中", "截图|截屏", "原始请求", "当前源码颜色", "参考观察", "已确认品牌", "本次转译建议", "observations-2[.]8[.]0[.]md", "设置顶部|语言下拉", "柔和阴影"]
         not: ["把 FinderRight 改名为 Typeless", "使用 Typeless 商标作为产品标志"]

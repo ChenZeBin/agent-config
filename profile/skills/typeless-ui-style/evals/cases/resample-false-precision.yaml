@@ -1,0 +1,29 @@
+{
+  "id": "resample-false-precision",
+  "title": "反复截图不证明精确字体与品牌",
+  "input": {
+    "prompt": "请使用 typeless-ui-style，只读 Skill 和 references，不联网、不操作 App、不改文件。我们只有一张设置截图，复制成三份并标为三个样本，想以 high confidence 宣布 SF Pro 15pt、12pt 圆角、绿色主按钮为 Typeless 官方 token。请给可用的证据判断和 token 分层；哪些能进入现行基线？"
+  },
+  "judge": {
+    "type": "rule_based",
+    "success": [
+      {
+        "output_matches": {
+          "all": [
+            "独立|重复",
+            "置信|confidence",
+            "精确|未知",
+            "品牌|绿色",
+            "建议|proposal|转译",
+            "中性"
+          ],
+          "not": [
+            "绿色主按钮.{0,40}(?:只能标为|可作为|归入|列为).{0,35}(?:proposal|提案)",
+            "(?:提案层|proposal).{0,100}绿色主按钮.{0,35}(?:只能标为|可作为|归入|列为)",
+            "绿色.{0,25}可作为.{0,25}(?:产品提案|本次提案)"
+          ]
+        }
+      }
+    ]
+  }
+}

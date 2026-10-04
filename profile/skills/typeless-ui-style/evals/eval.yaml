@@ -26,6 +26,11 @@ cases:
     - evals/cases/embedded-dark-evidence.yaml
     - evals/cases/inline-shortcut-scope.yaml
     - evals/cases/shortcut-error-evidence.yaml
+    - evals/cases/motion-provenance.yaml
+    - evals/cases/current-tested-matrix.yaml
+    - evals/cases/escape-layer-transfer.yaml
+    - evals/cases/loading-and-disabled.yaml
+    - evals/cases/immediate-save-and-limits.yaml
     - evals/cases/default-button-not-success-green.yaml
     - evals/cases/green-brand-exception.yaml
     - evals/cases/blind-save-button-css.yaml
@@ -33,8 +38,12 @@ cases:
     - evals/cases/unverified-existing-green.yaml
     - evals/cases/unbranded-miniapp-redesign.yaml
     - evals/cases/self-authored-color-acceptance.yaml
+    - evals/cases/resample-native-boundary.yaml
+    - evals/cases/resample-false-precision.yaml
+    - evals/cases/resample-empty-drift.yaml
+    - evals/cases/resample-role-conflict.yaml
   defaults:
-    timeout_seconds: 240
+    timeout_seconds: 420
     max_turns: 5
     expect:
       exit_code: 0

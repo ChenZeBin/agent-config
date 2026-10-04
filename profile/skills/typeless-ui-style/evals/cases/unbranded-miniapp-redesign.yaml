@@ -14,4 +14,11 @@ judge:
     - "将颜色决定表述为当前转译建议或默认，而不是从 Typeless 观察、现有代码或虚构品牌故事推导出的品牌事实。"
     - "保留提交预约与返回的业务语义，并将输出限于颜色 token 和按钮决定，不扩大为实际 UI 操作或全面重设计。"
     - "若输出默认、hover、pressed 或 focus 等可操作按钮状态，逐态保持普通文字与实际底色足够对比（Web 普通文字至少 4.5:1）；不可保留白字却将主按钮交互底色套为浅灰。若未提供状态，不凭空认定已验证完整状态。"
+    - "严格只输出本次颜色 token 和按钮决定；必要来源事实、缺口与可逆建议性质收进允许内容的注释或决定，不另加状态汇报、独立来源表、开场或结尾。"
+    - "引用已读观察的蓝色或其他颜色时，不将局部组件例子改为全应用排他结论；如称“仅”或“全部”，须覆盖已读材料相关事实且限定组件与状态，不遗漏文本选择或数据类别等会反驳该结论的事实。"
+    - "可操作状态须分别保持普通文字与实际背景至少4.5:1；状态的变亮、变暗或加深描述须与实际色值变化一致，对比合格不能掩盖方向描述矛盾。"
+    - "配色来源在原允许的 token 注释或按钮决定内分别明确填写原始请求、当前源码颜色、参考观察、已确认品牌和本次转译建议；原始请求不能省略，参考观察须包含具体界面组件或状态事实，缺材料则写实际未读和缺口。"
+    - "包内已有 observations-2.8.0.md 时，实际读取该观察记录并从中填具体页面、组件或状态事实；尚未读取不能当作没有材料，不能仅以目标绿色无依据替代观察。token、主动作默认和成功文案／图标的指南建议保持当前转译分类，不当作实测。判断是否实际读取时，须检索完整 transcript.json 中针对 observations-2.8.0.md 的 command_execution 及成功退出记录；只看前 260 行或 final_message 不足以证明未读取。 评分前用 Python 解析 `.skill-up/judge/context/transcript.json`：从 role=tool_call 建立 id 到 tool_call.arguments.command 的映射，再用 role=tool_result 的 tool_result.call_id 关联 status；这里的 id 在 x[\"tool_call\"][\"id\"]，不在顶层 x.get(\"id\")；先执行 calls = {x[\"tool_call\"][\"id\"]: x[\"tool_call\"][\"arguments\"][\"command\"] for x in rows if x[\"role\"] == \"tool_call\"}，再以 x[\"tool_result\"][\"call_id\"] 和 x[\"tool_result\"][\"status\"] 匹配；顶层 x.get(\"id\") 会得到 None，不能据此判无配对结果。只打印包含 references/observations-2.8.0.md 的调用命令、call_id 与 status。禁止用 rg 全文搜索后的大量 SKILL.md 正文推断读取结果。若该文件由独立命令读取且配对结果 status=success，则判实际读取成立；若 status=error 或无配对结果，则判失败。评分说明必须引用真实 call_id 和 status。"
+    - "用户只要本次会采用的颜色 token。每个 token 必须对应最终两枚按钮或其实际描述的状态；若两个按钮焦点均使用中性 focus-outline，就不能再列未使用的蓝色 --ty-accent。只写该 accent 可用于焦点、当前状态或关键动作，却没有任何本次实际按钮状态采用它，仍算多余 token；评分须对照 CSS token 与按钮决定的具体引用。"
+    - "逐个检查最终答复的 token：若用四列表格，每个 token 所在行必须同时写明‘提交预约’或‘返回’、具体状态／角色和色值；若用 CSS 代码块，提取 :root 中每个 `--token:` 名称，再检查代码块后两枚按钮决定是否逐字引用同名 token。只有泛称‘白底’‘深色文字’或代码块内注释提到它，仍算未使用。尤其 `--action-secondary-bg` 若只对应‘返回保留白底’而没有在按钮决定中出现该 token 名，必须判失败。不要仅凭整体配色合理给此项通过。"
   pass_threshold: 1.0

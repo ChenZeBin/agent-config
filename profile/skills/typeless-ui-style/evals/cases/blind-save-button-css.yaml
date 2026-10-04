@@ -14,6 +14,8 @@ judge:
   model: openai/gpt-5.6-luna
   criteria:
     - "CSS 让保存主按钮使用深色中性背景与高对比文字，取消按钮使用浅色表面和边界；没有将绿色当作无品牌色时的默认主按钮颜色。"
+    - "核对实际 CSS 选择器、token 和继承后的边框：白色或浅色取消按钮若靠边框识别为控件，边框与实际相邻背景的对比度至少 3:1。仅声明高对比边框 token 但按钮最终仍继承 #D2D2D6 一类低对比边框不合格；浅灰可用于装饰或分组。"
     - "保存完成反馈有明确文字或图标语义，不把绿色设成默认成功反馈，也不依赖颜色单独表达成功。"
     - "给出可用的 CSS token 或具体色值，符合用户要求的实际样式片段，而非只有抽象建议。"
+    - "包内已有 observations-2.8.0.md 时，实际读取该观察记录并从中填具体页面、组件或状态事实；尚未读取不能当作没有材料，不能仅以目标绿色无依据替代观察。token、主动作默认和成功文案／图标的指南建议保持当前转译分类，不当作实测。 核对完整执行记录时，transcript.json 数组以 role=tool_call 的 tool_call.arguments.command 记录读取命令，以 role=tool_result 的 tool_result.call_id 和 status=success 记录对应成功结果；不能只筛 role=assistant 或 role=tool。"
   pass_threshold: 1.0

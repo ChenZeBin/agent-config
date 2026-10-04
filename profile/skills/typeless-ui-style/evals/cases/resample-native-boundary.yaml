@@ -1,0 +1,25 @@
+{
+  "id": "resample-native-boundary",
+  "title": "原生 App 与网页提取的边界",
+  "input": {
+    "prompt": "请使用 typeless-ui-style，只读本 Skill 与 references，不联网、不操作 App、不安装软件、不改文件。团队打算把 /Applications/Typeless.app 传给 Dembrandt，声称会自动提取 SF Pro 15pt、12px 半径和所有 focus 状态。请判断并给可执行的有限只读重采样计划；保留用户近白/灰色/中性主动作方向。"
+  },
+  "judge": {
+    "type": "rule_based",
+    "success": [
+      {
+        "output_matches": {
+          "all": [
+            "DOM",
+            "原生",
+            "截图|AX|可访问",
+            "版本",
+            "未知|未.*验证",
+            "安装|MCP"
+          ],
+          "not": ["\\]\\(<[^>\\n]*\\)"]
+        }
+      }
+    ]
+  }
+}
