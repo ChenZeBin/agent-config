@@ -6,7 +6,7 @@ environment:
 skills:
   - source: local_path
     path: .
-    include: [SKILL.md, "references/**"]
+    include: [SKILL.md, "references/**", "assets/**"]
 
 engine:
   name: codex
@@ -42,6 +42,9 @@ cases:
     - evals/cases/resample-false-precision.yaml
     - evals/cases/resample-empty-drift.yaml
     - evals/cases/resample-role-conflict.yaml
+    - evals/cases/brand-family-provenance.yaml
+    - evals/cases/brand-family-icon-roles.yaml
+    - evals/cases/brand-family-boundaries.yaml
   defaults:
     timeout_seconds: 420
     max_turns: 5

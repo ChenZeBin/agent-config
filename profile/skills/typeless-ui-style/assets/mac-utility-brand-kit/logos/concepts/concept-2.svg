@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Abstract utility U mark</title>
+  <g id="icon" fill="#17252A">
+    <path fill-rule="evenodd" d="M96 64H216V284C216 326 231 352 256 352C281 352 296 326 296 284V64H416V288C416 396 355 464 256 464C157 464 96 396 96 288V64ZM296 184L360 216L296 248Z"/>
+  </g>
+</svg>

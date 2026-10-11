@@ -98,6 +98,13 @@
         "content_relation": "Original Chinese workflow synthesis from public README and source; no code/assets/third-party skill copied",
         "execution": "Source read only; no CLI/MCP installed or executed",
         "reference": "references/dembrandt-method.md"
+      },
+      "brand_kit": {
+        "source": "self-authored mac-utility-brand-kit v0.1",
+        "status": "historical-design-proposal; not approved brand or Typeless observation",
+        "source_reading_date": "2026-09-19",
+        "manifest": "profile/skills/typeless-ui-style/assets/mac-utility-brand-kit/provenance.json",
+        "scope": "Reusable SVG, HTML, tokens and native interaction guidance; excludes historical runtime evidence"
       }
     },
     "evidence-gate": {

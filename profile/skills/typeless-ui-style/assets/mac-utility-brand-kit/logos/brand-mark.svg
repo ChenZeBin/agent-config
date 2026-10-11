@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <g id="icon" fill="#17252A">
+    <g id="component-a">
+      <path d="M72 88H288V152H352V280H288V216H248L216 248V424H72V360H136V216H72Z"/>
+    </g>
+    <g id="component-b">
+      <path d="M440 424H224V360H160V232H224V296H264L296 264V88H440V152H376V296H440Z"/>
+    </g>
+  </g>
+</svg>

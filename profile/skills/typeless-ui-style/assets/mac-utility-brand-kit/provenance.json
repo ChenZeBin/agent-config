@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "origin": "self-authored mac-utility-brand-kit v0.1",
+  "status": "historical-design-proposal",
+  "source_reading_date": "2026-09-19",
+  "import_date": "2026-10-11",
+  "excluded": "Historical screenshots, browser logs and old run-dependent verification scripts.",
+  "files": [
+    {
+      "path": "DESIGN-SYSTEM.md",
+      "source_sha256": "52d4d289d1407458ac67e252817e4e0736bd7c473434c76278532428bbbebded",
+      "packaged_sha256": "57183f3df16deceefa51aed9ee6972133316747f291bd263163e7e4f02360e8a"
+    },
+    {
+      "path": "sources.md",
+      "source_sha256": "f45a9479a4f26cad24d8da0635ef9c642ec48c34402373283f530b838d5357fb",
+      "packaged_sha256": "94c0b131716f4ed59763017106c4608b164dfb95b2499473ca5ebeb955a2e04b"
+    },
+    {
+      "path": "tokens.json",
+      "source_sha256": "5d9d62c7b8e6c21d567de22695ebe2c7404ee62e984ab9589da6d01e9895f4c0",
+      "packaged_sha256": "5d9d62c7b8e6c21d567de22695ebe2c7404ee62e984ab9589da6d01e9895f4c0"
+    },
+    {
+      "path": "logos/brand-mark-inverse.svg",
+      "source_sha256": "2083119e24f895188f01ab9e2cda5c96115115328405e7e08e47cb89af5809b6",
+      "packaged_sha256": "2083119e24f895188f01ab9e2cda5c96115115328405e7e08e47cb89af5809b6"
+    },
+    {
+      "path": "logos/brand-mark.svg",
+      "source_sha256": "be4806e5baa0e98195d7c857307503ff826723bf99e571b0e07a4f8d6231df4f",
+      "packaged_sha256": "be4806e5baa0e98195d7c857307503ff826723bf99e571b0e07a4f8d6231df4f"
+    },
+    {
+      "path": "logos/concepts/concept-1.svg",
+      "source_sha256": "be4806e5baa0e98195d7c857307503ff826723bf99e571b0e07a4f8d6231df4f",
+      "packaged_sha256": "be4806e5baa0e98195d7c857307503ff826723bf99e571b0e07a4f8d6231df4f"
+    },
+    {
+      "path": "logos/concepts/concept-2.svg",
+      "source_sha256": "475226df2ec58bfc74c06d4a1cb8809e71d6e22793799cd402ab298537ac093c",
+      "packaged_sha256": "475226df2ec58bfc74c06d4a1cb8809e71d6e22793799cd402ab298537ac093c"
+    },
+    {
+      "path": "logos/concepts/concept-3.svg",
+      "source_sha256": "f28a39504aa0e84c550e644c615a1263cf0b67f396e0b105209ea415e3e47995",
+      "packaged_sha256": "f28a39504aa0e84c550e644c615a1263cf0b67f396e0b105209ea415e3e47995"
+    },
+    {
+      "path": "logos/family/folder.svg",
+      "source_sha256": "7c0ef953a9eac316a872a2cec926b62fb07083a8f79364c31682a13e2934698f",
+      "packaged_sha256": "7c0ef953a9eac316a872a2cec926b62fb07083a8f79364c31682a13e2934698f"
+    },
+    {
+      "path": "logos/family/note.svg",
+      "source_sha256": "6ae71d4c37367bd7ef971289e7015a32b17774909475660934b1a708f683221b",
+      "packaged_sha256": "6ae71d4c37367bd7ef971289e7015a32b17774909475660934b1a708f683221b"
+    },
+    {
+      "path": "logos/family/timer.svg",
+      "source_sha256": "71fea3f836584cd910a56e0eff8fccd05012466ef7cef4996869e05837288445",
+      "packaged_sha256": "71fea3f836584cd910a56e0eff8fccd05012466ef7cef4996869e05837288445"
+    },
+    {
+      "path": "logos/layers/folder.svg",
+      "source_sha256": "4c2b66fd00db51413f285518a33428942b62c8de850efc210d1e302e388c8554",
+      "packaged_sha256": "4c2b66fd00db51413f285518a33428942b62c8de850efc210d1e302e388c8554"
+    },
+    {
+      "path": "logos/layers/note.svg",
+      "source_sha256": "c531e8e9ee5f2013ade537ad236f36afb9a588b3c326006e7c640522d057b07d",
+      "packaged_sha256": "c531e8e9ee5f2013ade537ad236f36afb9a588b3c326006e7c640522d057b07d"
+    },
+    {
+      "path": "logos/layers/timer.svg",
+      "source_sha256": "d598c7aaf676b75ac2939e181695120b3bda525ed3a894cfe9bd7725bf06fcd8",
+      "packaged_sha256": "d598c7aaf676b75ac2939e181695120b3bda525ed3a894cfe9bd7725bf06fcd8"
+    },
+    {
+      "path": "logos/preview.html",
+      "source_sha256": "542ad04fbe95d4117d2b3183f855202fafd34d98871e96674e15225b7b8665f4",
+      "packaged_sha256": "f47141b590b21831e333cda0865d0e07c4257e39d683407e535255d9c3b6b2dc"
+    },
+    {
+      "path": "s-preview/index.html",
+      "source_sha256": "5f5b65296d448d350dacc00648871196fc34f6ddc71c10a0f5b2a32144ab7050",
+      "packaged_sha256": "2cca8b4251c1be551f0a37895998b173e7e01006f4fb2809d6e74b6bbf91b7bd"
+    },
+    {
+      "path": "s-preview/badge-v3.html",
+      "source_sha256": "44cf7c9cfc5ae726027e4d5b238d853a5715464a8b477d64dc338e1173b22d72",
+      "packaged_sha256": "dd58e1db1ca87c91d403018b54508ac4307458df6c015f4d2e595397bdc8ad24"
+    }
+  ]
+}

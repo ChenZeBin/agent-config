@@ -1,0 +1,17 @@
+{
+  "id": "brand-family-provenance",
+  "title": "历史品牌提案不能覆盖目标品牌",
+  "input": {
+    "prompt": "用户明确要求 Typeless 风格，并想借用 Mac 小工具品牌家族资料。请先阅读 references/mac-utility-brand-kit.md，再回答：tokens 和 S 标记是用户已确认品牌吗？蓝绿色能直接作为主按钮和成功态吗？HTML 的“品牌蓝贯穿界面”有何效力？说明与 Typeless 实测及当前平台要求的区别。仅讨论来源与采用条件，不输出色值。 另说明用户已有确认品牌与历史提案的优先级，以及主 Skill 的中性主按钮默认和颜色来源分类是否继续有效。"
+  },
+  "judge": {
+    "type": "agent_judge",
+    "model": "openai/gpt-5.6-luna",
+    "criteria": [
+      "明确 tokens、S 标记和预览颜色均为历史提案，未经用户确认；不能把原文件的品牌字样当作确认。",
+      "明确不得默认将历史蓝绿色用于主按钮或成功态，用户已确认品牌优先，主 Skill 的中性默认与来源分类继续有效。",
+      "区分历史设计建议、Typeless 实测与当前官方平台要求；不声称本次重新观察或核验。"
+    ],
+    "pass_threshold": 1.0
+  }
+}

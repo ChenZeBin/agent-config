@@ -1,0 +1,17 @@
+{
+  "id": "brand-family-icon-roles",
+  "title": "三种图标职责与真实交付边界",
+  "input": {
+    "prompt": "使用 typeless-ui-style 的品牌家族参考，为三个 Mac 小工具制定资源复用原则。先读 references/mac-utility-brand-kit.md。分别说明公司标志、应用图标、菜单栏图标的用途；能否只换颜色、把彩色图标缩小放菜单栏？现有 SVG/HTML 是否等同于交付 .icns、.icon 或完成真实 App 验收？不要输出色值。"
+  },
+  "judge": {
+    "type": "agent_judge",
+    "model": "openai/gpt-5.6-luna",
+    "criteria": [
+      "分别解释公司标志的品牌背书、应用图标的系统入口、菜单栏图标的小尺寸状态用途。",
+      "产品应有可辨的功能轮廓，不只换颜色；菜单栏另做简洁单色模板，不直接缩小彩色图标。",
+      "明确 SVG/HTML 是提案或制作输入，不等同于 .icns、.icon 或 App 交付；后续须在真实 Dock、Finder、菜单栏和小尺寸检查。"
+    ],
+    "pass_threshold": 1.0
+  }
+}
