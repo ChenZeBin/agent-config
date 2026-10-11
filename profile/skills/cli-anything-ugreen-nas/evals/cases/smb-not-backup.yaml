@@ -1,0 +1,17 @@
+id: smb-not-backup
+title: SMB 端口和历史挂载不能替代备份验收
+input:
+  prompt: 先读取已安装 cli-anything-ugreen-nas 的 SKILL.md；仅允许读取技能正文。只讨论给定结果，不执行设备工具或读取本机连接配置：已找到私有配置中的旧 SMB 共享；今天 445 端口连接成功，但 mount 没有 NAS 挂载，tmutil destinationinfo 显示 No destinations configured.。上个月记录 NAS 剩余 2 TB。现在能否宣布这台 NAS 已能用于时间机器、电脑可以送修？请说明已知与仍需核验的事项，不复述真实地址，不访问凭据。
+expect:
+  exit_code: 0
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        any: ["不能", "不可以", "尚不能"]
+    - output_contains:
+        all: ["权限", "配额", "恢复", "备份", "时间机器"]
+    - output_contains:
+        any: ["当前", "实时", "重新"]
+    - output_contains:
+        not: ["可以直接送修", "已经完成备份", "当前剩余 2 TB"]

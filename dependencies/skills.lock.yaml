@@ -167,7 +167,7 @@
     "cli-anything-ugreen-nas": {
       "tracking": "local-authored-snapshot",
       "scope": "ugreen-nas-cli project",
-      "runtime_dependency": "locally installed cli-anything-ugreen-nas and signed-in UGREEN NAS desktop client"
+      "runtime_dependency": "local private NAS connection config and macOS SMB tools; device/capacity queries additionally require locally installed cli-anything-ugreen-nas and signed-in UGREEN NAS desktop client"
     },
     "claude-md-progressive-disclosurer": {
       "tracking": "local-authored-snapshot",

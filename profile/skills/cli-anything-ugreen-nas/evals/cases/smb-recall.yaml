@@ -1,0 +1,15 @@
+id: smb-recall
+title: 客户端代理失败后仍可查找已有 SMB 连接
+input:
+  prompt: 先读取已安装 cli-anything-ugreen-nas 的 SKILL.md；本题仅允许读取技能正文。用户说“之前打开过 SMB，你搜索下看看”。绿联 CLI 刚返回 proxy_unavailable。请依据技能给出下一步只读检查流程及该错误的含义。不执行设备工具，不读取本机连接配置或凭据。输出你会首先读取的配置路径，以及挂载、端口和时间机器的检查命令。不要假定设备当前在线。
+expect:
+  exit_code: 0
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: [".config/agent-config-local/nas-archive.md", "445", "mount", "smbutil statshares", "tmutil destinationinfo", "proxy_unavailable"]
+    - output_contains:
+        any: ["不代表", "不等于", "不能说明", "不证明"]
+    - output_contains:
+        not: ["必须先打开绿联客户端才能", "把密码发给我", "eval ", "mkdir /Volumes"]
