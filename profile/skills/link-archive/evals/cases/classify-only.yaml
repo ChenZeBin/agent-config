@@ -1,0 +1,29 @@
+{
+  "id": "classify-only",
+  "title": "classify-only",
+  "input": {
+    "prompt": "只判断此链接的支持范围并给出命令，不执行或采集：https://youtu.be/dQw4w9WgXcQ?si=fixture。原 my-wiki 项目已删除。"
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "rule_based",
+    "success": [
+      {
+        "output_contains": {
+          "all": [
+            "link-archive classify",
+            "--json"
+          ],
+          "not": [
+            "link-archive capture"
+          ]
+        }
+      },
+      {
+        "exit_code": 0
+      }
+    ]
+  }
+}

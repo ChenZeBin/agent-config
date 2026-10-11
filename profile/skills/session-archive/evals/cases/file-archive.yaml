@@ -1,0 +1,31 @@
+{
+  "id": "file-archive",
+  "title": "file-archive",
+  "input": {
+    "prompt": "只给命令：把我选定的 /tmp/selected.jsonl 按标题“测试会话”、日期 2026-01-01 归档到 /tmp/my-archive，然后复验。原项目已删除，不运行命令。"
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "rule_based",
+    "success": [
+      {
+        "output_contains": {
+          "all": [
+            "session-archive ingest",
+            "--input",
+            "--output",
+            "session-archive verify"
+          ],
+          "not": [
+            "wiki_recall.mjs"
+          ]
+        }
+      },
+      {
+        "exit_code": 0
+      }
+    ]
+  }
+}

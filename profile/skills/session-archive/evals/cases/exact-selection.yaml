@@ -1,0 +1,27 @@
+{
+  "id": "exact-selection",
+  "title": "exact-selection",
+  "input": {
+    "prompt": "我要归档昨天聊的会话，没提供 ID 或导出文件。请说明需要的最少输入，不扫描历史也不要猜会话。"
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "rule_based",
+    "success": [
+      {
+        "output_contains": {
+          "all": [
+            "UUID",
+            "导出"
+          ],
+          "not": []
+        }
+      },
+      {
+        "exit_code": 0
+      }
+    ]
+  }
+}

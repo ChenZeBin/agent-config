@@ -185,6 +185,12 @@
       "license_file": "third_party_licenses/codex-session-controller-LICENSE.txt",
       "tracking": "local-adapted-snapshot",
       "runtime_dependency": "Codex app thread tools; availability and authorization checked at dispatch"
+    },
+    "link-archive": {
+      "tracking": "local-authored-snapshot"
+    },
+    "session-archive": {
+      "tracking": "local-authored-snapshot"
     }
   }
 }

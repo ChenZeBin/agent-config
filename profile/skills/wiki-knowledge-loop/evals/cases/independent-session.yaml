@@ -1,0 +1,26 @@
+{
+  "id": "independent-session",
+  "title": "independent-session",
+  "input": {
+    "prompt": "my-wiki 已删除，用户明确选定一个会话导出文件，只要归档原文，不要编译知识库。说明应使用哪个独立工具，不运行。"
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "rule_based",
+    "success": [
+      {
+        "output_contains": {
+          "all": [
+            "session-archive"
+          ],
+          "not": []
+        }
+      },
+      {
+        "exit_code": 0
+      }
+    ]
+  }
+}

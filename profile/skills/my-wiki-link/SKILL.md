@@ -1,31 +1,10 @@
 ---
 name: my-wiki-link
-description: Use the global my-wiki-link CLI to identify, safely capture, or verify links supported by the local my-wiki repository. Use for mp.weixin.qq.com articles, WeChat Channels sph shares, public X/Twitter statuses, Bilibili BV videos, and single public YouTube videos. Do not treat raw capture as completed Wiki distillation.
+description: 旧 my-wiki-link 命令的兼容入口，委托独立 link-archive 采集工具，不再依赖 my-wiki 项目。
 ---
 
-# My Wiki Link
+# 兼容链接入口
 
-Use the deterministic `my-wiki-link` CLI as the thin execution layer. Keep platform policy and the full knowledge-ingestion workflow in the repository Skills.
+使用 [link-archive](../link-archive/SKILL.md) 的独立归档流程。旧 `my-wiki-link` 命令兼容 `doctor`、`classify`、`capture`、`verify`；`--repo` 是 `--output` 的别名，不扫描或定位旧项目。
 
-## Route the request
-
-- Identify or normalize a link without writing: `my-wiki-link classify 'URL' --json`.
-- Check installation and adapter availability: `my-wiki-link doctor --json`.
-- Preview the exact capture adapter without writing: `my-wiki-link capture 'URL' --dry-run --json`.
-- Capture and atomically promote verified raw evidence only when the user asked to capture, archive, ingest, or distill that link: `my-wiki-link capture 'URL' --json`.
-- Verify an existing immutable bundle: `my-wiki-link verify 'raw/<platform>/<bundle>' --json`.
-- Inspect the platform-neutral compile queue without claiming it: `my-wiki-link queue scan --json`.
-
-Use `--repo PATH` when the target repository is not discoverable. Discovery order is `--repo`, `MY_WIKI_ROOT`, the current directory and its parents, then `$HOME/my-wiki`.
-
-## Preserve the knowledge boundary
-
-Before a real capture, read `$MY_WIKI_ROOT/.agents/skills/article-ingest/SKILL.md` and the routed platform Skill completely. Their request ownership, immutable `raw/`, authenticity, transcript, retry, and lock rules remain authoritative; the CLI intentionally reuses those adapters.
-
-`capture` ends at verified raw promotion. If the user says “炼化”, “llm wiki”, or asks for durable Wiki knowledge, continue in the same repository through source/canonical page compilation, index and append-only log updates, an independent semantic review, receipt creation, queue release, final `state: consistent`, and immediate consumption. Never describe `capture`, `promoted`, or `bookkeeping_state: consistent` alone as completed distillation.
-
-The public WeChat Channels adapter is metadata-only unless its bundle independently contains media or a transcript. YouTube without a verified caption remains archive-only. Preserve every adapter's reported evidence limitation.
-
-## Output and failure handling
-
-Prefer `--json`; decide from `ok`, `platform`, `action`, `raw_bundle`, and the nested `backend` result. Treat nonzero exit status, `ok: false`, unsupported host/path, a retained lock, integrity failure, or missing evidence as a stop condition. Do not bypass a failed adapter with a generic web scraper.
+`queue scan` 属于已移除的 Wiki 编译流程，不再提供；不能把 capture 称为完整炼化。安装或修复全局命令运行 `node ../link-archive/scripts/install.mjs`。仅判断支持范围时用 `my-wiki-link classify 'URL' --json`，不得提前采集。

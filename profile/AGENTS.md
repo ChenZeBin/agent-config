@@ -57,12 +57,11 @@
 
 - 开始面向美国、加拿大或墨西哥用户的新产品项目时，先使用 `$north-america-market-entry` Skill 做项目适配的市场进入扫描，再确定定位、商业模式、设计和上架方案。默认从美国开始；加拿大与墨西哥分别核验。已有项目扩区或重定价时也运行。只读调查不阻塞可并行的实现工作；不把旧报告当作当前法规或市场证据。
 
-### “炼化”与 my-wiki 链接处理
+### 独立链接采集与会话归档
 
-- “炼化下”等同于“llm wiki 下”：在 `my-wiki` 中处理用户当次提供或明确选定的材料。即使当前位于其他项目，也先定位 `my-wiki`，读取其 `AGENTS.md`，并遵循 `article-ingest` 和对应平台 Skill；不得写入无关项目。
-- 完整炼化须完成采集与确定性校验、不可变 `raw/` 固化、来源页及适用主题页编译、索引与日志同步、独立语义质量审查、receipt、队列 `state: consistent` 与即时消费。仅抓取、转存、聊天摘要、`promoted` 或 metadata-only 归档均不算完成。
-- 处理受支持链接时，优先加载 `my-wiki-link` Skill，使用全局 `my-wiki-link` 命令及 `--json`。它是已有平台适配器的薄封装，支持 `doctor`、`classify`、`capture --dry-run`、`capture`、`verify` 和只读 `queue scan`；`capture` 仅完成采集、确定性校验和 `raw/` 固化。
-- CLI 仓库发现顺序为 `--repo PATH`、`MY_WIKI_ROOT`、当前目录向上查找、`$HOME/my-wiki`。找不到仓库、平台不支持、适配器失败、完整性异常或锁被占用时，停止受影响的摄取并说明限制；不得用通用网页抓取绕过平台门禁。
+- 链接采集优先使用 `link-archive` Skill 与全局 CLI；兼容旧命令 `my-wiki-link`。程序和平台适配器独立分发，不再寻找或依赖旧 `my-wiki` 项目。
+- 输出目录优先使用用户指定的 `--output`，否则使用 `ARCHIVE_ROOT` 或 `~/codex-resource/archive`。只判断链接时用 `classify`；实际 capture 仅代表归档，不代表知识库编译。
+- 用户选定的会话文件或完整 Codex UUID 使用 `session-archive`，不扫描历史。只有用户明确选定现有 Wiki 并要求知识入库时，才读取并遵循该库的维护规则。
 
 ### Mac 小工具选题前置检索
 

@@ -1,87 +1,90 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import fs from 'node:fs';
-import fsp from 'node:fs/promises';
+import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 
-const home = os.homedir();
-const configRoot = path.resolve(import.meta.dirname, '../../../..');
-const skillRoot = path.resolve(import.meta.dirname, '..');
-const cli = path.join(home, '.local', 'bin', 'my-wiki-link');
-const installedSkill = path.join(home, '.agents', 'skills', 'my-wiki-link');
-const evalResult = path.join(home, '.local', 'state', 'my-wiki-link-skill-eval', 'iteration-1', 'result.json');
-const extensionId = 'banfcmclfmmlbkhionmemhibbjedhikm';
-
-function run(args, cwd = os.tmpdir(), allowedStatuses = [0]) {
-  const result = spawnSync(cli, args, { cwd, encoding: 'utf8', timeout: 120_000 });
-  assert.ok(allowedStatuses.includes(result.status), `${args.join(' ')} failed:\n${result.stderr}`);
-  return JSON.parse(result.stdout);
-}
-
-assert.ok(fs.existsSync(cli), 'global CLI entrypoint is missing');
-const cliStat = await fsp.lstat(cli);
-assert.ok(cliStat.isSymbolicLink() || cliStat.isFile(), 'CLI entrypoint must be a file or symlink');
-const sourceReal = await fsp.realpath(cli);
-assert.equal(sourceReal, path.join(skillRoot, 'scripts', 'my-wiki-link.mjs'));
-
-const doctor = run(['doctor', '--json']);
-assert.equal(doctor.ok, true);
-assert.equal(doctor.repo_root, path.join(home, 'my-wiki'));
-assert.ok(Object.values(doctor.adapters).every((item) => item.ok));
-
-const classified = run(['classify', 'https://youtu.be/dQw4w9WgXcQ?si=fixture', '--json']);
-assert.equal(classified.platform, 'youtube');
-assert.equal(classified.canonical_url, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
-
-const planned = run(['capture', 'https://x.com/Alice/status/1234567890123456789', '--dry-run', '--json']);
-assert.equal(planned.action, 'capture-plan');
-assert.equal(planned.full_wiki_compile, false);
-
-const wechatRaw = path.join(home, 'my-wiki', 'raw', 'wechat');
-const rawEntry = (await fsp.readdir(wechatRaw, { withFileTypes: true }))
-  .filter((item) => item.isDirectory() && !item.isSymbolicLink())
-  .sort((a, b) => a.name.localeCompare(b.name))[0];
-assert.ok(rawEntry, 'expected a WeChat raw bundle for read-only E2E verification');
-const verified = run(['verify', path.join(wechatRaw, rawEntry.name), '--json']);
-assert.equal(verified.action, 'verified');
-assert.equal(verified.backend.ok, true);
-
-const queue = run(['queue', 'scan', '--json'], os.tmpdir(), [0, 2]);
-assert.equal(queue.action, 'queue-scan');
-assert.ok(Array.isArray(queue.backend.bundles));
-assert.ok(Array.isArray(queue.backend.integrity_failures));
-
-assert.ok(fs.existsSync(installedSkill), 'managed global Skill link is missing');
-assert.equal(await fsp.realpath(installedSkill), skillRoot);
-assert.equal(await fsp.realpath(path.join(home, '.codex', 'AGENTS.md')), path.join(configRoot, 'profile', 'AGENTS.md'));
-
-const result = JSON.parse(await fsp.readFile(evalResult, 'utf8'));
-const serialized = JSON.stringify(result);
-assert.match(serialized, /PASS|passed|success/i, 'skill-up result does not contain a passing decision');
-assert.doesNotMatch(serialized, /"status"\s*:\s*"FAIL"/i, 'skill-up result contains a failed case');
-
-const chromeRoot = path.join(home, 'Library', 'Application Support', 'Google', 'Chrome');
-const profiles = (await fsp.readdir(chromeRoot, { withFileTypes: true }))
-  .filter((item) => item.isDirectory() && !item.isSymbolicLink())
-  .map((item) => path.join(chromeRoot, item.name, 'Extensions', extensionId));
-let extensionManifest = null;
-for (const base of profiles) {
-  const versions = await fsp.readdir(base, { withFileTypes: true }).catch(() => []);
-  for (const version of versions.filter((item) => item.isDirectory() && !item.isSymbolicLink())) {
-    const manifestPath = path.join(base, version.name, 'manifest.json');
-    if (fs.existsSync(manifestPath)) extensionManifest = JSON.parse(await fsp.readFile(manifestPath, 'utf8'));
+const sourceSkills = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const installedSkills = path.join(os.homedir(), '.config/agent-config/profile/skills');
+const bin = path.join(os.homedir(), '.local/bin');
+async function files(root, dir = '') {
+  const result = [];
+  for (const entry of await fs.readdir(path.join(root, dir), { withFileTypes: true })) {
+    assert.equal(entry.isSymbolicLink(), false);
+    const relative = path.join(dir, entry.name);
+    if (entry.isDirectory()) result.push(...await files(root, relative));
+    else { assert.equal(entry.isFile(), true); result.push(relative); }
   }
+  return result.sort();
 }
-assert.ok(extensionManifest, `Chrome extension ${extensionId} is not installed`);
-assert.equal(typeof extensionManifest.version, 'string');
-assert.match(String(extensionManifest.name), /MD|message/i);
-
-process.stdout.write(`${JSON.stringify({
-  ok: true,
-  cli,
-  skill: installedSkill,
-  extension_id: extensionId,
-  extension_version: extensionManifest.version,
-  skill_eval: evalResult,
-}, null, 2)}\n`);
+async function snapshot(bundle) {
+  const result = [];
+  for (const file of await files(bundle)) {
+    const bytes = await fs.readFile(path.join(bundle, file));
+    result.push({path:file, sha256:createHash('sha256').update(bytes).digest('hex'), encoding:'base64', bytes:bytes.toString('base64')});
+  }
+  return result;
+}
+for (const name of ['link-archive', 'session-archive']) {
+  const source = path.join(sourceSkills, name), installed = path.join(installedSkills, name);
+  assert.equal(await fs.realpath(path.join(os.homedir(), '.agents/skills', name)), installed);
+  const inventory = await files(source);
+  assert.deepEqual(await files(installed), inventory);
+  for (const file of inventory) assert.deepEqual(await fs.readFile(path.join(installed, file)), await fs.readFile(path.join(source, file)), `installed file differs: ${name}/${file}`);
+}
+const root = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'global-archive-acceptance-')));
+const blocked = path.join(os.homedir(), 'my-wiki');
+const profile = `(version 1) (allow default) (deny file-read* file-write* (subpath ${JSON.stringify(blocked)}))`;
+function execute(command, args, status = 0) {
+  const r = spawnSync('/usr/bin/sandbox-exec', ['-p', profile, command, ...args], { cwd: root, encoding: 'utf8', timeout: 120000, env: {...process.env, NODE_TEST_CONTEXT: undefined, NODE_OPTIONS: '', ARCHIVE_ROOT: path.join(root, 'archive'), MY_WIKI_ROOT: blocked} });
+  assert.equal(r.status, status, `${command}: ${r.stdout}\n${r.stderr}`);
+  return JSON.parse(r.stdout || r.stderr);
+}
+try {
+  const probe = execute(process.execPath, ['-e', `try {require('node:fs').readFileSync(${JSON.stringify(path.join(blocked, 'README.md'))}); process.exit(1);} catch(e) {if(!['EPERM','EACCES','ENOENT'].includes(e.code))process.exit(2);console.log(JSON.stringify({denied:true,code:e.code}));}`]);
+  assert.equal(probe.denied, true, 'the old project must really be unreadable');
+  const cli = (name, args, status = 0) => execute(path.join(bin, name), args, status);
+  assert.equal(cli('link-archive', ['doctor', '--json']).ok, true);
+  assert.equal(cli('session-archive', ['doctor']).requires_wiki, false);
+  assert.equal(cli('my-wiki-link', ['classify', 'https://youtu.be/dQw4w9WgXcQ', '--json']).platform, 'youtube');
+  // This check uses a real public network response. No mock fetch or prior project data.
+  const captured = cli('link-archive', ['capture', 'https://x.com/jack/status/20', '--json']);
+  assert.equal(captured.ok, true);
+  assert.equal(cli('link-archive', ['verify', captured.raw_bundle, '--json']).backend.ok, true);
+  assert.equal(cli('link-archive', ['verify', path.relative(root, captured.raw_bundle), '--json']).backend.ok, true);
+  // Bind the exact network evidence to the gate's stdout, not just a digest.
+  // An optional external directory also retains the readable original bundle.
+  const capturedFiles = await snapshot(captured.raw_bundle);
+  let retainedBundle = null;
+  if (process.argv[2]) {
+    const destination = path.resolve(process.argv[2]);
+    await fs.mkdir(destination, {recursive:true, mode:0o700});
+    const run = await fs.mkdtemp(path.join(destination, 'capture-'));
+    retainedBundle = path.join(run, path.basename(captured.raw_bundle));
+    await fs.cp(captured.raw_bundle, retainedBundle, {recursive:true, errorOnExist:true, force:false});
+  }
+  const duplicate = cli('my-wiki-link', ['capture', 'https://x.com/jack/status/20', '--json']);
+  assert.equal(cli('link-archive', ['verify', duplicate.raw_bundle, '--json']).backend.ok, true);
+  const firstManifest = JSON.parse(await fs.readFile(path.join(captured.raw_bundle, 'manifest.json'), 'utf8'));
+  const repeatManifest = JSON.parse(await fs.readFile(path.join(duplicate.raw_bundle, 'manifest.json'), 'utf8'));
+  const contentChanged = firstManifest.content_checksum !== repeatManifest.content_checksum;
+  // Engagement counts may change between live requests. Deduplication is exact
+  // content reuse, so a changed response must produce a distinct immutable bundle.
+  assert.equal(duplicate.backend.action, contentChanged ? 'promoted' : 'duplicate-noop');
+  assert.equal(duplicate.raw_bundle === captured.raw_bundle, !contentChanged);
+  assert.deepEqual(await snapshot(captured.raw_bundle), capturedFiles);
+  const repeatFiles = await snapshot(duplicate.raw_bundle);
+  const input = path.join(root, 'explicit-fixture.jsonl');
+  const bytes = Buffer.from('{"role":"user","text":"Synthetic global install acceptance fixture"}\n');
+  await fs.writeFile(input, bytes);
+  const sessionArgs = ['ingest', '--input', input, '--source-app', 'other', '--title', '全局安装合成验收', '--occurred-at', '2026-01-01'];
+  const session = cli('session-archive', sessionArgs);
+  assert.deepEqual(await fs.readFile(path.join(session.raw_bundle, 'session.jsonl')), bytes);
+  assert.equal(cli('session-archive', ['verify', '--bundle', session.raw_bundle]).state, 'verified');
+  assert.equal(cli('session-archive', sessionArgs).state, 'duplicate-noop');
+  await fs.appendFile(path.join(session.raw_bundle, 'session.jsonl'), 'tamper');
+  assert.equal(cli('session-archive', ['verify', '--bundle', session.raw_bundle], 1).ok, false);
+  console.log(JSON.stringify({ok:true, installed_commands:['link-archive','session-archive','my-wiki-link'], original_project_access:probe.code === 'ENOENT' ? 'absent' : 'denied-by-macos-sandbox', source_equals_installed:true, live_capture:{url:'https://x.com/jack/status/20', platform:captured.platform, backend:captured.backend.backend, warnings:captured.backend.warnings, checksum:captured.backend.bundle_checksum, retained_bundle:retainedBundle, files:capturedFiles}, repeat_capture:{action:duplicate.backend.action, content_changed:contentChanged, checksum:duplicate.backend.bundle_checksum, files:repeatFiles}, session:'synthetic bytes preserved; duplicate reused; tampering rejected'},null,2));
+} finally { await fs.rm(root, { recursive:true, force:true }); }

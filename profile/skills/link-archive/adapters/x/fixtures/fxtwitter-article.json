@@ -1,0 +1,27 @@
+{
+  "tweet": {
+    "id": "1234567890123456789",
+    "text": "长文发布帖摘要",
+    "author": { "screen_name": "Alice", "name": "Alice Example" },
+    "media": {
+      "all": [
+        { "type": "photo", "url": "https://pbs.twimg.com/media/article-photo.jpg" },
+        { "type": "video", "variants": [{ "url": "https://video.twimg.com/ext_tw_video/article-video.mp4" }] }
+      ],
+      "photos": { "cover": { "media_url_https": "https://pbs.twimg.com/media/article-cover.png" } }
+    },
+    "article": {
+      "title": "真实 Draft.js 长文标题",
+      "content": {
+        "blocks": [
+          { "key": "h", "text": "长文章节", "type": "header-one", "depth": 0 },
+          { "key": "p", "text": "首段内容。", "type": "unstyled", "depth": 0 },
+          { "key": "u", "text": "无序项目", "type": "unordered-list-item", "depth": 1 },
+          { "key": "o", "text": "有序项目", "type": "ordered-list-item", "depth": 0 },
+          { "key": "q", "text": "引用内容", "type": "blockquote", "depth": 0 },
+          { "key": "c", "text": "const answer = 42;", "type": "code-block", "depth": 0 }
+        ]
+      }
+    }
+  }
+}

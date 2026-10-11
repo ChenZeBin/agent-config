@@ -1,0 +1,4 @@
+interface:
+  display_name: "会话归档"
+  short_description: "独立保存原始资料、保留来源并验证完整性，支持全局命令和指定输出目录"
+  default_prompt: "使用 $session-archive 归档我明确选定的资料，并验证归档结果。"

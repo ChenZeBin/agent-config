@@ -1,26 +1,42 @@
-schema_version: v1alpha1
-environment:
-  type: none
-skills:
-  - source: local_path
-    path: .
-    include: [SKILL.md]
-engine:
-  name: codex
-  model:
-    provider: openai
-    name: gpt-5.6-luna
-cases:
-  files:
-    - evals/cases/scope-and-safety.yaml
-  defaults:
-    timeout_seconds: 180
-    max_turns: 8
-  parallelism: 1
-judge:
-  type: rule_based
-benchmark:
-  enabled: false
-report:
-  formats: [json]
-  artifacts: [transcript]
+{
+  "schema_version": "v1alpha1",
+  "environment": {
+    "type": "none"
+  },
+  "skills": [
+    {
+      "source": "local_path",
+      "path": ".",
+      "include": [
+        "SKILL.md"
+      ]
+    }
+  ],
+  "engine": {
+    "name": "codex"
+  },
+  "cases": {
+    "files": [
+      "evals/cases/scope-and-safety.yaml"
+    ],
+    "defaults": {
+      "timeout_seconds": 180,
+      "max_turns": 6
+    },
+    "parallelism": 1
+  },
+  "judge": {
+    "type": "rule_based"
+  },
+  "benchmark": {
+    "enabled": false
+  },
+  "report": {
+    "formats": [
+      "json"
+    ],
+    "artifacts": [
+      "transcript"
+    ]
+  }
+}
