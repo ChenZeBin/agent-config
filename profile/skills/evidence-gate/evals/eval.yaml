@@ -11,6 +11,8 @@ cases:
   files:
     - evals/cases/missing-dock-evidence.yaml
     - evals/cases/status-question.yaml
+    - evals/cases/pre-delivery-upload-error.yaml
+    - evals/cases/continue-after-review-rejection.yaml
   defaults:
     timeout_seconds: 180
     max_turns: 8

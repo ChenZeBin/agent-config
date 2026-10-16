@@ -125,7 +125,9 @@
           "license": "BSD-3-Clause",
           "license_file": "third_party_licenses/bashlex-PLY-LICENSE.txt"
         }
-      }
+      },
+      "state_directory_policy": "default production state; explicit unhooked isolated-test opt-in; read-only registration status",
+      "verification": "deterministic protocol regressions, real skill-up behavior cases, real read-only review including pre-delivery HTTP 413 with outer exit 0"
     },
     "article-ingest": {
       "tracking": "local-authored-snapshot",

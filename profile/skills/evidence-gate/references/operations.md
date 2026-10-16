@@ -35,7 +35,11 @@ gate review
 gate verify
 ```
 
-`init` 默认使用 `CODEX_THREAD_ID`；独立测试时显式 `--session demo`。`--state-dir` 可指定隔离的测试目录，必须位于合同范围之外。生产状态默认 `$CODEX_HOME/evidence-gate`（未设置时 `~/.codex/evidence-gate`）。
+`init` 默认使用 `CODEX_THREAD_ID`。生产状态必须使用默认 `$CODEX_HOME/evidence-gate`（未设置时 `~/.codex/evidence-gate`）；CLI 拒绝静默写入自定义目录。隔离测试须显式指定与当前 `CODEX_THREAD_ID` 不同的 `--session`，并使用 `gate --session demo --state-dir /absolute/test-state init --allow-unhooked-test-state --contract /absolute/contract.json`。该目录必须位于合同范围之外；默认 Hook 不读取它，不能作为真实交付的保护证明。
+
+`status` 是无写入的登记查询，不创建目录或锁文件，不调用验收或联网检查。它输出 `registration`、`state_dir`、`cli_default_state_dir`、`state_alignment: cli_default|custom`（仅依据当前 CLI 环境）；`hook_runtime: unknown` 和 `acceptance: not_checked` 明确表示尚未核验宿主与验收。`status --require-registered` 仅在默认目录存在 `active` 合同时退出 0；缺登记、已关闭、已转移或自定义目录退出 1。普通问答、只读调查和进度询问不因缺登记而创建合同。
+
+旧自定义目录仍可使用原 `--state-dir` 执行 `status`、`verify`、`close` 以保留审计记录；不能把自定义目录的 `accepted` 当作默认 Hook 保护。恢复生产工作前，先核对该会话在默认目录及旧目录的合同，保留原始要求与未完成项，在默认目录重新登记并重跑检查和审查；不自动搬移状态或继承通过凭据。`CODEX_HOME` 改变也会改变默认目录；必须核对 CLI 和 Hook 宿主的实际环境一致。
 
 `review` 默认使用 `${CODEX_HOME:-~/.codex}/evidence-gate/reviewer-policy.json` 的 `default`（机器本地策略，不随 Skill 发布，也不从项目目录加载）；`--codex /absolute/codex` 只能选择策略中已核验路径及 SHA-256 匹配的 Codex 二进制，不能换成自写审查脚本。Codex 升级后需要重新核对官方安装来源、版本和摘要，再更新策略；不得为让任务通过而放宽白名单。策略变化会使旧合同失效。保留用户配置的模型，不覆写模型。审查调用 `codex exec --sandbox read-only --ephemeral --json --output-schema …`，不传入绕过审批或 hook 信任的参数，也不修改用户认证。独立审查会消耗一次模型调用；错误/无效 JSON/超时都保留为未通过。默认超时 180 秒，可用 `--timeout` 调整到最多 1800 秒。
 
@@ -46,6 +50,8 @@ gate verify
 - `checks_pass`：机器检查通过，独立审查尚未通过；退出码 1。
 - `unverified`：证据缺失、检查失败、内容过期或仍在运行；退出码 1。
 - `closed_unverified`：明确结束但未获得当前验收；退出码 1。
+
+结果还输出 `delivery_blocked` 与 `next_action`。检查或证据不满足、审查拒绝时，下一步为 `continue_authorized_work_and_reverify`；检查通过但未审查时为 `run_independent_review`。这不证明所有缺口可自行修复，仍须区分当前可做工作与实际外部阻塞。`pre_delivery` 通过时为 `run_declared_delivery_then_advance_and_reverify`，只允许精确声明的交付命令通过后续范围校验，不能泛化为任意发布许可。交付后必须 `init --advance` 登记下一阶段，再真实检查、独立审查和 `verify`；对旧阶段重复 `verify` 不会完成目标。关闭时为 `resolve_closure_before_resuming`；不自动恢复已取消任务。既有退出码保持兼容：`run` 到 `checks_pass`、成功导入证据和 `close` 可退出 0，均不等于目标完成。
 
 `close --reason "用户取消；未验收"` 只归档未完成状态，不制造通过凭据；修复或变更需求后用新合同重新 `init`。
 
