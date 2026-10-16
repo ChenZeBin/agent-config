@@ -1,0 +1,15 @@
+{
+  "id": "speedtest-error",
+  "title": "识别测速正文中的错误",
+  "input": {
+    "prompt": "请使用 $mac-cli Skill 回答，不执行命令。mac speedtest 退出码为 0，stdout 有 Uplink capacity: 0.000 bps、Downlink capacity: 3.138 Mbps、Total Network Errors: 1 和 Error: Expected HTTP status code 200, got 413。用户只要求核验兼容性。输出 JSON：{\"measurement_succeeded\":布尔值,\"disable_proxy_to_retry\":布尔值,\"stable_availability\":布尔值,\"reason\":中文理由}。"
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/judges/speedtest-error.py",
+    "timeout_seconds": 20
+  }
+}

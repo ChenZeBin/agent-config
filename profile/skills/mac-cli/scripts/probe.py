@@ -5,6 +5,17 @@ PIN = "26c047242351e4b1c66bff91548a07352a694f16"
 FILES = ["mac", "mac-cli/misc/help"] + ["mac-cli/plugins/" + n for n in ["general","network","brew","search","ssh","performance","dns","volume","git"]]
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
 def digest(p): return hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+def network_quality_ok(result):
+    output=ANSI.sub("",result["stdout"]+result["stderr"])
+    if result["exit_code"]!=0 or result["timed_out"]:
+        return False
+    if re.search(r"(?im)^\s*Error:|Expected HTTP status|NetworkQualityErrorDomain|Total Network Errors:\s*[1-9][0-9]*",output):
+        return False
+    for direction in ("Uplink","Downlink"):
+        values=re.findall(direction+r" capacity:\s*([0-9.]+)\s*[kMGT]?bps",output)
+        if not values or any(float(value)<=0 for value in values):
+            return False
+    return True
 def run(argv, cwd=None, stdin="", timeout=12, env=None):
     start=time.monotonic()
     p=subprocess.Popen(argv,cwd=cwd,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,errors="replace",env=env,start_new_session=True)
@@ -119,7 +130,7 @@ def main():
         probe("git:size",["git:size"],lambda r,o: bool(re.search(r"(?m)^[\d.]+[BKMGTP]?\s+tmp.bundle$",o)) and not (repo/"tmp.bundle").exists(),repo,env=env,note="Writes/deletes tmp.bundle; fixture only.")
         if a.network:
             probe("ip:public",["ip:public"],lambda r,o: bool(re.search(r"(?m)^(?:\d{1,3}\.){3}\d{1,3}\s*$",o)),base,timeout=15)
-            probe("speedtest",["speedtest"],lambda r,o: r["exit_code"]==0 and "Downlink capacity:" in o and "Uplink capacity:" in o,base,timeout=60)
+            probe("speedtest",["speedtest"],lambda r,o: network_quality_ok(r),base,timeout=60,note="A zero exit code with HTTP errors or zero capacity is not a successful measurement.")
     report["finished_at"]=datetime.datetime.now(datetime.timezone.utc).isoformat()
     a.output.parent.mkdir(parents=True,exist_ok=True)
     fd=os.open(a.output,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)

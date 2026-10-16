@@ -1,6 +1,6 @@
 # 当前兼容性与使用边界
 
-核验日期：2026-10-16。系统：macOS 27.0.1，build 26A434，arm64。
+核验日期：2026-10-16 至 2026-10-17。系统：macOS 27.0.1，build 26A434，arm64。
 上游：[guarinogabriel/mac-cli](https://github.com/guarinogabriel/mac-cli/tree/26c047242351e4b1c66bff91548a07352a694f16)。
 源码 revision：`26c047242351e4b1c66bff91548a07352a694f16`。安装入口、帮助文件和九个插件与该仓库逐文件一致；摘要见 [source-manifest.json](source-manifest.json)。
 这是兼容性快照，不是所有 macOS 版本的保证。没有改动上游 CLI。
@@ -23,7 +23,8 @@
 | `search:replace` | 临时文件简单 before→after 替换通过。包含 sed 特殊字符、分隔符或空格路径的输入不在通过范围。 |
 | `git:config`、`git:log`、`git:branch` | 在隔离配置的临时 Git 仓库核对实际输出。真实 config 输出可能包含账号或凭据地址，不应公开。 |
 | `git:create:branch`、`git:branch:rename`、`git:branch:remove-local`、`git:undo-commit`、`git:add-removed`、`git:size` | 只在临时仓库验证分支、提交计数、工作文件和暂存状态；不代表真实仓库的变更已获授权。git:size 使用固定 tmp.bundle，有覆盖/删除风险。 |
-| `ip:public`、`speedtest` | 公网 IPv4 查询及 networkQuality 上/下行结果实际返回。依赖 wget / networkQuality 和当时网络；公网 IP 使用明文 HTTP，仅作参考。测速会产生流量。 |
+| `ip:public` | 公网 IPv4 查询实际返回。依赖 wget 和当时网络；使用明文 HTTP，仅作参考。 |
+| `speedtest` | 有条件，不能保证稳定可用。首次核验得到正值上下行结果；2026-10-17 的复核在代理路径（Connections Proxied: 100%、Interface: lo0）出现 HTTP 413、Total Network Errors: 1、上行 0 bps，但外层仍退出 0。不得仅凭标题或退出码报告成功。脚本已检查错误正文及上下行容量；本次不修改代理。测速会产生流量。 |
 
 ## 当前失败或没有实现
 

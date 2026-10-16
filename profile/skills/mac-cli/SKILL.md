@@ -19,6 +19,7 @@ description: 使用 guarinogabriel/mac-cli 的 mac 命令查询 macOS、目录�
 
 - 状态查询优先使用已核验项，例如 `mac info`、`mac uptime`、`mac battery`、`mac volume`（无参数）、`mac volume:ismute`、`mac folder:size`、`mac git:log`。在用户指定目录执行文件和 Git 命令。
 - mac 的入口依次 source 多个插件。中间错误常被后续空分支覆盖，最终退出码可能仍为 0。核对有效输出、stderr 和预期状态；空输出不算成功。
+- `speedtest` 还可能把 HTTP 413 等错误写到 stdout，同时返回 0。只在没有网络错误且上下行容量均大于 0 时报告测速成功；标题存在不够。当前代理路径已出现间歇失败，不能保证稳定可用。不要为验证测速而修改代理或网络设置。
 - `wifi:status`、`wifi:scan`、`lock` 使用已经缺失的旧路径。`bluetooth:status` 在已测机器读不到配置键。不要重复运行、假装成功或为修好查询而切换网络/蓝牙。
 - `system`、`temp`、`display`、`hosts:edit`、`ssh:list`、`git:settings`、`git:branches:date` 没有可执行分支。`time`、`brew` 不是有效命令；正确 Homebrew 操作是 `brew:update`，它会升级和清理软件。
 - 文件名含空格时，不使用未经修复的搜索、压缩、解压和替换封装。即使外层给路径加引号，插件内未引用变量仍会拆词。改用带独立 argv 参数的原生命令，并明确说明这是替代操作，不是 mac-cli 验证通过。
