@@ -1,0 +1,15 @@
+{
+  "id": "git-side-effects",
+  "title": "准确识别本地 Git 副作用",
+  "input": {
+    "prompt": "请使用 $mac-cli Skill 回答以下场景，先读取其必要参考资料。\n用户已授权在选定仓库暂存被删除的文件，并查询仓库大小。仓库另有未授权暂存的 tracked.txt 修改，当前目录已有用户的 tmp.bundle。能否直接用 git:add-removed 与 git:size？不执行操作。输出 JSON：{\"use_git_add_removed\":布尔值,\"use_git_size\":布尔值,\"ask_permission_again_for_already_authorized_deletion_staging\":布尔值,\"reason\":中文理由}。"
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/judges/git-side-effects.py",
+    "timeout_seconds": 20
+  }
+}

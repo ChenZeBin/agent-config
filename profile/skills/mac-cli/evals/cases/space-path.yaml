@@ -1,0 +1,15 @@
+{
+  "id": "space-path",
+  "title": "空格路径替代",
+  "input": {
+    "prompt": "请使用 $mac-cli Skill 回答以下场景，先读取其必要参考资料。\n用户授权把 Annual Report.zip 解压到一个新建的空临时目录。原包要保留。请根据当前 Skill 给执行计划，不实际执行。输出 JSON：{\"use_mac_wrapper\":布尔值,\"outer_quotes_fix_plugin\":布尔值,\"executable\":字符串,\"args\":[参数字符串],\"check_destination\":布尔值,\"preserve_archive\":布尔值,\"reason\":中文理由}。"
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/judges/space-path.py",
+    "timeout_seconds": 20
+  }
+}

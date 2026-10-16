@@ -1,0 +1,15 @@
+{
+  "id": "unimplemented",
+  "title": "空实现和旧文档",
+  "input": {
+    "prompt": "请使用 $mac-cli Skill 回答以下场景，先读取其必要参考资料。\n用户看到 mac system、mac temp、mac ssh:list、mac git:branches:date 都返回 0 且无输出。还想用 README 的 mac brew 列出安装包。不要运行命令。输出 JSON：{\"empty_commands_work\":布尔值,\"brew_lists_packages\":布尔值,\"actual_brew_subcommand\":字符串,\"brew_updates_software\":布尔值,\"reason\":中文理由}。"
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/judges/unimplemented.py",
+    "timeout_seconds": 20
+  }
+}

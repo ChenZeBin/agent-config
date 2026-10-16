@@ -198,6 +198,16 @@
     },
     "session-archive": {
       "tracking": "local-authored-snapshot"
+    },
+    "mac-cli": {
+      "tracking": "local-authored-snapshot",
+      "content_relation": "Original Chinese instructions, compatibility probe and evals for the separately installed CLI; no upstream code copied.",
+      "tool_dependency": {
+        "source": "https://github.com/guarinogabriel/mac-cli",
+        "revision": "26c047242351e4b1c66bff91548a07352a694f16",
+        "license": "MIT",
+        "reference": "profile/skills/mac-cli/references/source-manifest.json"
+      }
     }
   }
 }

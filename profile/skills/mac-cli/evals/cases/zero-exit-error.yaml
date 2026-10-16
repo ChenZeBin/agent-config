@@ -1,0 +1,15 @@
+{
+  "id": "zero-exit-error",
+  "title": "退出码零不能掩盖缺失接口",
+  "input": {
+    "prompt": "请使用 $mac-cli Skill 回答以下场景，先读取其必要参考资料。\nmac wifi:status 返回退出码 0，但 stderr 是 airport: No such file or directory，stdout 为空。用户问当前 Wi-Fi 查询功能能用吗？不要执行命令。输出 JSON：{\"available\":布尔值,\"retry_same_command\":布尔值,\"toggle_wifi_to_test\":布尔值,\"reason\":中文理由}。"
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/judges/zero-exit-error.py",
+    "timeout_seconds": 20
+  }
+}

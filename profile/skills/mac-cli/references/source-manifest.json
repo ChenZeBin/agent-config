@@ -1,0 +1,19 @@
+{
+  "source": "https://github.com/guarinogabriel/mac-cli",
+  "revision": "26c047242351e4b1c66bff91548a07352a694f16",
+  "license": "MIT",
+  "content_relation": "Original instructions and probe; upstream CLI is not redistributed. Hashes bind the inspected executable and plugin source.",
+  "sha256": {
+    "mac": "38b4216638e719f6c6b5efe44903a18baa6d4cea9d77d5eac8c868c31be784e1",
+    "mac-cli/misc/help": "0f8631088de691eb83d0a673ea6d05c65389d6adb5b0a770cea99f7a741ebbd6",
+    "mac-cli/plugins/general": "b690c43faa398cd1900d05521118ce48c2cdd8f3d6ac7bf3547141ae49c34bd2",
+    "mac-cli/plugins/network": "34386e6df256830adfcea55ad25f07b983d99d981e44ab4306a6ee689342d1aa",
+    "mac-cli/plugins/brew": "bdcdb330efb009742579645c287e7302eaefb9ce70288171848c7ed8c4b6f896",
+    "mac-cli/plugins/search": "4e48a393129a791d8a4f02a300dcaecb2137df7bd4ed1edd7d879acf9c5130b0",
+    "mac-cli/plugins/ssh": "69fd54fe266fd4f30d70b4ad9dc8cfd461954cfd77e73c66b2b9de353ad4152e",
+    "mac-cli/plugins/performance": "df3b0b201507d26db6dc06f3ac34c962ceea0da1ea3d861b5cd9f5aacbd35b74",
+    "mac-cli/plugins/dns": "a312a550fe199fc0f1255f3ae125f83bb26f89c3c24150764666ca2492d04b4c",
+    "mac-cli/plugins/volume": "0e600e739df4f32b61d456dba3bf13a2ae26dae1120427c6a53b638378034b27",
+    "mac-cli/plugins/git": "926e9b2062397ff70fc96374e36a4038e3cb5e48ab8b4178be34605f55547d62"
+  }
+}

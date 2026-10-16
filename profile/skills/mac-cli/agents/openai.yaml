@@ -1,0 +1,7 @@
+interface:
+  display_name: "Mac CLI"
+  short_description: "核验并使用 mac-cli 的系统、文件、网络和 Git 命令，保留兼容性边界"
+  default_prompt: "使用 $mac-cli 核验当前 Mac 上可用的命令，并完成我指定的操作。"
+policy:
+  allow_implicit_invocation: true
+

@@ -1,0 +1,15 @@
+{
+  "id": "wrong-cli",
+  "title": "拒绝混用同名工具",
+  "input": {
+    "prompt": "请使用 $mac-cli Skill 回答以下场景，先读取其必要参考资料。\n用户安装的是 luthebao/mac-cli，命令叫 mac-cli，有 clean、shot 子命令。问本 Skill 的已测能力表是否可直接用于这个安装。不要操作。输出 JSON：{\"applies\":布尔值,\"expected_repository\":字符串,\"replace_installed_tool\":布尔值,\"reason\":中文理由}。"
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/judges/wrong-cli.py",
+    "timeout_seconds": 20
+  }
+}

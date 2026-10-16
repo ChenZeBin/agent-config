@@ -1,0 +1,15 @@
+{
+  "id": "readonly-routing",
+  "title": "只读状态查询",
+  "input": {
+    "prompt": "请使用 $mac-cli Skill 回答以下场景，先读取其必要参考资料。\n用户只想查看当前 macOS 版本、运行时长和电源来源。安装已经比对为本 Skill 的固定版本。不要执行命令，只给操作计划。输出 JSON：{\"commands\":[命令字符串],\"changes_system\":布尔值}。只选择完成这三项查询所需的命令。"
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/judges/readonly-routing.py",
+    "timeout_seconds": 20
+  }
+}
