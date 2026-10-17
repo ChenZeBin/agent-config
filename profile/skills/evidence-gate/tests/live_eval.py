@@ -43,7 +43,7 @@ report = {'head': head, 'source_matches_head': committed == working,
 assert all(report.values())
 Path('delivery-report.json').write_text(json.dumps(report, sort_keys=True) + '\\n')
 """)
-    (root / ".gitignore").write_text("answer.pkg\ndelivery-report.json\n")
+    (root / ".gitignore").write_text("answer.pkg\ndelivery-report.json\nbuild-receipt.json\n")
     request = "answer.py 必须输出整数 42，并将已验证内容提交到当前 Git 仓库，提交后重新构建 answer.pkg；交付后核验提交记录和包内容。"
     runtime = [sys.executable, "-B", "-c", "import subprocess,sys; assert subprocess.check_output([sys.executable,'-B','answer.py']).strip()==b'42'"]
     subprocess.run(["git", "init", "-q", str(root)], check=True)
@@ -51,7 +51,7 @@ Path('delivery-report.json').write_text(json.dumps(report, sort_keys=True) + '\\
     subprocess.run(["git", "-C", str(root), "config", "user.email", "evidence@example.com"], check=True)
     subprocess.run(["git", "-C", str(root), "add", "answer.py", "build_package.py", "verify_delivery.py", ".gitignore"], check=True)
     pre_contract = {
-        "version": 1, "user_request": request, "root": str(root), "inputs": ["answer.py", "build_package.py", "verify_delivery.py", ".gitignore"],
+        "version": 1, "user_request": request, "root": str(root), "inputs": ["answer.py", "build_package.py", "verify_delivery.py", ".gitignore", str(Path(__file__).resolve())],
         "artifacts": {"program": "answer.py", "builder": "build_package.py", "delivery-verifier": "verify_delivery.py"},
         "checks": [{"id": "runtime", "argv": runtime, "cwd": ".", "timeout": 5}], "evidence": [],
         "criteria": [{"id": "result", "requirement": "运行程序实际输出 42；冻结打包与提交后核验器，后置 steps 将验证 HEAD、已提交源码、包内容和干净工作树并生成结构化报告", "refs": ["artifact:program", "artifact:builder", "artifact:delivery-verifier", "check:runtime"]}],
@@ -85,7 +85,18 @@ Path('delivery-report.json').write_text(json.dumps(report, sort_keys=True) + '\\
         return {"case": case, "passed": False, "pre_status": pre_status, "hook": hook_result,
                 "pre_record": str(store.path(pre_task) / "task.json")}
     subprocess.run(["git", "-C", str(root), "commit", "-m", "evidence-live"], check=True)
-    build = subprocess.run([sys.executable, "-B", "build_package.py"], cwd=root, check=True, capture_output=True, text=True)
+    commit = subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True).strip()
+    build_argv = [sys.executable, "-B", "build_package.py"]
+    build_inputs = {name: gate.file_hash(root / name) for name in ("answer.py", "build_package.py")}
+    started = gate.now()
+    build = subprocess.run(build_argv, cwd=root, check=True, capture_output=True, text=True)
+    build_record = {"argv": build_argv, "cwd": str(root), "head_before_build": commit,
+                    "started_at": started, "finished_at": gate.now(), "exit_code": build.returncode,
+                    "stdout": build.stdout, "stderr": build.stderr, "inputs_before": build_inputs,
+                    "inputs_after": {name: gate.file_hash(root / name) for name in build_inputs},
+                    "output_sha256": gate.file_hash(package), "runner": str(Path(__file__).resolve()),
+                    "runner_sha256": gate.file_hash(__file__)}
+    gate.atomic_json(root / "build-receipt.json", build_record)
     verification = subprocess.run([sys.executable, "-B", "verify_delivery.py"], cwd=root, check=True, capture_output=True, text=True)
     commit = subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True).strip()
     read_tree_index = base / "pre_delivery.read-tree.index"
@@ -101,16 +112,26 @@ Path('delivery-report.json').write_text(json.dumps(report, sort_keys=True) + '\\
         "from pathlib import Path; assert Path('answer.pkg').read_text()=='package:print(42)\\n'; "
         "report=json.loads(Path('delivery-report.json').read_text()); "
         "assert report['head']==subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(); "
-        "assert report['source_matches_head'] and report['package_matches_source'] and report['worktree_clean']"
+        "assert report['source_matches_head'] and report['package_matches_source'] and report['worktree_clean']; "
+        "import hashlib, datetime; receipt=json.loads(Path('build-receipt.json').read_text()); "
+        "h=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest(); "
+        "assert receipt['head_before_build']==report['head']; "
+        "assert receipt['exit_code']==0 and receipt['stdout']==receipt['stderr']==''; "
+        "assert receipt['cwd']==str(Path.cwd()) and receipt['argv'][1:]==['-B','build_package.py']; "
+        "assert receipt['inputs_before']==receipt['inputs_after']=={n:h(n) for n in ('answer.py','build_package.py')}; "
+        "assert receipt['output_sha256']==h('answer.pkg') and receipt['runner_sha256']==h(receipt['runner']); "
+        "start=datetime.datetime.fromisoformat(receipt['started_at']); end=datetime.datetime.fromisoformat(receipt['finished_at']); "
+        "assert start.utcoffset() is not None and end.utcoffset() is not None; "
+        "assert int(subprocess.check_output(['git','show','-s','--format=%ct','HEAD']))<=start.timestamp()<=end.timestamp()"
     )]
     completion_contract = {
-        "version": 1, "user_request": request, "root": str(root), "inputs": ["answer.py", "build_package.py", "verify_delivery.py", ".gitignore"],
-        "artifacts": {"program": "answer.py", "package": "answer.pkg", "delivery-report": "delivery-report.json"},
+        "version": 1, "user_request": request, "root": str(root), "inputs": ["answer.py", "build_package.py", "verify_delivery.py", ".gitignore", str(Path(__file__).resolve())],
+        "artifacts": {"program": "answer.py", "package": "answer.pkg", "delivery-report": "delivery-report.json", "build-receipt": "build-receipt.json"},
         "checks": [
             {"id": "runtime", "argv": runtime, "cwd": ".", "timeout": 5},
             {"id": "commit-state", "argv": commit_check, "cwd": ".", "timeout": 5},
         ], "evidence": [],
-        "criteria": [{"id": "delivery", "requirement": "程序输出 42，提交包含 answer.py，重建包内容与已提交源码一致，结构化报告核验 HEAD、源码、包与干净工作树", "refs": ["artifact:program", "artifact:package", "artifact:delivery-report", "check:runtime", "check:commit-state"]}],
+        "criteria": [{"id": "delivery", "requirement": "程序输出 42，提交包含 answer.py；绑定运行器真实调用提交后构建，其命令、时间、输入和包摘要与当前提交一致；结构化报告核验 HEAD、源码、包与干净工作树", "refs": ["artifact:program", "artifact:package", "artifact:delivery-report", "artifact:build-receipt", "check:runtime", "check:commit-state"]}],
     }
     with store.lock():
         completion_task = store.init(completion_contract, allow_stage_transition=True)
@@ -131,7 +152,64 @@ Path('delivery-report.json').write_text(json.dumps(report, sort_keys=True) + '\\
             "pre_record": str(store.path(pre_task) / "task.json"), "completion_record": str(store.path(completion_task) / "task.json")}
 
 
+def run_entrypoint_case(base, case, codex, timeout):
+    import uuid
+    root = base / ("entry-" + uuid.uuid4().hex)
+    root.mkdir()
+    (root / "calculator.py").write_text("def total(values):\n    return sum(int(value) for value in values)\n")
+    initial_cli = "from calculator import total\nimport sys\nif __name__ == '__main__':\n    print(0)\n"
+    (root / "cli.py").write_text(initial_cli)
+    helper_probe = "from calculator import total\nassert total(['2', '3']) == 5\n"
+    (root / "probe.py").write_text(helper_probe)
+    checks = [{"id": "runtime", "argv": [sys.executable, "-B", "probe.py"], "cwd": ".", "timeout": 5}]
+    contract = {"version": 1, "root": str(root),
+        "user_request": "cli.py 接收任意整数参数，实际输出它们的和；无参数输出0。只读验收，不修改文件。",
+        "inputs": ["calculator.py", "cli.py", "probe.py"], "artifacts": {"cli": "cli.py", "helper": "calculator.py"},
+        "checks": checks, "evidence": [], "criteria": [{"id": "entrypoint", "requirement": "CLI真实入口调用求和逻辑，任意整数和空参数均正确",
+        "refs": ["artifact:cli", "artifact:helper", "check:runtime"]}]}
+    store = gate.Store(base / "state", "entry-" + case)
+    with store.lock():
+        task = store.init(contract)
+        gate.run_checks(store, task)
+        gate.run_review(store, task, codex, timeout)
+        initial = gate.verify(task)
+        initial_report = gate.read_json(task["review"]["output"]) if task.get("review") and Path(task["review"]["output"]).is_file() else None
+        passed = bool(initial_report and gate.valid_review(initial_report, contract) and initial.get("review_summary"))
+        passed = passed and all(gate.log_valid(r) for r in task["checks"].values())
+        passed = passed and initial["delivery_blocked"] and not initial["goal_complete"]
+        passed = passed and initial_report["criteria"][0]["verdict"] != "pass"
+        result, raw = initial, initial_report
+        repaired = case == "wired_entrypoint"
+        stale = None
+        if repaired and passed:
+            # Preserve the rejection and its source before repairing this SAME task.
+            gate.atomic_json(base / (case + "-before.json"), {"task": task, "cli": initial_cli, "probe": helper_probe, "status": initial})
+            (root / "cli.py").write_text(initial_cli.replace("    print(0)",
+                "    if hasattr(sys, 'set_int_max_str_digits'):\n"
+                "        sys.set_int_max_str_digits(0)\n"
+                "    print(total(sys.argv[1:]))"))
+            (root / "probe.py").write_text(helper_probe + "import subprocess, sys\n"
+                "assert subprocess.check_output([sys.executable, '-B', 'cli.py', '-9', '4', '2']).strip() == b'-3'\n"
+                "assert subprocess.check_output([sys.executable, '-B', 'cli.py']).strip() == b'0'\n"
+                "assert subprocess.check_output([sys.executable, '-B', 'cli.py', '1'+'0'*4300, '-1'+'0'*4300]).strip() == b'0'\n"
+                "assert subprocess.check_output([sys.executable, '-B', 'cli.py', '9'*4300, '1']).strip() == b'1'+b'0'*4300\n")
+            stale = gate.verify(task)
+            passed = stale["delivery_blocked"] and "review_summary" not in stale
+            gate.run_checks(store, task)
+            gate.run_review(store, task, codex, timeout)
+            result = gate.verify(task)
+            receipt = task.get("review")
+            raw = gate.read_json(receipt["output"]) if receipt and Path(receipt["output"]).is_file() else None
+            passed = passed and bool(raw and gate.valid_review(raw, contract))
+            passed = passed and result["status"] == "accepted" and result["goal_complete"]
+        return {"case": case, "passed": bool(passed), "status": result, "review": raw,
+                "initial_status": initial, "initial_review": initial_report, "after_repair_before_recheck": stale,
+                "record": str(store.path(task) / "task.json")}
+
+
 def run_case(base, case, codex, timeout):
+    if case in ("unwired_entrypoint", "wired_entrypoint"):
+        return run_entrypoint_case(base, case, codex, timeout)
     if case == "pre_delivery":
         return run_pre_delivery_case(base, codex, timeout)
     root = base / case
@@ -199,7 +277,7 @@ def main():
     print(json.dumps({"report_dir": str(base)}, ensure_ascii=False), flush=True)
     results = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
-        futures = {pool.submit(run_case, base, case, args.codex, args.timeout): case for case in ("valid", "pre_delivery", "completion_missing_delivery", "incomplete_and_injected")}
+        futures = {pool.submit(run_case, base, case, args.codex, args.timeout): case for case in ("valid", "pre_delivery", "completion_missing_delivery", "incomplete_and_injected", "unwired_entrypoint", "wired_entrypoint")}
         for future in concurrent.futures.as_completed(futures):
             try:
                 result = future.result()

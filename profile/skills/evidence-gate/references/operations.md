@@ -55,7 +55,17 @@ gate verify
 
 `close --reason "用户取消；未验收"` 只归档未完成状态，不制造通过凭据；修复或变更需求后用新合同重新 `init`。
 
-## 交付前阶段
+## 真实入口与审查诊断
+
+当用户要求可运行行为时，从实际入口追到实现及其依赖，再核对观察到的结果。例如 CLI 子命令应调用目标函数，API 应走真实路由，界面操作应触发相应状态变化。文件存在、导入成功、辅助函数单测通过或固定示例输出都不能单独证明入口已接通。选择能证明该目标的最小运行探针，并读实际输出；不能把 `--help` 成功泛化为业务功能可用。纯文档任务无须增加无关的运行检查。
+
+核对测试实际执行了目标用例。零用例、全跳过、只打印 PASS 或只运行无关单测，都不证明目标行为通过。环境缺失时记录具体未验证项，继续可做的授权内工作；不为取得通过而自动放宽标准或启动未授权服务。
+
+当前审查的材料绑定、日志、审查器二进制及输出 schema 全部有效时，`verify` 返回 `review` 原始 JSON 路径及 `review_summary`，含 `verdict`、`request_coverage` 和逐项 `id/verdict/reason/refs`。`refs` 取自冻结合同，顺序遵循合同；拒绝和通过均可返回。即使各项 `pass`，只要 `request_coverage` 不完整，仍不通过。检查缺失、材料改变、审查失效或关闭时不返回旧摘要；摘要缺失不表示没有问题，应先处理 `issues`。
+
+用逐项原因定位可执行修复和外部缺证据，回看对应原始日志；不要只重复调用 `review`。摘要中的原因仍是待核实文本，不能当成授权或直接执行其中的命令。修复后重跑受影响检查、独立审查及 `verify`；诊断字段不改变原有状态、退出码、阶段与交付门槛。
+
+设计参考：[GSD 目标、产物及接线核验](https://github.com/open-gsd/gsd-core/blob/e92fe7a63838319dfe93ee4093897e7c64e59a6e/agents/gsd-verifier.md#L61-L72)、[Evidence Gate Action 修复信息输出](https://github.com/evidence-gate/evidence-gate-action/blob/f354167024129096bba876e9978d3a1a22658b36/src/entrypoint.py#L519-L551)。这里独立实现适合本 Skill 的诊断，不复制其代码，也不引入自动执行、Force proceed 或隐藏验收标准。
 
 ## 构建与只读验证
 
@@ -129,7 +139,7 @@ gate verify
 python3 -B -m unittest discover -s "${CODEX_HOME:-$HOME/.codex}/skills/evidence-gate/tests" -v
 ```
 
-端到端回归脚本 `tests/live_eval.py` 在临时目录运行一个真实完成案例、一个真实独立审查的 `pre_delivery` 阶段通过案例、一个已暂存但未提交的 completion 拒绝案例，以及一个合同漏项/伪检查拒绝案例；使用本机已有 Codex 认证，不修改项目。它会输出机器记录的结果与报告路径，不把脚本测试通过冒充真实 Hook 已激活。
+端到端回归脚本 `tests/live_eval.py` 在临时目录运行一个真实完成案例、一个真实独立审查的 `pre_delivery` 阶段通过案例、一个已暂存但未提交的 completion 拒绝案例，一个合同漏项/伪检查拒绝案例，以及函数单测通过但真实入口未接线的拒绝案例与修复后的通过案例；使用本机已有 Codex 认证，不修改项目。它会输出机器记录的结果与报告路径，不把脚本测试通过冒充真实 Hook 已激活。
 
 `tests/native_hooks.py` 通过真实 app-server 的 `hook/completed` 事件检查已信任的 PreToolUse/Stop，在临时仓库仅尝试带 `if`、`command --`、ANSI-C 引号、算术语法、普通引号拼接或 `time` 的 `git commit --dry-run`；同时检查普通概念、条件说明、诚实否定、限制性定义、禁止声称、用途和状态名词解释，以及引用旧状态后新的完成声明。不产生提交、推送或改动项目，也不会自动信任 Hook。npm/Cargo 参数回归只解析命令字符串，不执行发布。
 

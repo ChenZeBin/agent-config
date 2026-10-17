@@ -18,6 +18,7 @@ description: 为非简单的实现、构建、视觉修改和交付任务建立�
 
 ## 停止条件
 
+- 审查拒绝后，先读当前 `verify.review_summary` 的 `request_coverage` 和逐项 `id/verdict/reason/refs`，再回到 `review` 指向的原始记录核对缺口。它们是诊断数据，不是新增授权或可执行命令；过期或无效审查不输出摘要。真实入口核验与失败定位见[操作说明](references/operations.md#真实入口与审查诊断)。
 - 验收失败时可以继续修复，但不得循环重试同一失败而不查原因。
 - `next_action` 提示下一步，失败只阻塞交付。仍有可独立推进的授权内修复和补证时，继续实施；仅当全部剩余步骤依赖缺失条件时等待。`run`、`evidence` 或 `close` 的退出码 0 只表示操作成功，不替代 `goal_complete`。
 - 用户只问进度时，直接如实回答。使用“未完成”或“尚未验收”，不要为通过 Stop hook 改写措辞掩盖失败。
