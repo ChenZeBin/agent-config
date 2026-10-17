@@ -1,0 +1,26 @@
+{
+  "id": "blocked-delivery",
+  "title": "交付阻塞不阻止独立可执行工作",
+  "description": "交付阻塞不阻止独立可执行工作",
+  "input": {
+    "prompt": "使用 $correct 做离线决策评测。state.json 是合成任务快照；只读提出下一步，不操作真实门禁或文件。仅输出 JSON：{\"continue_work\":[当前应继续的事项ID],\"wait_for\":[确实等待的事项ID],\"can_commit_now\":布尔值,\"goal_complete\":布尔值,\"reason\":\"中文说明\"}。"
+  },
+  "context": {
+    "files": {
+      ".eval-case": "blocked-delivery\n",
+      "state.json": "{\n  \"user_request\": \"修复A和B并完成验收后提交\",\n  \"contract_scope\": [\n    \"A\",\n    \"B\"\n  ],\n  \"tasks\": [\n    {\n      \"id\": \"A\",\n      \"implementation\": \"done\",\n      \"evidence\": \"缺目标设备，当前无法获得\"\n    },\n    {\n      \"id\": \"B\",\n      \"implementation\": \"本地解析错误待修，可独立复现与修复\"\n    }\n  ],\n  \"acceptance\": {\n    \"status\": \"unverified\",\n    \"acceptance_stage\": \"completion\",\n    \"goal_complete\": false\n  },\n  \"local_partial_delivery_allowed\": false\n}\n"
+    }
+  },
+  "constraints": {
+    "timeout_seconds": 300,
+    "max_turns": 12
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/grade.py",
+    "timeout_seconds": 30
+  }
+}

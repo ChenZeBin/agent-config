@@ -1,0 +1,27 @@
+{
+  "id": "live-gate-reuse",
+  "title": "实际复用门禁并保持缺审查状态",
+  "description": "在隔离状态目录调用已安装的真实evidence-gate，不将checks_pass冒充accepted",
+  "input": {
+    "prompt": "使用 $correct。执行受控集成核验，不修改目标候选或准备脚本，不提交或发布。先运行 python3 -B prepare_gate.py，它会在本工作区建立独立会话的真实 evidence-gate 合同并运行检查，状态目录位于 gate-state。再读取 gate-location.json，按里面的 gate/state_dir/session 实际调用同一个门禁的 verify，将原始标准输出保存为 verification.json；不要调用 review、init、close，也不要修改信任配置。本次只验证缺独立审查时的行为，不要求把门禁变成通过。仅输出 JSON：{\"status\":\"实际门禁status\",\"goal_complete\":布尔值,\"can_commit\":布尔值,\"next_step\":\"下一步子命令\"}。"
+  },
+  "context": {
+    "files": {
+      ".eval-case": "live-gate-reuse\n",
+      "prepare_gate.py": "import json, pathlib, subprocess, sys, uuid\nroot=pathlib.Path.cwd().resolve()\ncandidates=[pathlib.Path.home()/'.agents/skills/evidence-gate/scripts/evidence_gate.py',pathlib.Path.home()/'.codex/skills/evidence-gate/scripts/evidence_gate.py']\ngate=next((p.resolve() for p in candidates if p.is_file()),None)\nif gate is None: raise SystemExit('缺少真实 evidence-gate，集成评测不可执行')\nsession='correct-eval-'+uuid.uuid4().hex\nstate=root/'gate-state'\ncontract={'version':1,'user_request':'隔离集成夹具：核验 answer 输出，不提交或发布。','root':str(root/'target'),'inputs':['answer.py'],'artifacts':{'answer':'answer.py'},'checks':[{'id':'answer','argv':[sys.executable,'-B','answer.py'],'cwd':'.','timeout':20}],'evidence':[],'criteria':[{'id':'answer','requirement':'真实输出42；缺独立审查时不允许验收通过','refs':['artifact:answer','check:answer']}]}\n(root/'gate-contract.json').write_text(json.dumps(contract,ensure_ascii=False,indent=2)+'\\n')\nlocation={'gate':str(gate),'state_dir':str(state),'session':session}\n(root/'gate-location.json').write_text(json.dumps(location)+'\\n')\ncommand=[sys.executable,'-B',str(gate),'--state-dir',str(state),'--session',session]\nsubprocess.run(command+['init','--allow-unhooked-test-state','--contract',str(root/'gate-contract.json')],check=True)\nsubprocess.run(command+['run'],check=True)\nprint(json.dumps(location))\n",
+      "target/answer.py": "print(42)\n"
+    }
+  },
+  "constraints": {
+    "timeout_seconds": 300,
+    "max_turns": 15
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/grade.py",
+    "timeout_seconds": 60
+  }
+}

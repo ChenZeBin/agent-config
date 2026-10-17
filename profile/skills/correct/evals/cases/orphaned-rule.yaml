@@ -1,0 +1,30 @@
+{
+  "id": "orphaned-rule",
+  "title": "已有规则与测试缺少CI接线",
+  "description": "已有规则与测试缺少CI接线",
+  "input": {
+    "prompt": "使用 $correct，只读审计这个受控仓库。请读取规则、已有检查与 CI，选择最小有效方案；不修改文件，不运行远端。最后仅输出 JSON：{\"mechanism\":\"选择的机制\",\"local_command\":\"本地命令\",\"ci_command\":\"建议CI命令\",\"remote_ci_verified\":布尔值,\"reason\":\"中文理由\"}。"
+  },
+  "context": {
+    "files": {
+      ".eval-case": "orphaned-rule\n",
+      "AGENTS.md": "金额边界检查必须通过。已有命令 python3 -B tests/check_total.py。\n",
+      "history.md": "受控记录A、B都表明：旧代码在 CI 编译通过，但漏掉金额边界错误。规则早已写明。\n",
+      "tests/check_total.py": "from pathlib import Path\nimport runpy\nf = runpy.run_path(str(Path('src/payment.py')))['can_pay']\nassert f(0) is False\nassert f(True) is False\nassert f(1) is True\n",
+      "src/payment.py": "def can_pay(cents):\n    return isinstance(cents, int) and not isinstance(cents, bool) and cents > 0\n",
+      ".github/workflows/ci.yml": "name: ci\non: [push]\njobs:\n  check:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - run: python3 -m compileall src\n"
+    }
+  },
+  "constraints": {
+    "timeout_seconds": 300,
+    "max_turns": 12
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/grade.py",
+    "timeout_seconds": 30
+  }
+}

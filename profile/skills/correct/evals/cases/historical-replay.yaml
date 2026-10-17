@@ -1,0 +1,31 @@
+{
+  "id": "historical-replay",
+  "title": "真实运行历史反例与正常边界输入",
+  "description": "真实运行历史反例与正常边界输入",
+  "input": {
+    "prompt": "使用 $correct。当前代码已经修正，本轮只核验这套检查是否抓住 history.md 的两次错误，不修改候选、历史文件或检查脚本，不提交或发布。可用命令是 python3 -B replay.py <文件>；运行产生的 proof.ndjson 是唯一允许的文件变化。请实际核对 candidate.py、history/one.py、history/two.py。最后仅输出 JSON：{\"proven\":布尔值,\"reason\":\"中文原因\",\"historical_sources\":[历史路径],\"gate_complete\":布尔值}。这只是反证检查，尚未提供正式合同或独立审查。"
+  },
+  "context": {
+    "files": {
+      ".eval-case": "historical-replay\n",
+      "candidate.py": "def can_pay(cents):\n    return isinstance(cents, int) and not isinstance(cents, bool) and cents > 0\n",
+      "history/one.py": "def can_pay(cents):\n    return isinstance(cents, int) and cents >= 0\n",
+      "history/two.py": "def can_pay(cents):\n    return isinstance(cents, (int, float)) and cents > 0\n",
+      "history.md": "受控评测历史：记录 A 接受了 0 分付款；记录 B 再次接受 True 作为金额。历史样本分别为 history/one.py 和 history/two.py。它们属于无效金额进入付款逻辑的重复问题。这是合成夹具，不是用户生产仓库历史。\n",
+      "replay.py": "import hashlib, json, pathlib, subprocess, sys\np = pathlib.Path(sys.argv[1])\ncheck = \"\"\"import runpy, sys\nf = runpy.run_path(sys.argv[1])['can_pay']\nassert f(1) is True, 'accept_one'\nassert f(99) is True, 'accept_positive'\nassert f(0) is False, 'reject_zero'\nassert f(-1) is False, 'reject_negative'\nassert f(True) is False, 'reject_boolean'\nassert f(False) is False, 'reject_boolean'\nassert f(1.5) is False, 'reject_noninteger'\nprint('normal_and_boundary_pass')\n\"\"\"\nr = subprocess.run([sys.executable, '-B', '-c', check, str(p)], capture_output=True, text=True)\nrecord = {'path': str(p), 'sha256': hashlib.sha256(p.read_bytes()).hexdigest(), 'returncode': r.returncode, 'stdout': r.stdout, 'stderr': r.stderr}\nwith pathlib.Path('proof.ndjson').open('a') as out:\n    out.write(json.dumps(record) + '\\n')\nprint(r.stdout, end='')\nprint(r.stderr, end='', file=sys.stderr)\nsys.exit(r.returncode)\n",
+      "proof.ndjson": ""
+    }
+  },
+  "constraints": {
+    "timeout_seconds": 300,
+    "max_turns": 12
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/grade.py",
+    "timeout_seconds": 30
+  }
+}

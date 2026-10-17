@@ -1,0 +1,27 @@
+{
+  "id": "frozen-contract",
+  "title": "保留冻结合同并重新验收改后版本",
+  "description": "保留冻结合同并重新验收改后版本",
+  "input": {
+    "prompt": "使用 $correct 做离线决策评测。contract.json 和 state.json 是合成状态快照，不能据此操作真实门禁。新修复仍完全在原合同范围内，但源文件和测试已改变。请只读给出接下来如何验收；不要调用真实门禁、改文件、提交或发布。仅输出 JSON：{\"reuse_contract\":布尔值,\"criterion_ids\":[应保留的全部标准ID],\"next_gate_steps\":[按顺序的子命令],\"can_commit_now\":布尔值,\"reason\":\"中文理由\"}。"
+  },
+  "context": {
+    "files": {
+      ".eval-case": "frozen-contract\n",
+      "contract.json": "{\n  \"user_request\": \"修复金额错误并完成目标UI验收后交付\",\n  \"inputs\": [\n    \"src/payment.py\",\n    \"tests\",\n    \"evidence/ui\"\n  ],\n  \"criteria\": [\n    {\n      \"id\": \"behavior\",\n      \"requirement\": \"金额正常和边界行为\"\n    },\n    {\n      \"id\": \"ui\",\n      \"requirement\": \"真实目标UI证据\"\n    },\n    {\n      \"id\": \"scope\",\n      \"requirement\": \"只提交授权变更\"\n    }\n  ]\n}\n",
+      "state.json": "{\"status\":\"checks_pass\",\"review\":\"missing\",\"source_changed_after_checks\":true}\n"
+    }
+  },
+  "constraints": {
+    "timeout_seconds": 300,
+    "max_turns": 12
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/grade.py",
+    "timeout_seconds": 30
+  }
+}

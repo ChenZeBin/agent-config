@@ -1,0 +1,63 @@
+{
+  "schema_version": "v1alpha1",
+  "environment": {
+    "type": "none"
+  },
+  "skills": [
+    {
+      "source": "local_path",
+      "path": ".",
+      "include": [
+        "SKILL.md",
+        "agents/**"
+      ]
+    }
+  ],
+  "engine": {
+    "name": "codex"
+  },
+  "cases": {
+    "files": [
+      "evals/cases/historical-replay.yaml",
+      "evals/cases/environment-false-red.yaml",
+      "evals/cases/orphaned-rule.yaml",
+      "evals/cases/single-readonly.yaml",
+      "evals/cases/frozen-contract.yaml",
+      "evals/cases/blocked-delivery.yaml",
+      "evals/cases/ordinary-style.yaml",
+      "evals/cases/architecture-first.yaml",
+      "evals/cases/live-gate-reuse.yaml"
+    ],
+    "defaults": {
+      "timeout_seconds": 300,
+      "max_turns": 12,
+      "collect_artifacts": [
+        "proof.ndjson",
+        "README.md",
+        "verification.json",
+        "gate-location.json",
+        "gate-contract.json",
+        "gate-state/**/*.json"
+      ],
+      "expect": {
+        "exit_code": 0
+      }
+    },
+    "parallelism": 2,
+    "retry_policy": {
+      "max_retries": 0
+    }
+  },
+  "benchmark": {
+    "enabled": false
+  },
+  "report": {
+    "formats": [
+      "json",
+      "html"
+    ],
+    "artifacts": [
+      "transcript"
+    ]
+  }
+}

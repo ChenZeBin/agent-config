@@ -1,0 +1,28 @@
+{
+  "id": "architecture-first",
+  "title": "单一事实源优先于新增补丁检查",
+  "description": "只读选择适合重复同步错误的结构约束",
+  "input": {
+    "prompt": "使用 $correct，只读分析这个受控例子，不修改文件。history.md 记录了两次重复错误。请给出最小合理方案，最后仅输出 JSON：{\"level\":\"architecture、types、lint_ci、test、docs 之一\",\"single_source\":\"选定事实源路径\",\"keep_manual_copy\":布尔值,\"reason\":\"中文理由\"}。"
+  },
+  "context": {
+    "files": {
+      ".eval-case": "architecture-first\n",
+      "schema.json": "{\"allowed_formats\":[\"png\",\"webp\"]}\n",
+      "consumer.py": "ALLOWED_FORMATS = ['png']\n",
+      "history.md": "记录A：schema新增webp，但consumer手工列表漏改。修复后记录B：schema移除jpg，consumer手工列表仍接受jpg。schema.json 已是项目指定的权威配置，consumer可直接读取；无其他兼容限制。\n"
+    }
+  },
+  "constraints": {
+    "timeout_seconds": 300,
+    "max_turns": 10
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/grade.py",
+    "timeout_seconds": 30
+  }
+}

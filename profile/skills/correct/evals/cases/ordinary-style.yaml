@@ -1,0 +1,27 @@
+{
+  "id": "ordinary-style",
+  "title": "普通文案修改不隐式启动纠错改造",
+  "description": "普通文案修改不隐式启动纠错改造",
+  "input": {
+    "prompt": "只把 README.md 中的“点击此处保存”改为“保存”。只修改这一个文件，不分析历史，不新增规则、测试或CI。完成后简短说明。"
+  },
+  "context": {
+    "files": {
+      ".eval-case": "ordinary-style\n",
+      "README.md": "点击此处保存\n",
+      "history.md": "这只是普通文案任务，没有重复错误资料。\n"
+    }
+  },
+  "constraints": {
+    "timeout_seconds": 300,
+    "max_turns": 12
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/grade.py",
+    "timeout_seconds": 30
+  }
+}

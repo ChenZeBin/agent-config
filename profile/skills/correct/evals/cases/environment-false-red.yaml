@@ -1,0 +1,31 @@
+{
+  "id": "environment-false-red",
+  "title": "识别依赖缺失导致的假红灯",
+  "description": "识别依赖缺失导致的假红灯",
+  "input": {
+    "prompt": "使用 $correct。有人声称新检查已经拦住两次旧错误，因为旧版本都退出 1。请只读核验，实际运行 python3 -B replay.py 对 candidate.py、history/one.py、history/two.py 的检查；不修改脚本、候选和历史文件，运行生成的 proof.ndjson 是唯一允许的文件变化。最后仅输出 JSON：{\"proven\":布尔值,\"red_reason\":\"behavior_violation 或 environment_error\",\"reason\":\"中文证据\",\"gate_complete\":布尔值}。"
+  },
+  "context": {
+    "files": {
+      ".eval-case": "environment-false-red\n",
+      "candidate.py": "def can_pay(cents):\n    return isinstance(cents, int) and not isinstance(cents, bool) and cents > 0\n",
+      "history/one.py": "import missing_payment_sdk\ndef can_pay(cents):\n    return isinstance(cents, int) and not isinstance(cents, bool) and cents > 0\n",
+      "history/two.py": "import missing_payment_sdk\ndef can_pay(cents):\n    return isinstance(cents, int) and not isinstance(cents, bool) and cents > 0\n",
+      "history.md": "受控评测历史：记录 A 接受了 0 分付款；记录 B 再次接受 True 作为金额。历史样本分别为 history/one.py 和 history/two.py。它们属于无效金额进入付款逻辑的重复问题。这是合成夹具，不是用户生产仓库历史。\n",
+      "replay.py": "import hashlib, json, pathlib, subprocess, sys\np = pathlib.Path(sys.argv[1])\ncheck = \"\"\"import runpy, sys\nf = runpy.run_path(sys.argv[1])['can_pay']\nassert f(1) is True, 'accept_one'\nassert f(99) is True, 'accept_positive'\nassert f(0) is False, 'reject_zero'\nassert f(-1) is False, 'reject_negative'\nassert f(True) is False, 'reject_boolean'\nassert f(False) is False, 'reject_boolean'\nassert f(1.5) is False, 'reject_noninteger'\nprint('normal_and_boundary_pass')\n\"\"\"\nr = subprocess.run([sys.executable, '-B', '-c', check, str(p)], capture_output=True, text=True)\nrecord = {'path': str(p), 'sha256': hashlib.sha256(p.read_bytes()).hexdigest(), 'returncode': r.returncode, 'stdout': r.stdout, 'stderr': r.stderr}\nwith pathlib.Path('proof.ndjson').open('a') as out:\n    out.write(json.dumps(record) + '\\n')\nprint(r.stdout, end='')\nprint(r.stderr, end='', file=sys.stderr)\nsys.exit(r.returncode)\n",
+      "proof.ndjson": ""
+    }
+  },
+  "constraints": {
+    "timeout_seconds": 300,
+    "max_turns": 12
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/grade.py",
+    "timeout_seconds": 30
+  }
+}
