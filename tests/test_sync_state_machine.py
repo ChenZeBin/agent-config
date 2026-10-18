@@ -30,7 +30,8 @@ class SyncStateMachineTests(unittest.TestCase):
         self.git(seed, "add", "-A")
         self.git(seed, "commit", "-q", "-m", "seed")
         self.origin = self.base / "origin.git"
-        subprocess.run(["git", "clone", "--quiet", "--bare", str(seed), str(self.origin)], check=True)
+        # Use Git transport so object packing cannot race a local filesystem copy.
+        subprocess.run(["git", "clone", "--quiet", "--no-local", "--bare", str(seed), str(self.origin)], check=True)
         self.a = self.clone("a")
         self.b = self.clone("b")
         self.env = os.environ | {
@@ -62,7 +63,7 @@ class SyncStateMachineTests(unittest.TestCase):
 
     def clone(self, name: str) -> Path:
         destination = self.base / name
-        subprocess.run(["git", "clone", "--quiet", str(self.origin), str(destination)], check=True)
+        subprocess.run(["git", "clone", "--quiet", "--no-local", str(self.origin), str(destination)], check=True)
         self.git(destination, "config", "user.name", "Agent Config Test")
         self.git(destination, "config", "user.email", "test@example.com")
         return destination

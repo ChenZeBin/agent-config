@@ -20,6 +20,8 @@ jobs:
           python-version: '3.12'
       - name: Validate manifest, skills, and privacy policy
         run: bin/agent-config validate
+      - name: Check generated skill catalog
+        run: python3 -B scripts/build_skill_catalog.py --check
       - name: Scan personal identifiers across Git history
         run: python3 scripts/privacy_scan.py --root . --git-history
       - name: Run link and sync state-machine tests

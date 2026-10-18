@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S python3 -B
 """Manage a public Codex profile with fail-closed leaf links and Git sync."""
 
 from __future__ import annotations
@@ -341,6 +341,20 @@ def command_security_scan(_: argparse.Namespace) -> int:
         check=False,
     )
     return OK if result.returncode == 0 and history_privacy.returncode == 0 else INVALID
+
+
+def command_catalog(args: argparse.Namespace) -> int:
+    sys.dont_write_bytecode = True
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from skill_catalog import CatalogError, load_catalog, render_human, render_json
+
+    try:
+        catalog = load_catalog(ROOT, skill=args.skill)
+        print(render_json(catalog) if args.json else render_human(catalog), end="")
+        return OK
+    except CatalogError as exc:
+        print(f"catalog: {exc}", file=sys.stderr)
+        return INVALID
 
 
 def describe_link(target: Path, source: Path) -> tuple[str, bool]:
@@ -985,6 +999,10 @@ def build_parser() -> argparse.ArgumentParser:
     validate.add_argument("--rev")
     validate.set_defaults(func=command_validate)
     sub.add_parser("security-scan").set_defaults(func=command_security_scan)
+    catalog = sub.add_parser("catalog", help="read the manifest skill catalog without installing")
+    catalog.add_argument("--json", action="store_true", help="emit stable catalog JSON")
+    catalog.add_argument("--skill", metavar="NAME", help="filter by exact manifest skill name")
+    catalog.set_defaults(func=command_catalog)
     setup = sub.add_parser("setup")
     setup.add_argument("--dry-run", action="store_true")
     setup.set_defaults(func=command_setup)

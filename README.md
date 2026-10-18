@@ -1,16 +1,67 @@
-# 面向 OpenGPT 的 agent-config
+# agent-config
 
-面向 OpenGPT 的个人 Codex 全局配置仓库，公开、安全、可恢复。GitHub `main` 是已发布事实源；本机 clone 是工作副本；Codex 只使用清单声明的叶级符号链接。
+个人 Codex 规则、可复用 Skill 与安全同步工具。GitHub `main` 是已发布事实源；本机 clone 是工作副本；Codex 只使用清单声明的叶级符号链接。
 
-## 安装
+这里保存可公开的工作方法和配置源文件。账号、凭据、会话、日志和本机私有配置留在本机。仓库不是完整机器备份，也不承诺安装后具备全部工具或登录状态。
+
+## 从哪里开始
+
+| 目的 | 入口 |
+| --- | --- |
+| 了解有哪些 Skill、适用场景和许可证 | [Skill 目录](docs/skills.md) |
+| 只试用一个 Skill | 下方的“按需取用” |
+| 在自己的机器恢复这套个人配置 | 下方的“安装个人环境” |
+| 新增或更新 Skill 并发布 | [维护与发布](CONTRIBUTING.md) |
+| 了解组织方式与取舍 | [分发设计与上游研究](docs/skills-distribution.md) |
+
+克隆后也可以只读查询，不需要先运行 `setup`：
+
+```bash
+bin/agent-config catalog
+bin/agent-config catalog --skill teach
+bin/agent-config catalog --json
+```
+
+## 按需取用
+
+先阅读选中 Skill 的指令、依赖和许可证。下面用有独立 MIT 许可证的 `teach` 演示。
+需要 Node.js >=22.20.0、npm、Git 和 curl；示例固定为本次核验的 `skills@1.7.2`。
+在准备使用该 Skill 的项目目录执行：
+
+```bash
+# 固定 Skill 与许可证的同一个已核验版本
+agent_config_revision=93b86f619151e19228efb725f1a1ad581e1dc052
+npx --yes skills@1.7.2 add "https://github.com/ChenZeBin/agent-config/tree/$agent_config_revision/profile/skills/teach" --list
+
+# 安装到当前项目，并保留同一版本的作者与许可声明；两步均成功才完成安装
+npx --yes skills@1.7.2 add "https://github.com/ChenZeBin/agent-config/tree/$agent_config_revision/profile/skills/teach" --skill teach --agent codex --yes &&
+curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' \
+  --output .agents/skills/teach/LICENSE \
+  "https://raw.githubusercontent.com/ChenZeBin/agent-config/$agent_config_revision/third_party_licenses/teach-LICENSE.txt"
+```
+
+更新时，将 `agent_config_revision` 换成重新审查过的完整 commit SHA，并重复完整安装步骤。
+第三方安装器可能覆盖目标项目内的同名 Skill；先检查已有内容。
+不要让第三方安装器和 `agent-config` 同时管理同一个全局路径。
+
+此入口只分发选中的 Skill 文件。它不运行本仓库的 `setup`，不安装全局规则、Git hooks、外部 CLI、MCP 或认证状态。
+安装器本身不会携带仓库的 `third_party_licenses/`，因此上述 curl 步骤必须执行。
+许可证下载失败时，安装未完成，不要使用或再分发这个副本；修复后重新执行完整步骤。
+最终目录应包含 6 个 Skill 源文件及 `LICENSE`。换用其他 Skill 时须按来源清单选择对应许可证；
+没有明确许可证时，不沿用本例的 MIT 授权。
+安装成功只证明文件已安装。Skill 的真实执行仍需其依赖、目标环境和适用验收。
+
+## 安装个人环境
 
 需要 Git 和 Python 3.11+。macOS 如尚未安装 Gitleaks，还需要 Homebrew；
 `setup` 会自动运行 `brew install gitleaks`。其他系统请先安装 Gitleaks。
-克隆后运行一次 `setup`：
+先审查 [全局规则](profile/AGENTS.md) 与 [Skill 目录](docs/skills.md)，再克隆并预览。
+公开仓库可以通过 HTTPS 读取，无需先配置 GitHub SSH：
 
 ```bash
-git clone git@github.com:ChenZeBin/agent-config.git ~/.config/agent-config
+git clone https://github.com/ChenZeBin/agent-config.git ~/.config/agent-config
 cd ~/.config/agent-config
+bin/agent-config setup --dry-run
 bin/agent-config setup
 ```
 
@@ -40,9 +91,10 @@ bin/agent-config sync --check      # fetch 并分类，不修改工作树
 bin/agent-config sync --pull       # clean + fast-forward-only
 bin/agent-config validate
 bin/agent-config security-scan
-git add -A && git commit -m "..."
-bin/agent-config sync --push       # 禁止 force push
 ```
+
+修改、生成目录和检查通过后，仅暂存本次改动并提交。推送还需仓库写权限和有效发布授权；
+确认这些条件后使用 `bin/agent-config sync --push`。具体步骤见 [维护与发布](CONTRIBUTING.md)。
 
 ## 新建或更新自建 Skill
 
