@@ -110,7 +110,7 @@ def main():
         thread_id = thread["thread"]["id"]
         state = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex"))) / "evidence-gate"
         store = gate.Store(state, thread_id)
-        contract = {"version": 1, "user_request": "本次仅用只读探针验证真实 Hook 调用；不提交、不推送，不把待审任务说成已验收。",
+        contract = {"version": 2, "testing": {"kind": "not_applicable", "reason": "验收器协议回归夹具，不执行产品端到端流程"}, "user_request": "本次仅用只读探针验证真实 Hook 调用；不提交、不推送，不把待审任务说成已验收。",
                     "root": str(root), "inputs": ["answer.py"], "artifacts": {"program": "answer.py"},
                     "checks": [{"id": "runtime", "argv": [sys.executable, "-B", "answer.py"], "cwd": ".", "timeout": 5}],
                     "evidence": [], "criteria": [{"id": "output", "requirement": "实际输出 42", "refs": ["artifact:program", "check:runtime"]}]}

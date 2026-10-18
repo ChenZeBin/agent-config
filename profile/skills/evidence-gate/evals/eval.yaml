@@ -14,6 +14,8 @@ cases:
     - evals/cases/pre-delivery-upload-error.yaml
     - evals/cases/continue-after-review-rejection.yaml
     - evals/cases/unwired-entrypoint.yaml
+    - evals/cases/e2e-plan-before-run.yaml
+    - evals/cases/e2e-stale-plan.yaml
   defaults:
     timeout_seconds: 180
     max_turns: 8

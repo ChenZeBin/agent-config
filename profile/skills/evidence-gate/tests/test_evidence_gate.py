@@ -30,7 +30,7 @@ class GateTests(unittest.TestCase):
         self.policy_patch.start()
         self.store = gate.Store(self.state, "unit-session")
         self.contract = {
-            "version": 1, "user_request": "程序应输出 42，经过运行检查后交付。", "root": str(self.root),
+            "version": 2, "testing": {"kind": "not_applicable", "reason": "验收器协议回归夹具，不执行产品端到端流程"}, "user_request": "程序应输出 42，经过运行检查后交付。", "root": str(self.root),
             "inputs": ["main.py"], "artifacts": {"program": "main.py"},
             "checks": [{"id": "run", "argv": [sys.executable, "-B", "-c", "import subprocess,sys; assert subprocess.check_output([sys.executable,'-B','main.py']).strip()==b'42'"], "cwd": ".", "timeout": 5}],
             "evidence": [], "criteria": [{"id": "answer", "requirement": "真实运行输出 42", "refs": ["check:run", "artifact:program"]}]
@@ -60,7 +60,7 @@ class GateTests(unittest.TestCase):
         if mode == "partial":
             report["criteria"] = []
         text = "not json" if mode == "bad_json" else json.dumps(report)
-        program = "#!/usr/bin/env python3\nimport sys,pathlib,time\n"
+        program = "#!/usr/bin/env python3\nimport sys,pathlib,time\nsys.stdin.buffer.read()\n"
         if mode == "timeout":
             program += "time.sleep(5)\n"
         elif mode == "empty":
@@ -265,6 +265,24 @@ class GateTests(unittest.TestCase):
         result = gate.run_process([sys.executable, "-c", "import os,signal; os.kill(os.getpid(),signal.SIGTERM)"], self.root, self.base / "signal", 5)
         self.assertLess(result["exit_code"], 0)
         self.assertFalse(gate.log_valid(result))
+
+    def test_large_input_does_not_block_timeout_or_early_exit(self):
+        payload = b"x" * 2000000
+        result = gate.run_process([sys.executable, "-c", "import time; time.sleep(5)"],
+                                  self.root, self.base / "input-timeout", 0.15, payload)
+        self.assertEqual(result["error"], "timeout")
+        self.assertLess(result["duration_seconds"], 2)
+        result = gate.run_process([sys.executable, "-c", "raise SystemExit(3)"],
+                                  self.root, self.base / "input-exit", 5, payload)
+        self.assertEqual(result["exit_code"], 3)
+        self.assertFalse(gate.log_valid(result))
+
+    def test_large_input_with_output_before_read(self):
+        result = gate.run_process([sys.executable, "-c",
+                                  "import sys; sys.stdout.write('x'*100000); sys.stdout.flush(); print(len(sys.stdin.buffer.read()))"],
+                                  self.root, self.base / "input-output", 5, b"y" * 2000000)
+        self.assertTrue(gate.log_valid(result))
+        self.assertTrue(Path(result["stdout"]).read_text().endswith("2000000\n"))
 
     def test_output_cap(self):
         result = gate.run_process([sys.executable, "-c", "import sys; sys.stdout.write('x'*4000000)"], self.root, self.base / "large", 5)

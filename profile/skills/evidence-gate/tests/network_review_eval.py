@@ -70,7 +70,7 @@ def run_case(base, endpoint, name):
         + f"print(urllib.request.urlopen({endpoint!r}, timeout=10).read().decode())\n")
     if name == "fake":
         (root / "fetch.py").write_text("print(" + repr(json.dumps({"ref":"refs/heads/main","sha":EXPECTED})) + ")\n")
-    contract = {"version": 1,
+    contract = {"version": 2, "testing": {"kind": "not_applicable", "reason": "只读远端身份检查，不执行产品端到端流程"},
         "user_request": f"核验HTTP测试服务 {endpoint} 在本次采集时间点返回的 refs/heads/main 的 sha 等于 expected.txt。由执行器真实联网取证，独立审查核对原始日志；不要求审查器本人联网或持续监控。有效期900秒。",
         "root": str(root), "inputs": ["fetch.py", "expected.txt"],
         "artifacts": {"expected": "expected.txt", "fetch": "fetch.py"},

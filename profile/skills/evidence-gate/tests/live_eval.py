@@ -51,7 +51,7 @@ Path('delivery-report.json').write_text(json.dumps(report, sort_keys=True) + '\\
     subprocess.run(["git", "-C", str(root), "config", "user.email", "evidence@example.com"], check=True)
     subprocess.run(["git", "-C", str(root), "add", "answer.py", "build_package.py", "verify_delivery.py", ".gitignore"], check=True)
     pre_contract = {
-        "version": 1, "user_request": request, "root": str(root), "inputs": ["answer.py", "build_package.py", "verify_delivery.py", ".gitignore", str(Path(__file__).resolve())],
+        "version": 2, "testing": {"kind": "not_applicable", "reason": "验收器协议回归夹具，不执行产品端到端流程"}, "user_request": request, "root": str(root), "inputs": ["answer.py", "build_package.py", "verify_delivery.py", ".gitignore", str(Path(__file__).resolve())],
         "artifacts": {"program": "answer.py", "builder": "build_package.py", "delivery-verifier": "verify_delivery.py"},
         "checks": [{"id": "runtime", "argv": runtime, "cwd": ".", "timeout": 5}], "evidence": [],
         "criteria": [{"id": "result", "requirement": "运行程序实际输出 42；冻结打包与提交后核验器，后置 steps 将验证 HEAD、已提交源码、包内容和干净工作树并生成结构化报告", "refs": ["artifact:program", "artifact:builder", "artifact:delivery-verifier", "check:runtime"]}],
@@ -125,7 +125,7 @@ Path('delivery-report.json').write_text(json.dumps(report, sort_keys=True) + '\\
         "assert int(subprocess.check_output(['git','show','-s','--format=%ct','HEAD']))<=start.timestamp()<=end.timestamp()"
     )]
     completion_contract = {
-        "version": 1, "user_request": request, "root": str(root), "inputs": ["answer.py", "build_package.py", "verify_delivery.py", ".gitignore", str(Path(__file__).resolve())],
+        "version": 2, "testing": {"kind": "not_applicable", "reason": "验收器协议回归夹具，不执行产品端到端流程"}, "user_request": request, "root": str(root), "inputs": ["answer.py", "build_package.py", "verify_delivery.py", ".gitignore", str(Path(__file__).resolve())],
         "artifacts": {"program": "answer.py", "package": "answer.pkg", "delivery-report": "delivery-report.json", "build-receipt": "build-receipt.json"},
         "checks": [
             {"id": "runtime", "argv": runtime, "cwd": ".", "timeout": 5},
@@ -162,7 +162,7 @@ def run_entrypoint_case(base, case, codex, timeout):
     helper_probe = "from calculator import total\nassert total(['2', '3']) == 5\n"
     (root / "probe.py").write_text(helper_probe)
     checks = [{"id": "runtime", "argv": [sys.executable, "-B", "probe.py"], "cwd": ".", "timeout": 5}]
-    contract = {"version": 1, "root": str(root),
+    contract = {"version": 2, "testing": {"kind": "not_applicable", "reason": "验收器协议回归夹具，不执行产品端到端流程"}, "root": str(root),
         "user_request": "cli.py 接收任意整数参数，实际输出它们的和；无参数输出0。只读验收，不修改文件。",
         "inputs": ["calculator.py", "cli.py", "probe.py"], "artifacts": {"cli": "cli.py", "helper": "calculator.py"},
         "checks": checks, "evidence": [], "criteria": [{"id": "entrypoint", "requirement": "CLI真实入口调用求和逻辑，任意整数和空参数均正确",
@@ -234,7 +234,7 @@ def run_case(base, case, codex, timeout):
         request = "answer.py 必须输出整数 42，而且传入 --double 时输出 84。请只读验收，不修改文件。"
         argv = ["/usr/bin/true"]
         criterion = "文件存在且检查命令退出 0"
-    contract = {"version": 1, "user_request": request, "root": str(root),
+    contract = {"version": 2, "testing": {"kind": "not_applicable", "reason": "验收器协议回归夹具，不执行产品端到端流程"}, "user_request": request, "root": str(root),
                 "inputs": ["answer.py"], "artifacts": {"program": "answer.py"},
                 "checks": [{"id": "runtime", "argv": argv, "cwd": ".", "timeout": 5}], "evidence": [],
                 "criteria": [{"id": "result", "requirement": criterion, "refs": ["artifact:program", "check:runtime"]}]}

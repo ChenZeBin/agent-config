@@ -4,11 +4,14 @@ Python 3.10+，使用标准库及随 Skill 固定的 `vendor/bashlex` 0.18（GPL
 
 ## 合同
 
+新登记使用 v2，必须声明 `testing`。端到端任务先读 [端到端测试](e2e-testing.md)，执行 `plan-review` 后再运行。已登记 v1 可读并继续非端到端工作；其尚未执行的端到端测试须保留原始要求和全部验收范围迁移到 v2。不能借迁移继承旧通过结果。
+
 用 `apply_patch` 写 JSON，保存在产物范围之外。`root` 是任务工作目录，`inputs` 是相关源文件/目录，`artifacts` 是必须存在且非空的交付文件/目录。路径可为 root 相对路径，或明确纳入任务范围的绝对路径；拒绝符号链接。不要把整个 home、状态目录、依赖缓存或无关仓库纳入范围。
 
 ```json
 {
-  "version": 1,
+  "version": 2,
+  "testing": {"kind": "not_applicable", "reason": "本任务验证独立函数行为，不涉及端到端流程"},
   "user_request": "修复示例程序，使空输入返回 0；运行验证后交付。",
   "root": "/absolute/project",
   "inputs": ["src", "tests"],

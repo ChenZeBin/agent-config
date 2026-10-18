@@ -19,7 +19,7 @@ class PortableInstallTests(unittest.TestCase):
             root = Path(tmp) / "project"
             root.mkdir()
             (root / "a.txt").write_text("fixture")
-            contract = {"version": 1, "user_request": "verify fixture", "root": str(root), "inputs": ["a.txt"], "artifacts": {"a": "a.txt"}, "checks": [{"id": "read", "argv": [sys.executable, "-c", "print('fixture')"], "cwd": ".", "timeout": 5}], "evidence": [], "criteria": [{"id": "a", "requirement": "fixture readable", "refs": ["check:read", "artifact:a"]}]}
+            contract = {"version": 2, "testing": {"kind": "not_applicable", "reason": "验收器协议回归夹具，不执行产品端到端流程"}, "user_request": "verify fixture", "root": str(root), "inputs": ["a.txt"], "artifacts": {"a": "a.txt"}, "checks": [{"id": "read", "argv": [sys.executable, "-c", "print('fixture')"], "cwd": ".", "timeout": 5}], "evidence": [], "criteria": [{"id": "a", "requirement": "fixture readable", "refs": ["check:read", "artifact:a"]}]}
             file = Path(tmp) / "contract.json"
             file.write_text(json.dumps(contract))
             result = subprocess.run([sys.executable, "-B", str(SCRIPT), "--session", "missing-policy", "init", "--contract", str(file)], env=env, capture_output=True, text=True)
