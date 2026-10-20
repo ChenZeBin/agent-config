@@ -13,6 +13,7 @@ CHECKER = ROOT / "scripts" / "source_size.py"
 INSTALLER = ROOT / "scripts" / "source_size_hooks.py"
 sys.path.insert(0, str(ROOT / "scripts"))
 from source_size_hooks import HOOKS, RUNTIME, wrapper
+from source_size_baseline_e2e import counterexamples, initial_counterexample
 
 
 def run(argv, cwd, env, *, ok=True, data=None):
@@ -142,6 +143,8 @@ def exempt_and_policy_snapshot(f):
     f.file("another.py", b"#" * 20500)
     f.stage("another.py")
     assert f.commit(ok=False).returncode != 0
+    f.git("rm", "--force", "--", "another.py")
+    counterexamples(f)
 
 
 def rename_delete_recover(f):
@@ -217,6 +220,8 @@ def collision_and_default_hooks(f):
         target = f.file(".git/hooks/" + name,
                         f"#!/bin/sh\nprintf '{name}\\n' >> default-hooks.log\n" + extra)
         target.chmod(0o755)
+    originals = {name: (f.repo / ".git/hooks" / name).read_bytes()
+                 for name in ("pre-commit", "commit-msg", "pre-push")}
     f.file("small.py", "x = 1\n")
     f.stage("small.py")
     f.commit()
@@ -235,6 +240,7 @@ def collision_and_default_hooks(f):
     assert wrapper.read_text() == "unknown original\n"
     run([sys.executable, "-B", INSTALLER, "uninstall", "--scope", "global"], f.repo, f.env)
     assert f.git("config", "--global", "--get", "core.hooksPath", ok=False).returncode != 0
+    assert all((f.repo / ".git/hooks" / name).read_bytes() == data for name, data in originals.items())
     assert (f.repo / ".git/hooks/pre-push").read_text().endswith("exit 9\n")
     f.git("config", "core.hooksPath", "custom-hooks")
     original = f.file("custom-hooks/pre-commit", "#!/bin/sh\nexit 0\n")
@@ -341,6 +347,7 @@ def live_global_entrypoint(f):
     state = json.loads((hooks / "source-size-state.json").read_text())
     assert state["scope"] == "global" and state["runtime"] == str(runtime)
     assert state["previous"] is None
+    initial_counterexample(f)
     limit_boundary(f)
     assert f.git("config", "--global", "--get", "core.hooksPath").stdout == before
 
@@ -364,10 +371,12 @@ def main():
         try:
             with tempfile.TemporaryDirectory(prefix="source-size-e2e-") as temporary:
                 fixture = Fixture(Path(temporary), live=live,
-                                  install=install and case_id != "exempt-and-policy-snapshot")
-                if case_id == "exempt-and-policy-snapshot":
-                    fixture.file("hand.py", b"#" * 21000)
-                    fixture.stage("hand.py")
+                                  install=install and case_id not in {
+                                      "exempt-and-policy-snapshot", "rename-delete-recover"})
+                if case_id in {"exempt-and-policy-snapshot", "rename-delete-recover"}:
+                    legacy = "hand.py" if case_id == "exempt-and-policy-snapshot" else "legacy.py"
+                    fixture.file(legacy, b"#" * 21000)
+                    fixture.stage(legacy)
                     fixture.commit()
                     fixture.install("global")
                 function(fixture)

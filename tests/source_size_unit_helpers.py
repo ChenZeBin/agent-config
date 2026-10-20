@@ -56,8 +56,11 @@ class CheckerUnitTest(IsolatedUnitTest):
 
         with mock.patch.object(checker, "entries", return_value=files) as scan, \
              mock.patch.object(checker, "blob", side_effect=lambda repo, oid: blobs[oid]) as read, \
+             mock.patch.object(checker, "validate_baselines") as provenance, \
              mock.patch.object(checker, "git", side_effect=git_output) as git:
             result = checker.inspect("unit-repo", tree, all_files=all_files)
         scan.assert_called_once_with("unit-repo", tree)
+        provenance.assert_called_once_with("unit-repo", files, checker.load(
+            blobs[files[checker.POLICY][1]] if checker.POLICY in files else None), tree)
         self.process.assert_not_called()
         return result, git, read

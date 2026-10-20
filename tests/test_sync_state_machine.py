@@ -19,16 +19,37 @@ class SyncStateMachineTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory(prefix="agent-config-sync-test-")
         self.base = Path(self.temporary.name)
         seed = self.base / "seed"
+        # Keep real parent history so existing source-size baselines remain valid.
+        subprocess.run(
+            ["git", "clone", "--quiet", "--no-local", str(ROOT), str(seed)],
+            check=True,
+        )
+        self.git(seed, "branch", "-M", "main")
+        self.git(seed, "config", "user.name", "Agent Config Test")
+        self.git(seed, "config", "user.email", "test@example.com")
+        # Replace only the disposable checkout; retain its Git history and config.
+        for entry in seed.iterdir():
+            if entry.name == ".git":
+                continue
+            if entry.is_dir() and not entry.is_symlink():
+                shutil.rmtree(entry)
+            else:
+                entry.unlink()
         shutil.copytree(
             ROOT,
             seed,
             ignore=shutil.ignore_patterns(".git", "__pycache__", "*.pyc", ".DS_Store"),
+            dirs_exist_ok=True,
+            symlinks=True,
         )
-        self.git(seed, "init", "-q", "-b", "main")
-        self.git(seed, "config", "user.name", "Agent Config Test")
-        self.git(seed, "config", "user.email", "test@example.com")
-        self.git(seed, "add", "-A")
-        self.git(seed, "commit", "-q", "-m", "seed")
+        changed = self.git(
+            seed, "ls-files", "--modified", "--deleted", "--others", "--exclude-standard", "-z"
+        ).stdout
+        paths = sorted(set(filter(None, changed.split("\0"))))
+        if paths:
+            self.git(seed, "add", "-A", "--", *(f":(literal){name}" for name in paths))
+            if self.git(seed, "diff", "--cached", "--name-only", "-z").stdout:
+                self.git(seed, "commit", "-q", "-m", "seed current working tree")
         self.origin = self.base / "origin.git"
         # Use Git transport so object packing cannot race a local filesystem copy.
         subprocess.run(["git", "clone", "--quiet", "--no-local", "--bare", str(seed), str(self.origin)], check=True)

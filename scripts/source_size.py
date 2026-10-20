@@ -46,9 +46,78 @@ def snapshot_policy(repo, files):
     return load(blob(repo, item[1]) if item else None)
 
 
+def validate_baselines(repo, files, policy, tree=None):
+    """Check each ceiling's first-parent origin, including inherited bypasses."""
+    active = set(policy["baseline"])
+    if not active:
+        return
+    cache, sizes = {}, {}
+
+    def snapshot(revision):
+        if revision is None:
+            return {}, load(None)
+        if revision not in cache:
+            items = entries(repo, revision)
+            cache[revision] = items, snapshot_policy(repo, items)
+        return cache[revision]
+
+    def parent(revision):
+        raw = git(repo, "cat-file", "-p", revision).stdout.split(b"\n\n", 1)[0]
+        return next((line[7:].decode("ascii") for line in raw.splitlines()
+                     if line.startswith(b"parent ")), None)
+
+    def size(items, path):
+        item = items.get(path)
+        if not item or item[0] not in {"100644", "100755"}:
+            return None
+        prefix = blob(repo, item[1])[:2] if not Path(path).suffix else b""
+        if not is_source(path, prefix, item[0]):
+            return None
+        if item[1] not in sizes:
+            sizes[item[1]] = int(git(repo, "cat-file", "-s", item[1]).stdout)
+        return sizes[item[1]]
+
+    def transition(current, rules, previous, old_rules):
+        for path in tuple(active):
+            ceiling = rules["baseline"].get(path)
+            if ceiling is None:
+                raise ValueError(f"baseline ancestry missing for {path!r}")
+            old = old_rules["baseline"].get(path)
+            previous_size = size(previous, path)
+            current_size = size(current, path)
+            if current_size is not None and current_size > LIMIT and previous_size is None:
+                raise ValueError(f"baseline cannot exempt new source: {path!r}; split the file")
+            if old:
+                if ceiling["max_bytes"] > old["max_bytes"]:
+                    raise ValueError(f"baseline cannot increase: {path!r}; split the file")
+            else:
+                if (previous_size is None or previous_size <= LIMIT
+                        or ceiling["max_bytes"] > previous_size):
+                    raise ValueError(f"baseline requires pre-existing oversized source: {path!r}")
+                active.remove(path)
+
+    if tree and git(repo, "cat-file", "-t", tree).stdout.strip() == b"commit":
+        revision = git(repo, "rev-parse", "--verify", tree).stdout.decode().strip()
+    else:
+        result = git(repo, "rev-parse", "--verify", "--quiet", "HEAD", check=False)
+        revision = result.stdout.decode().strip() if result.returncode == 0 else None
+        transition(files, policy, *snapshot(revision))
+    if active and revision:
+        paths = [":(literal)" + path for path in [POLICY, *sorted(active)]]
+        history = git(repo, "log", "--first-parent", "--format=%H", revision, "--", *paths).stdout
+        for commit in history.decode("ascii").splitlines():
+            current, rules = snapshot(commit)
+            transition(current, rules, *snapshot(parent(commit)))
+            if not active:
+                return
+    if active:
+        raise ValueError("baseline history unavailable; fetch full first-parent history before checking")
+
+
 def inspect(repo, tree=None, *, all_files=False):
     files = entries(repo, tree)
     policy = snapshot_policy(repo, files)
+    validate_baselines(repo, files, policy, tree)
     if tree or all_files:
         selected = files
     else:

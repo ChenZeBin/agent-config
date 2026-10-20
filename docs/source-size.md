@@ -45,6 +45,13 @@ patterns. They are reviewable exemptions, not automatic author detection.
 Never exempt all source or all tests. Baselines require exact paths and a byte ceiling above the
 default. A rename does not inherit an old path's baseline. A reduced baseline
 should be updated after a refactor. Do not raise it to make a change pass.
+The checker verifies baseline provenance against first-parent Git history. A
+new baseline requires an already committed oversized regular source at the
+same path. Its ceiling cannot exceed that previous blob. Existing ceilings
+cannot increase. Deleting and re-adding a source does not inherit a ceiling.
+Commit/tree checks also reject inherited invalid baseline introductions.
+Keep the full first-parent history available in CI. Missing history fails
+closed; a raw tree object is compared with HEAD, just like the staged index.
 
 `python3 -B scripts/source_size.py --baseline` prints a proposal from HEAD. Review
 it before saving. The tool never writes policy or baselines on its own. This
