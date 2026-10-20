@@ -30,6 +30,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PROTECTED_CONTROL_PATHS = (
     ".githooks/",
     ".gitleaks.toml",
+    ".source-size.json",
     "bin/",
     "scripts/",
 )
@@ -520,7 +521,6 @@ def copy_path(source: Path, destination: Path) -> None:
     if source.is_dir():
         shutil.copytree(source, destination)
     else:
-        destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, destination)
 
 

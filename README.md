@@ -131,6 +131,11 @@ codex-hybrid status   # 查看当前状态
 
 ## 安全边界
 
+源码大小门禁默认限制手写源码为 20,000 字节（约 5,000 token）。提交前读取
+暂存区，CI 读取提交树；生成物须有明确豁免，存量大文件只允许不增长。
+全局默认 hook、项目本地 hook 的保留式接入及撤销方法见
+[源码大小门禁](docs/source-size.md)。hook 报错会提示按职责拆分和重新测试。
+
 - 本地：Gitleaks + `scripts/privacy_scan.py`，pre-commit 扫 staged index，pre-push 扫全部待推送历史。
 - GitHub：Actions 使用完整历史执行 Gitleaks、个人标识扫描、manifest/skill 验证和状态机测试。
 - `.gitignore` 不是秘密管理器；凭据只放环境变量、macOS Keychain 或密码管理器。
