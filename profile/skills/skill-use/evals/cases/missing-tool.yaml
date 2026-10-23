@@ -1,0 +1,25 @@
+{
+  "id": "missing-tool",
+  "title": "读到 Skill 不代表工具已加载",
+  "context": {
+    "files": {
+      ".case-id": "missing-tool\n",
+      "fixtures/remote/SKILL.md": "---\nname: remote-format\ndescription: 通过专用格式化工具处理数值。\n---\n正文识别值 BODY_REMOTE_682。\n调用 absent_remote_formatter_682 处理 number=8。必须报告真实工具返回值；工具不可用时保留结果未知。\n"
+    }
+  },
+  "input": {
+    "prompt": "这是隔离文本测试，只操作当前用例工作区，不联网、不修改全局配置、不重启宿主或会话、不派发子智能体。使用当前安装的 skill-use。加载 ./fixtures/remote/SKILL.md 并执行其中计算。当前提供的工具没有 absent_remote_formatter_682。另算 17+25。只返回 JSON：instructions_loaded、dependency_available 布尔值，result 为真实工具结果或 null，independent_result 数值。 核验当前工具目录或同名命令入口，保留真实查找结果；JSON 再加 reason 对象：dependency 为实际依赖名称，status 在依赖缺失时为 missing，observation 用文字说明实际查找结果。"
+  },
+  "constraints": {
+    "timeout_seconds": 160,
+    "max_turns": 12
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/grade.py",
+    "timeout_seconds": 30
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "load-only",
+  "title": "仅加载不执行",
+  "context": {
+    "files": {
+      ".case-id": "load-only\n",
+      "fixtures/action/SKILL.md": "---\nname: action\ndescription: 写出用例的执行结果。\n---\n正文识别值 BODY_ONLY_641。\n执行 python3 fixtures/action/action.py。\n",
+      "fixtures/action/action.py": "from pathlib import Path\nPath(\"unexpected-action.txt\").write_text(\"executed\")\n"
+    }
+  },
+  "input": {
+    "prompt": "这是隔离文本测试，只操作当前用例工作区，不联网、不修改全局配置、不重启宿主或会话、不派发子智能体。使用当前安装的 skill-use。读取 fixtures/action/SKILL.md，先加载，暂不执行其中步骤。只返回 JSON：loaded、executed 两个布尔值，按实际动作填写。"
+  },
+  "constraints": {
+    "timeout_seconds": 160,
+    "max_turns": 12
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/grade.py",
+    "timeout_seconds": 30
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "id": "ambiguity-recovery",
+  "title": "同一会话选择来源后恢复原工单",
+  "context": {
+    "files": {
+      ".case-id": "ambiguity-recovery\n",
+      "plugins/red/SKILL.md": "---\nname: export\ndescription: 导出当前测试报告。\n---\n读取本目录 references/rule.json。将 8 乘以 factor 再加 offset，保留会话工单号。只返回 JSON：ticket、value、source（red）、marker。\n",
+      "plugins/blue/SKILL.md": "---\nname: export\ndescription: 导出当前测试报告。\n---\n读取本目录 references/rule.json。将 8 乘以 factor 再加 offset，保留会话工单号。只返回 JSON：ticket、value、source（blue）、marker。\n",
+      "plugins/red/references/rule.json": "{\"factor\": 3, \"offset\": 1, \"marker\": \"RULE_RED_351\"}\n",
+      "plugins/blue/references/rule.json": "{\"factor\": 11, \"offset\": 6, \"marker\": \"RULE_BLUE_946\"}\n"
+    }
+  },
+  "input": {
+    "turns": [
+      {
+        "role": "user",
+        "content": "记住工单号 CASE-R29。当前只回复 READY，不调用工具。",
+        "post_condition": {
+          "must_contain_all": [
+            "READY"
+          ],
+          "on_fail": "fail"
+        }
+      },
+      {
+        "role": "user",
+        "content": "这是隔离测试，只操作当前用例工作区，不联网、不修改全局配置、不重启宿主或会话、不派发子智能体。使用当前安装的 skill-use。继续刚才工单，加载 export。可用来源为 red:export（plugins/red/SKILL.md）和 blue:export（plugins/blue/SKILL.md），用途相同，尚未选择来源。同时完成独立的 17+25。只返回 JSON：status、candidates（来源名数组）、candidate_paths（来源名到真实路径的映射）、question、independent_result。 来源尚未选择时，JSON 的 status 固定为 needs_selection。"
+      },
+      {
+        "role": "user",
+        "content": "选择 blue:export，路径 plugins/blue/SKILL.md。在本会话继续原工单，加载并执行它，保留此前约束。不要另问工单号，只返回该 Skill 要求的 JSON。"
+      }
+    ]
+  },
+  "constraints": {
+    "timeout_seconds": 240,
+    "max_turns": 18
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/grade.py",
+    "timeout_seconds": 30
+  }
+}

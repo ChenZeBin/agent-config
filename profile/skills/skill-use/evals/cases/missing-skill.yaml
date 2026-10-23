@@ -1,0 +1,26 @@
+{
+  "id": "missing-skill",
+  "title": "缺失 Skill 时继续独立步骤",
+  "context": {
+    "files": {
+      ".case-id": "missing-skill\n",
+      "known-skills/README.txt": "此目录没有目标 Skill。\n",
+      "known-skills/available-sample/SKILL.md": "---\nname: available-sample\ndescription: 目录中已有的其他 Skill。\n---\n此项不是 unavailable-523。\n"
+    }
+  },
+  "input": {
+    "prompt": "这是隔离文本测试，只操作当前用例工作区，不联网、不修改全局配置、不重启宿主或会话、不派发子智能体。使用当前安装的 skill-use。加载 ./known-skills/unavailable-523/SKILL.md。先核验指定文件，再只在 ./known-skills 补查，不创建、不下载。另算 17+25。只返回 JSON：loaded 布尔值、independent_result 数值、reason 对象。reason 包含 target（实际目标文件路径）、search_root（实际补查目录）、status（缺失时为 missing）和 observation（用文字说明实际检查及补查结果）。"
+  },
+  "constraints": {
+    "timeout_seconds": 160,
+    "max_turns": 12
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/grade.py",
+    "timeout_seconds": 30
+  }
+}

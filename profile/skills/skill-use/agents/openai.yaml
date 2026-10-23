@@ -1,0 +1,4 @@
+interface:
+  display_name: "会话中加载 Skill"
+  short_description: "在当前会话定位、读取并应用 Skill，保留任务上下文并按需重新加载"
+  default_prompt: "使用 $skill-use 在当前会话加载指定 Skill，并继续当前任务。"

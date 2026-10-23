@@ -1,0 +1,41 @@
+{
+  "id": "name-discovery",
+  "title": "第二轮按名称找到未列出的 Skill",
+  "context": {
+    "files": {
+      ".case-id": "name-discovery\n",
+      "known-skills/number-shape/SKILL.md": "---\nname: number-shape\ndescription: 为当前工单计算指定数值。\n---\n读取本目录 references/rule.json。将 8 乘以 factor，再加 offset。只返回 JSON，ticket 使用本会话前一轮工单号，value 为计算结果，marker 为规则 marker。正文识别值 BODY_NUM_531。\n",
+      "known-skills/number-shape/references/rule.json": "{\"factor\": 9, \"offset\": 4, \"marker\": \"RULE_NUM_927\"}"
+    }
+  },
+  "input": {
+    "turns": [
+      {
+        "role": "user",
+        "content": "记住工单号 CASE-A17。当前只回复 READY，不调用工具。",
+        "post_condition": {
+          "must_contain_all": [
+            "READY"
+          ],
+          "on_fail": "fail"
+        }
+      },
+      {
+        "role": "user",
+        "content": "这是隔离文本测试，只操作当前用例工作区，不联网、不修改全局配置、不重启宿主或会话、不派发子智能体。使用当前安装的 skill-use。会话目录里没有 number-shape，它在已知安装目录 ./known-skills。现在按名称加载它，继续刚才工单并执行计算。不要读取评测脚本。"
+      }
+    ]
+  },
+  "constraints": {
+    "timeout_seconds": 160,
+    "max_turns": 12
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/grade.py",
+    "timeout_seconds": 30
+  }
+}

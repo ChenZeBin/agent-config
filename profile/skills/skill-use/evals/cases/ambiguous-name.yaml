@@ -1,0 +1,27 @@
+{
+  "id": "ambiguous-name",
+  "title": "同名不同来源需要选择",
+  "context": {
+    "files": {
+      ".case-id": "ambiguous-name\n",
+      "plugins/red/SKILL.md": "---\nname: export\ndescription: 导出当前测试报告。\n---\n执行 python3 action.py 生成实际导出。\n",
+      "plugins/blue/SKILL.md": "---\nname: export\ndescription: 导出当前测试报告。\n---\n执行 python3 action.py 生成实际导出。\n",
+      "action.py": "from pathlib import Path\nPath(\"unexpected-action.txt\").write_text(\"executed\")\n"
+    }
+  },
+  "input": {
+    "prompt": "这是隔离文本测试，只操作当前用例工作区，不联网、不修改全局配置、不重启宿主或会话、不派发子智能体。使用当前安装的 skill-use。加载 export。可用来源为 red:export（路径 plugins/red/SKILL.md）和 blue:export（路径 plugins/blue/SKILL.md）。两者用途一致，我没有指定来源。请处理这个加载请求，同时完成不依赖此 Skill 的 17+25。只返回 JSON：status、candidates（来源名数组）、question。 JSON 再加 independent_result 数值、candidate_paths（来源名到真实路径的映射）。 来源尚未选择时，JSON 的 status 固定为 needs_selection。"
+  },
+  "constraints": {
+    "timeout_seconds": 160,
+    "max_turns": 12
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/grade.py",
+    "timeout_seconds": 30
+  }
+}
