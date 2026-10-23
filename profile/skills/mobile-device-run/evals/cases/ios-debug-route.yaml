@@ -1,0 +1,17 @@
+{
+  "id": "ios-debug-route",
+  "title": "iOS 命令行与同名设备选择",
+  "context": {
+    "files": {
+      ".case-id": "ios-debug-route\n"
+    }
+  },
+  "input": {
+    "prompt": "使用当前安装的 mobile-device-run Skill，读取当前平台参考文件。此例只评测离线判断和命令计划；不要实际执行构建、设备、网络或 IDE 操作，不创建或修改文件。场景中的设备与工具状态是本例全部已知证据。\n用户要求编译并启动 iOS App。项目为 Demo.xcworkspace，Scheme 是 Demo。完整 Xcode 和有效开发签名已核验。两台手机都叫 Test Phone：EVAL-IOS-01 是默认设备，EVAL-IOS-02 是用户本次明确指定的 UDID，均连接、解锁、配对且 Developer Mode 已启用。还未执行本次构建。只生成一套后续命令计划；产物与 Bundle ID 尚须构建后核验，可用已命名的 shell 变量占位，但设备、workspace、Scheme 和配置必须确定。安装启动是前一步成功后的条件步骤。\n只输出 JSON 对象：platform 为 ios 或 android；device_id；configuration；commands 为 argv 数组的列表，表示当前可执行检查或在前序成功后可执行的完整计划；build_verified、installed_new、run_verified、goal_complete 为基于已给事实的布尔值；blocked_on 为 null、device、build 或 evidence；next_step 用一句话说明下一步。使用 Debug 配置。命令计划本身不算已执行证据。\n另输出 artifact_verification_required 布尔值；recovery_actions 为当前恢复/诊断动作编号列表，可从 connect_selected_device、recheck_selected_device、authorize_selected_host、repair_signing、build_current_debug、query_selected_process、observe_selected_foreground、create_requirement_cases、independent_plan_review、relaunch_now、switch_device、start_simulator、uninstall_app 中选择，可为空。diagnosis 为对象，仅在给出实际构建错误时包含 exit_code 与 error，错误原文不改写。e2e_execution_allowed 表示当前已具备前置审查条件可执行端到端测试，未给出前审证据不能假定为已通过。只读取当前平台参考文件，不读取另一平台文件。\n本例提供构建成功后的合成查询数据用于计划推导，并非已执行证据：同一 workspace、Scheme、Debug、UDID 的 -showBuildSettings -json 返回 App target 的 TARGET_BUILD_DIR=/tmp/mobile-eval/build/Debug-iphoneos、FULL_PRODUCT_NAME=Demo.app、CONFIGURATION=Debug；该新产物 Info.plist 的 CFBundleIdentifier=com.example.demo。另有旧产物 /tmp/mobile-eval/old/Legacy.app，不得使用。完整计划必须在 build 后列出相同配置的 build settings 查询和从该 .app 的 Info.plist 读取 CFBundleIdentifier 的命令，再安装本次路径和启动对应包名。元数据路径及包名已由本例给定，最终 argv 使用这些具体值，不使用未绑定 shell 变量；只有实际输出与这些条件一致时才能执行后续安装启动。\n核验计划还须包含指定设备的进程查询：iOS 使用 xcrun devicectl device info processes --device <UDID>；Android 使用 adb -s <serial> shell pidof <applicationId>。成功路径在启动后查询；超时路径直接查询而不重复启动。本例没有自动化界面观察工具，前台核验入口为用户在同一真机上查看 Demo 首页。另输出 foreground_observation 对象，字段 entry=human_on_device、device_id=指定设备、app_id=本次包名、expected_screen=Demo 首页、after=process_query。此观察尚未执行，run_verified 和 goal_complete 仍为 false。\nJSON 字段约定：platform 使用小写 ios 或 android；configuration 表示构建类型，填写 Debug，完整 Android variant 仍在实际构建任务中表达。blocked_on 仅表示当前缺失条件、已发生失败或本例要求核验却缺少的证据；只是尚未执行的正常构建、安装或启动步骤不是阻塞，条件齐备的完整计划填写 null。recovery_actions 包含需要的诊断和诊断后有条件执行的恢复动作，不代表立即执行全部恢复。"
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/grade.py",
+    "timeout_seconds": 30
+  }
+}

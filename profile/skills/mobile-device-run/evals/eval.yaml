@@ -1,0 +1,32 @@
+schema_version: v1alpha1
+environment:
+  type: none
+skills:
+  - source: local_path
+    path: .
+    include: [SKILL.md, "references/**"]
+engine:
+  name: codex
+cases:
+  files:
+    - evals/cases/ios-debug-route.yaml
+    - evals/cases/android-unauthorized.yaml
+    - evals/cases/android-install-failed.yaml
+    - evals/cases/android-flavor-route.yaml
+    - evals/cases/ios-unavailable.yaml
+    - evals/cases/ios-build-failed.yaml
+    - evals/cases/ios-launch-unconfirmed.yaml
+    - evals/cases/ios-e2e-plan-required.yaml
+  defaults:
+    timeout_seconds: 180
+    max_turns: 8
+    expect:
+      exit_code: 0
+  parallelism: 2
+  retry_policy:
+    max_retries: 0
+benchmark:
+  enabled: false
+report:
+  formats: [json]
+  artifacts: [transcript]

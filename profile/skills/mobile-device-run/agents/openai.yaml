@@ -1,0 +1,4 @@
+interface:
+  display_name: "移动 App 真机运行"
+  short_description: "通过命令行编译 Debug 版，并安装到指定 iOS 或 Android 真机运行"
+  default_prompt: "使用 $mobile-device-run 编译当前项目的 Debug 版，安装到指定真机并核验启动结果。"

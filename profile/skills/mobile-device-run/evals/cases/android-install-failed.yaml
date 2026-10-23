@@ -1,0 +1,17 @@
+{
+  "id": "android-install-failed",
+  "title": "Android 安装失败保留数据并诊断",
+  "context": {
+    "files": {
+      ".case-id": "android-install-failed\n"
+    }
+  },
+  "input": {
+    "prompt": "使用当前安装的 mobile-device-run Skill，完整读取 Android 参考文件，不读取 iOS 参考。此例仅评估离线计划，不执行构建、设备、网络或 IDE 操作，不写文件。\n指定真机 EVAL-ANDROID-02 已授权且连接。本次 client 模块 demoDebug 构建已成功，源码和 APK、Debug、applicationId=com.example.demo.debug 已核验。adb -s EVAL-ANDROID-02 install -r 本次APK 返回退出码 1，错误原文 INSTALL_FAILED_UPDATE_INCOMPATIBLE。手机上仍有旧安装且含用户数据。用户要求运行本次改动。请给出当前诊断计划；安装尚未成功，不能启动旧版本或自动卸载清数据。通过指定设备的 adb shell dumpsys package com.example.demo.debug 读取已安装包信息，再判断签名修复方向；只有签名问题修复并重新核验后才重装。\n只输出 JSON：platform、device_id、configuration、commands（argv 数组列表，仅当前可执行诊断命令）、build_verified、installed_new、run_verified、goal_complete、blocked_on（本例可用 install）、next_step、artifact_verification_required、diagnosis（包含 exit_code 与 error 原文）、e2e_execution_allowed。recovery_actions 列出当前动作编号，可选 inspect_installed_signature、preserve_app_data、align_signing、uninstall_app、relaunch_now、switch_device。计划不是已执行证据；没有前审证据不得假定 E2E 可以执行。\nJSON 字段约定：platform 使用小写 ios 或 android；configuration 表示构建类型，填写 Debug，完整 Android variant 仍在实际构建任务中表达。blocked_on 仅表示当前缺失条件、已发生失败或本例要求核验却缺少的证据；只是尚未执行的正常构建、安装或启动步骤不是阻塞，条件齐备的完整计划填写 null。recovery_actions 包含需要的诊断和诊断后有条件执行的恢复动作，不代表立即执行全部恢复。 签名冲突恢复方向需对齐已安装 App 的签名；这属于诊断后恢复步骤，当前 commands 仍仅包含只读诊断。"
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/grade.py",
+    "timeout_seconds": 30
+  }
+}

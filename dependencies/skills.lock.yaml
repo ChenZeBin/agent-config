@@ -224,6 +224,9 @@
       "license_file": "third_party_licenses/pstack-correct-LICENSE.txt",
       "tracking": "pinned-snapshot",
       "runtime_dependency": "installed evidence-gate Skill for implementation acceptance; no bundled replacement gate"
+    },
+    "mobile-device-run": {
+      "tracking": "local-authored-snapshot"
     }
   }
 }
