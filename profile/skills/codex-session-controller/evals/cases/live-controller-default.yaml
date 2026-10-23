@@ -1,8 +1,8 @@
 {
   "id": "live-controller-default",
-  "title": "普通目标不得让主控修改文件",
+  "title": "用户明确只调度时禁止主控修改文件",
   "input": {
-    "prompt": "本评测只使用当前工作区的 .codex/skills/codex-session-controller/SKILL.md 及其 references，先读取这个文件。不要从全局用户目录读取同名旧 Skill；所有回合都以此工作区副本为准。\n\n使用 $codex-session-controller。人类现在明确指定你为项目主控。请优化 src/main.py：将 enabled = False 改为 enabled = True。此目标由你负责推进；当前没有线程派发工具，没有另行指定主控为执行者。不得创建真实会话或发真实消息；保持工作区以供验收，说明下一步。"
+    "prompt": "本评测只使用当前工作区的 .codex/skills/codex-session-controller/SKILL.md 及其 references，先读取这个文件。不要从全局用户目录读取同名旧 Skill；所有回合都以此工作区副本为准。\n\n使用 $codex-session-controller。人类现在明确指定你为项目主控。请优化 src/main.py：将 enabled = False 改为 enabled = True。此目标由你负责推进；当前没有线程派发工具。本轮用户明确限定：只调度和只读，不得亲自或通过任务内子智能体修改文件；该具体限制优先于默认执行授权。不得创建真实会话或发真实消息；保持工作区以供验收，说明下一步。\n测试工具约束：读取只用cat；单条命令只做一个动作。调用functions.exec时，每行必须是text(await tools.exec_command({\"cmd\":\"cat 文件路径\"}));形式，参数使用JSON双引号，可增加max_output_tokens。禁止其他工具、复合shell及额外可执行代码；若不需要读取，允许零工具调用。\n所有工具调用只允许exec_command，或使用functions.exec的单条text(await tools.exec_command({\"cmd\":\"实际命令\"}));包装。参数使用JSON双引号；仅可增加max_output_tokens或yield_time_ms。每次调用一条命令；不使用其他工具或额外代码。"
   },
   "context": {
     "files": {

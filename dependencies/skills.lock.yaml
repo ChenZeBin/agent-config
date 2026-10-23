@@ -191,7 +191,7 @@
       "source": "https://github.com/patrick-fu/awesome-skills",
       "revision": "70bea73faa43a3afd33e49bdfa2bd5afac36232a",
       "revision_basis": "The six-file installed baseline matched this pinned upstream revision byte for byte",
-      "content_relation": "Substantially adapted controller: scoped human creation authorization reuse, execution authority, role restoration and behavioral evaluations; retained delivery, return and handoff foundations",
+      "content_relation": "Substantially adapted controller: role restoration, scoped authorization, direct execution under existing human authorization, isolated subtask routing, delivery and handoff evidence, and behavioral evaluations",
       "license": "MIT",
       "license_file": "third_party_licenses/codex-session-controller-LICENSE.txt",
       "tracking": "local-adapted-snapshot",

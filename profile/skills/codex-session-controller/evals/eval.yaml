@@ -60,7 +60,14 @@
       "evals/cases/creation-unknown-result.yaml",
       "evals/cases/creation-no-authority-expansion.yaml",
       "evals/cases/creation-restores-authority.yaml",
-      "evals/cases/creation-untrusted-quote.yaml"
+      "evals/cases/creation-untrusted-quote.yaml",
+      "evals/cases/direct-current.yaml",
+      "evals/cases/direct-subagent.yaml",
+      "evals/cases/direct-owner.yaml",
+      "evals/cases/direct-control-only.yaml",
+      "evals/cases/direct-screenshot.yaml",
+      "evals/cases/direct-explicit-create.yaml",
+      "evals/cases/direct-persistent.yaml"
     ],
     "defaults": {
       "timeout_seconds": 600,
