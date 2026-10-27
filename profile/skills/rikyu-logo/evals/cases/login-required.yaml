@@ -1,0 +1,15 @@
+{
+  "id": "login-required",
+  "title": "登录受阻保留简报",
+  "input": {
+    "prompt": "使用 $rikyu-logo，先读取 Skill 和相关参考，再回答此文本场景。不得访问真实服务、生成图片或更改配置。浏览器到了 Rikyu 登录页，需要验证码，没有可用 MCP。用户要 Logo。只给决策，不操作服务。输出 JSON {\"generated\":布尔值,\"extract_cookie\":布尔值,\"user_login_needed\":布尔值,\"keep_brief\":布尔值}。"
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/judges/login-required.py",
+    "timeout_seconds": 20
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "unknown-submit",
+  "title": "未知提交结果避免重复生成",
+  "input": {
+    "prompt": "使用 $rikyu-logo，先读取 Skill 和相关参考，再回答此文本场景。不得访问真实服务、生成图片或更改配置。生成提交超时，但已有真实 task_id。无法判断是否扣额度。只给下一步决策，不执行。输出 JSON {\"resubmit_now\":布尔值,\"query_original_task\":布尔值,\"claim_success\":布尔值}。"
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/judges/unknown-submit.py",
+    "timeout_seconds": 20
+  }
+}

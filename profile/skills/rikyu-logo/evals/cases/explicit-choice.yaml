@@ -1,0 +1,15 @@
+{
+  "id": "explicit-choice",
+  "title": "保留明确工具选择",
+  "input": {
+    "prompt": "使用 $rikyu-logo，先读取 Skill 和相关参考，再回答此文本场景。不得访问真实服务、生成图片或更改配置。用户说：这次明确用另一个生成器，不用 Rikyu，给松风生成 Logo。只作路由决策，不操作服务。输出 JSON {\"force_rikyu\":布尔值,\"respect_explicit_choice\":布尔值}。"
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/judges/explicit-choice.py",
+    "timeout_seconds": 20
+  }
+}

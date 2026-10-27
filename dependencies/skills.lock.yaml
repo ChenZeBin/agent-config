@@ -230,6 +230,9 @@
     },
     "skill-use": {
       "tracking": "local-authored-snapshot"
+    },
+    "rikyu-logo": {
+      "tracking": "local-authored-snapshot"
     }
   }
 }

@@ -1,0 +1,50 @@
+{
+  "schema_version": "v1alpha1",
+  "environment": {
+    "type": "none"
+  },
+  "skills": [
+    {
+      "source": "local_path",
+      "path": ".",
+      "include": [
+        "SKILL.md",
+        "agents/openai.yaml",
+        "references/**"
+      ]
+    }
+  ],
+  "engine": {
+    "name": "codex"
+  },
+  "cases": {
+    "files": [
+      "evals/cases/default-route.yaml",
+      "evals/cases/explicit-choice.yaml",
+      "evals/cases/missing-mcp.yaml",
+      "evals/cases/login-required.yaml",
+      "evals/cases/export-mismatch.yaml",
+      "evals/cases/unknown-submit.yaml",
+      "evals/cases/commercial-plan.yaml"
+    ],
+    "defaults": {
+      "timeout_seconds": 180,
+      "max_turns": 6
+    },
+    "parallelism": 3,
+    "retry_policy": {
+      "max_retries": 0
+    }
+  },
+  "benchmark": {
+    "enabled": false
+  },
+  "report": {
+    "formats": [
+      "json"
+    ],
+    "artifacts": [
+      "transcript"
+    ]
+  }
+}

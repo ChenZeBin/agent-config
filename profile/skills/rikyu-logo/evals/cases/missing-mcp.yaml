@@ -1,0 +1,15 @@
+{
+  "id": "missing-mcp",
+  "title": "MCP 不可用时网页接入",
+  "input": {
+    "prompt": "使用 $rikyu-logo，先读取 Skill 和相关参考，再回答此文本场景。不得访问真实服务、生成图片或更改配置。当前没有可用 Rikyu MCP，但浏览器可用且账号已登录。用户已授权生成一次 Logo。只给决策，不操作服务。输出 JSON {\"route\":字符串,\"invent_api\":布尔值,\"claim_generated\":布尔值}。route 用 browser、other_generator 或 stop。"
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/judges/missing-mcp.py",
+    "timeout_seconds": 20
+  }
+}

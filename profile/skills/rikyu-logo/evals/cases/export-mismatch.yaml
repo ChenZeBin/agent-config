@@ -1,0 +1,15 @@
+{
+  "id": "export-mismatch",
+  "title": "导出不符合矢量透明要求",
+  "input": {
+    "prompt": "使用 $rikyu-logo，先读取 Skill 和相关参考，再回答此文本场景。不得访问真实服务、生成图片或更改配置。用户要透明矢量 SVG。Rikyu 返回 1024px PNG，实际无透明像素，但预览有棋盘格。只给判断，不下载或修改文件。输出 JSON {\"rename_to_svg\":布尔值,\"transparent_verified\":布尔值,\"request_complete\":布尔值,\"preserve_original\":布尔值}。"
+  },
+  "expect": {
+    "exit_code": 0
+  },
+  "judge": {
+    "type": "script",
+    "script_path": "evals/judges/export-mismatch.py",
+    "timeout_seconds": 20
+  }
+}

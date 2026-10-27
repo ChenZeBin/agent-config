@@ -1,0 +1,6 @@
+interface:
+  display_name: "Rikyu Logo"
+  short_description: "通过 Rikyu 生成品牌 Logo，支持需求整理、迭代与导出核验"
+  default_prompt: "使用 $rikyu-logo 为当前项目生成 Logo，并保存实际导出文件。"
+policy:
+  allow_implicit_invocation: true
